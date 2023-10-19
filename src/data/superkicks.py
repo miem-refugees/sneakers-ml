@@ -1,10 +1,10 @@
 from bs4 import BeautifulSoup
 import requests
 from urllib.parse import urljoin, urlparse
-import re
 import os
 from tqdm.auto import tqdm, trange
 import pandas as pd
+import itertools
 import boto3
 
 from helper import (
@@ -19,14 +19,15 @@ from helper import (
     HEADERS,
 )
 
-WEBSITE_NAME = "sneakerbaas"
-COLLECTIONS_URL = "https://www.sneakerbaas.com/collections/sneakers/"
-HOSTNAME_URL = "https://www.sneakerbaas.com/"
+WEBSITE_NAME = "superkicks"
+COLLECTIONS_URL = "https://www.superkicks.in/collections/"
+HOSTNAME_URL = "https://www.superkicks.in/"
 COLLECTIONS = [
-    "category-kids",
-    "category-unisex",
-    "category-women",
-    "category-men",
+    f"{item[0]}-{item[1]}"
+    for item in itertools.product(
+        ["men", "women"],
+        ["sneakers", "basketball-sneakers", "classics-sneakers", "skateboard-sneakers"],
+    )
 ]
 BUCKET = "sneakers-ml"
 
@@ -38,14 +39,10 @@ def get_collection_info(collection):
     r = requests.get(info["url"], headers=HEADERS)
     soup = BeautifulSoup(r.text, "html.parser")
 
-    products_string = soup.find(class_=re.compile("collection-size")).text.strip()
-
-    info["number_of_products"] = int(re.search(r"\d+", products_string).group())
     info["number_of_pages"] = int(
-        soup.find_all(class_=re.compile("(?<!\S)pagination(?!\S)"))[0]
-        .find_all("span")[-2]
-        .a.text
+        soup.find(name="nav", class_="pagination").ul.find_all(name="li")[-2].a.text
     )
+
     return info
 
 
@@ -55,8 +52,10 @@ def get_sneakers_urls(page_url):
 
     return set(
         [
-            urljoin(HOSTNAME_URL, item["href"])
-            for item in soup.find_all(href=re.compile("/collections/sneakers/products"))
+            urljoin(HOSTNAME_URL, item.a["href"])
+            for item in soup.find_all(
+                name="div", class_="card__information product-card2"
+            )
         ]
     )
 
@@ -64,23 +63,24 @@ def get_sneakers_urls(page_url):
 def get_sneakers_metadata(soup):
     metadata = {}
 
-    meta_html = soup.find(name="div", class_="page-row-content").div.find_all(
-        name="meta"
+    metadata["brand"] = fix_string_for_s3(
+        soup.find(name="p", class_="product__text").text.strip()
     )
-
-    unused_keys = ["url", "image", "name"]
-    for meta in meta_html[1:]:
-        if meta.has_attr("itemprop") and meta["itemprop"] not in unused_keys:
-            key = meta["itemprop"].lower().strip()
-            metadata[key] = (
-                meta["content"].replace("\xa0", " ").strip().replace("\n", " ")
-            )
-
-    # format metadata brand
-    metadata["brand"] = fix_string_for_s3(metadata["brand"].lower())
-
     metadata["title"] = fix_string_for_s3(
-        (soup.find(name="main", id="MainContent").find_all(name="span")[2].text.strip())
+        soup.find(name="div", class_="product__title").h1.text.strip()
+    )
+    metadata["price"] = soup.find(
+        name="span", class_="price-item price-item--regular"
+    ).text.strip()
+
+    for span in soup.find_all(name="span", class_="product_description-name"):
+        key = span.contents[0].replace(" :", "").lower().replace(" ", "_")
+        metadata[key] = span.span.span.text.strip()
+
+    metadata["description"] = (
+        soup.find_all(name="div", class_="product__description")[0]
+        .text.strip()
+        .replace("\n", " ")
     )
 
     return metadata
@@ -88,14 +88,12 @@ def get_sneakers_metadata(soup):
 
 def get_sneakers_images(soup):
     images = []
-    images_section = soup.find_all(name="div", class_="swiper-slide product-image")
+    images_section = soup.find(name="div", class_="product-media-modal__content")
 
-    for product_image in images_section:
-        raw_image_html = product_image.find("a", {"data-fancybox": "productGallery"})
-        raw_image_url = remove_query_from_url(
-            remove_params_from_url(raw_image_html["href"])
+    for raw_image_url in images_section.find_all(name="img"):
+        image_url = add_https_to_url(
+            remove_query_from_url(remove_params_from_url(raw_image_url["src"]))
         )
-        image_url = add_https_to_url(raw_image_url)
         image_binary = requests.get(image_url).content
         image_ext = get_image_extension(image_url)
         images.append((image_binary, image_ext))
@@ -175,7 +173,7 @@ def upload_to_s3(file_to_upload, s3_path):
     )
 
 
-def parse_sneakerbaas(path, s3, old_urls=None):
+def parse_superkicks(path, s3, old_urls=None):
     full_metadata = []
 
     bar = tqdm(COLLECTIONS)
@@ -206,4 +204,4 @@ def parse_sneakerbaas(path, s3, old_urls=None):
 
 
 if __name__ == "__main__":
-    parse_sneakerbaas(path="data", s3=False)
+    parse_superkicks(path="data", s3=False)

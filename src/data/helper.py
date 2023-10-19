@@ -5,6 +5,10 @@ from pathlib import Path
 HEADERS = {"User-Agent": UserAgent().random}
 
 
+def get_parent_path(path):
+    return str(Path(path).parent)
+
+
 def get_hostname_url(url):
     parsed_url = urlsplit(url)
     return f"{parsed_url.scheme}://{parsed_url.netloc}"
@@ -41,3 +45,7 @@ def get_max_file_name(folder):
 
 def add_page_to_url(url, page_number):
     return urlparse(url)._replace(query=f"page={page_number}").geturl()
+
+
+def fix_string_for_s3(string):
+    return string.replace('"', "").replace("'", "").replace("/", "").replace("\\", "")

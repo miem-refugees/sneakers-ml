@@ -1,10 +1,11 @@
 from bs4 import BeautifulSoup
 import requests
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 import os
 from tqdm.auto import tqdm, trange
 import pandas as pd
 import itertools
+import boto3
 
 from helper import (
     add_https_to_url,
@@ -13,6 +14,8 @@ from helper import (
     get_max_file_name,
     remove_query_from_url,
     remove_params_from_url,
+    get_parent_path,
+    fix_string_for_s3,
     HEADERS,
 )
 
@@ -26,6 +29,7 @@ COLLECTIONS = [
         ["sneakers", "basketball-sneakers", "classics-sneakers", "skateboard-sneakers"],
     )
 ]
+BUCKET = "sneakers-ml"
 
 
 def get_collection_info(collection):
@@ -59,8 +63,12 @@ def get_sneakers_urls(page_url):
 def get_sneakers_metadata(soup):
     metadata = {}
 
-    metadata["brand"] = soup.find(name="p", class_="product__text").text.strip()
-    metadata["title"] = soup.find(name="div", class_="product__title").h1.text.strip()
+    metadata["brand"] = fix_string_for_s3(
+        soup.find(name="p", class_="product__text").text.strip()
+    )
+    metadata["title"] = fix_string_for_s3(
+        soup.find(name="div", class_="product__title").h1.text.strip()
+    )
     metadata["price"] = soup.find(
         name="span", class_="price-item price-item--regular"
     ).text.strip()
@@ -93,7 +101,7 @@ def get_sneakers_images(soup):
     return images
 
 
-def save_sneakers_images_local(images, path, collection, brand, title):
+def save_sneakers_images(images, path, collection, brand, title, s3):
     dir = os.path.join(
         path,
         WEBSITE_NAME,
@@ -103,17 +111,22 @@ def save_sneakers_images_local(images, path, collection, brand, title):
         title,
     )
     os.makedirs(dir, exist_ok=True)
+    s3_dir = ""
 
     i = get_max_file_name(dir)
     for image_binary, image_ext in images:
         i += 1
-        with open(os.path.join(dir, str(i) + image_ext), "wb") as f:
+        image_path = os.path.join(dir, str(i) + image_ext)
+        with open(image_path, "wb") as f:
             f.write(image_binary)
 
-    return dir
+        if s3:
+            s3_dir = upload_to_s3(image_path, image_path)
+
+    return dir, s3_dir
 
 
-def parse_sneakers(url, collection_info, path, s3=False):
+def parse_sneakers(url, collection_info, path, s3):
     r = requests.get(url, headers=HEADERS)
     soup = BeautifulSoup(r.text, "html.parser")
 
@@ -124,27 +137,43 @@ def parse_sneakers(url, collection_info, path, s3=False):
     metadata["collection_url"] = collection_info["url"]
     metadata["url"] = url
 
-    photos_path = save_sneakers_images_local(
+    photos_path, s3_path = save_sneakers_images(
         images,
         path,
         metadata["collection_name"],
         metadata["brand"],
         metadata["title"],
-    )  # or S3
+        s3,
+    )
 
     metadata["photos_path"] = photos_path
+    metadata["s3_path"] = s3_path
 
     return metadata
 
 
-def save_metadata(metadata, path, collection="", s3=False):
+def save_metadata(metadata, path, collection, s3):
+    dir = os.path.join(path, WEBSITE_NAME, collection, "metadata.csv")
     df = pd.DataFrame(metadata)
-    df.to_csv(os.path.join(path, WEBSITE_NAME, collection, "metadata.csv"), index=False)
+    df.to_csv(dir, index=False)
+
+    if s3:
+        upload_to_s3(dir, dir)
 
 
-def parse_superkicks(path="data", s3=False):
-    print(f"{len(COLLECTIONS)} collections found")
+def upload_to_s3(file_to_upload, s3_path):
+    s3 = boto3.resource(
+        service_name="s3", endpoint_url="https://storage.yandexcloud.net"
+    )
+    s3.Bucket(BUCKET).upload_file(file_to_upload, s3_path)
+    return (
+        urlparse("")
+        ._replace(scheme="s3", netloc=BUCKET, path=get_parent_path(s3_path))
+        .geturl()
+    )
 
+
+def parse_superkicks(path, s3, old_urls=None):
     full_metadata = []
 
     bar = tqdm(COLLECTIONS)
@@ -160,19 +189,19 @@ def parse_superkicks(path="data", s3=False):
         pbar = trange(1, collection_info["number_of_pages"] + 1, leave=False)
         for page in pbar:
             page_url = add_page_to_url(collection_info["url"], page)
-            pbar.set_description(f"Page {page} | {page_url}")
             sneakers_urls = get_sneakers_urls(page_url)
+            pbar.set_description(f"Page {page} | {page_url}")
             for sneakers_url in tqdm(sneakers_urls, leave=False):
-                metadata = parse_sneakers(sneakers_url, collection_info, path="data")
+                metadata = parse_sneakers(sneakers_url, collection_info, path, s3)
                 metadata_collection.append(metadata)
 
-        save_metadata(metadata_collection, path, collection)
+        save_metadata(metadata_collection, path, collection, s3)
 
         full_metadata += metadata_collection
 
-    save_metadata(full_metadata, path)
+    save_metadata(full_metadata, path, "", s3)
     print(f"Collected {len(full_metadata)} sneakers from {WEBSITE_NAME} website")
 
 
 if __name__ == "__main__":
-    parse_superkicks()
+    parse_superkicks(path="data", s3=False)

@@ -14,6 +14,10 @@ def remove_query_from_url(url):
     return urlparse(url)._replace(query="").geturl()
 
 
+def remove_params_from_url(url):
+    return urlparse(url)._replace(params="").geturl()
+
+
 def add_https_to_url(url):
     return urlparse(url)._replace(scheme="https").geturl()
 

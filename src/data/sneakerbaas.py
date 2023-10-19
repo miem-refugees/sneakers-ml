@@ -11,6 +11,7 @@ from .helper import (
     add_page_to_url,
     get_image_extension,
     get_max_file_name,
+    remove_query_from_url,
     HEADERS,
 )
 

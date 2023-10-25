@@ -5,8 +5,8 @@
 ## Чекпоинты
 
 - [ ] [Поиск и сбор данных](https://docs.google.com/document/d/1ZiSaJdyIBDxR2tN6hkaq2Dc5KgajTxphSlj7CzCoUAg)
-  - [ ] Парсинг [sneakerbaas](sneakerbaas.com)
-  - [ ] Парсинг [superkicks](superkicks.in)
+  - [ ] Парсинг [sneakerbaas](https://www.sneakerbaas.com)
+  - [ ] Парсинг [superkicks](https://www.superkicks.in)
 
   - [ ] Выгрузка данных на s3
   - [ ] Объединение данных в одну базу
@@ -30,6 +30,30 @@ DL:
 - Обучение моделей с similarity learning
 - Добавить text2image и image2text поиск
 - Если модели работали на "чистых" изображениях (без фона), попробовать использовать данные из реального мира
+
+## [Требования](https://docs.google.com/document/d/1Gdz3_W7x7L9Ff1-Sl61Cv3L6GHBiceH863Vn1ucXzjU/edit)
+
+Требования к инфраструктурной части общие для всех проектов.
+ • Язык разработки: Python 3.10.4
+ • Менеджмент зависимостей: pip, conda
+ • Менеджмент версий python: pyenv, poetry
+ • Управление виртуальными окружениями: pyenv-virtualenv
+ • Система контроля версий: git (gitlab)
+ • Система контроля версий данных, менеджмент workflow: dvc, google drive
+ • Шаблонизатор: coockiecutter
+ • Линтер: flake8
+ • Автоформаттер: black
+ • CLI: click, argparse
+ • Мониторинг: MLflow
+ • ML-стэк: catboost, sklearn, pandas, numpy, pytorch
+ • Parsing-стэк: pyautogui
+ • Тестирование: pytest
+
+Проект разбит на несколько этапов, также общих для всех задач
+
+Этап 1: сбор данных; анализ данных без ML; визуализация в виде графиков и гистограмм
+Этап 2: доработка кода; использование инструментов промышленной разработки; внедрение ML.
+Этап 3: внедрение DL. Доработка задачи.
 
 ## Список членов команды
 

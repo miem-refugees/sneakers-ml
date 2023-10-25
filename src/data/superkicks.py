@@ -1,10 +1,10 @@
 from bs4 import BeautifulSoup
 import requests
 from urllib.parse import urljoin
-import os
 from tqdm.auto import tqdm, trange
 import itertools
 from typing import Union
+from pathlib import Path
 
 from helper import (
     add_https,
@@ -107,10 +107,10 @@ def parse_sneakers(
     metadata["collection_url"] = collection_info["url"]
     metadata["url"] = url
 
-    website_dir = os.path.join(dir, WEBSITE_NAME)
-    images_dir = os.path.join(metadata["collection_name"], "images")
-    brand_dir = os.path.join(metadata["brand"], metadata["title"])
-    save_dir = os.path.join(website_dir, images_dir, brand_dir)
+    website_dir = str(Path(dir, WEBSITE_NAME))
+    images_dir = str(Path(metadata["collection_name"], "images"))
+    brand_dir = str(Path(metadata["brand"], metadata["title"]))
+    save_dir = str(Path(website_dir, images_dir, brand_dir))
 
     images_dir, s3_dir = save_images(images, save_dir.lower(), s3)
 
@@ -145,9 +145,9 @@ def parse_superkicks_collection(
         pbar.set_description(f"Page {page}")
         metadata_collection += parse_superkicks_page(dir, collection_info, page, s3)
 
-    website_dir = os.path.join(dir, WEBSITE_NAME)
-    csv_path = os.path.join(collection, "metadata.csv")
-    metadata_path = os.path.join(website_dir, csv_path.lower())
+    website_dir = str(Path(dir, WEBSITE_NAME))
+    csv_path = str(Path(collection, "metadata.csv"))
+    metadata_path = str(Path(website_dir, csv_path.lower()))
 
     save_metadata(metadata_collection, metadata_path, INDEX_COLUMN, s3)
 
@@ -162,9 +162,10 @@ def parse_superkicks(dir: str, s3: bool) -> None:
         bar.set_description(f"Collection: {collection}")
         full_metadata += parse_superkicks_collection(dir, collection, s3)
 
-    save_metadata(full_metadata, dir, INDEX_COLUMN, s3)
+    metadata_path = str(Path(dir, "metadata.csv"))
+    save_metadata(full_metadata, metadata_path, INDEX_COLUMN, s3)
     print(f"Collected {len(full_metadata)} sneakers from {WEBSITE_NAME} website")
 
 
 if __name__ == "__main__":
-    parse_superkicks(dir="data", s3=False)
+    parse_superkicks(dir=str(Path("data", "raw")), s3=False)

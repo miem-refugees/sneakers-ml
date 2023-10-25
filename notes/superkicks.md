@@ -17,10 +17,11 @@
 
 | Вид | Картинка |
 |---|---|
-| Справа |  |
-| Спереди |  |
-| Сзади |  |
-| Задняя часть |  |
+| Справа | ![image](https://github.com/miem-refugees/sneakers-ml/assets/57370975/c4347ddf-cb57-4907-8ca8-26b1228cdcce) |
+| Спереди | ![image](https://github.com/miem-refugees/sneakers-ml/assets/57370975/953a8a7b-10c2-4bd1-8011-5ab76def0aa3) |
+| Сзади | ![image](https://github.com/miem-refugees/sneakers-ml/assets/57370975/f385b140-c14a-4088-ba55-a2f88a6ded83) |
+| Передняя часть | ![image](https://github.com/miem-refugees/sneakers-ml/assets/57370975/f5518b95-6fb1-4b7b-8ebc-01fae3812fb7) |
+| Задняя часть | ![image](https://github.com/miem-refugees/sneakers-ml/assets/57370975/3e4750d7-98cd-4ee0-8966-18c37fd6df42) |
 
 Есть, модели в которых не хватает фотографий, есть те, где есть дополнительные.
 

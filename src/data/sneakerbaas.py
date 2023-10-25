@@ -161,7 +161,8 @@ def parse_sneakerbaas(dir: str, s3: bool) -> None:
         bar.set_description(f"Collection: {collection}")
         full_metadata += parse_sneakerbaas_collection(dir, collection, s3)
 
-    metadata_path = str(Path(dir, "metadata.csv"))
+    website_dir = str(Path(dir, WEBSITE_NAME))
+    metadata_path = str(Path(website_dir, "metadata.csv"))
     save_metadata(full_metadata, metadata_path, INDEX_COLUMN, s3)
     print(f"Collected {len(full_metadata)} sneakers from {WEBSITE_NAME} website")
 

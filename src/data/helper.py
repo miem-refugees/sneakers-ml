@@ -152,7 +152,7 @@ def save_metadata(
     if Path(path).is_file():
         old_df = pd.read_csv(path)
         df = pd.concat([old_df, df])
-        df = df.drop_duplicates(subset=index_column, keep="last").reset_index(drop=True)
+        df = df.drop_duplicates(subset=index_column, keep="first").reset_index(drop=True)
 
     df.to_csv(path, index=False)
 

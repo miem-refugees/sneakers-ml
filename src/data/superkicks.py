@@ -169,4 +169,4 @@ def parse_superkicks(dir: str, s3: bool) -> None:
 
 
 if __name__ == "__main__":
-    parse_superkicks(dir=str(Path("data", "raw")), s3=False)
+    parse_superkicks(dir=str(Path("data", "raw")), s3=True)

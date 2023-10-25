@@ -17,11 +17,11 @@
 
 | Вид | Картинка |
 |---|---|
-| Справа | ![image](https://github.com/miem-refugees/sneakers-ml/assets/57370975/c4347ddf-cb57-4907-8ca8-26b1228cdcce) |
-| Спереди | ![image](https://github.com/miem-refugees/sneakers-ml/assets/57370975/953a8a7b-10c2-4bd1-8011-5ab76def0aa3) |
-| Сзади | ![image](https://github.com/miem-refugees/sneakers-ml/assets/57370975/f385b140-c14a-4088-ba55-a2f88a6ded83) |
-| Передняя часть | ![image](https://github.com/miem-refugees/sneakers-ml/assets/57370975/f5518b95-6fb1-4b7b-8ebc-01fae3812fb7) |
-| Задняя часть | ![image](https://github.com/miem-refugees/sneakers-ml/assets/57370975/3e4750d7-98cd-4ee0-8966-18c37fd6df42) |
+| Справа | ![image](https://github.com/miem-refugees/sneakers-ml/assets/57370975/f2c43479-4069-42b7-87fe-12ead6d2943b) |
+| Спереди | ![image](https://github.com/miem-refugees/sneakers-ml/assets/57370975/1b8bb638-b1d2-48bb-b3de-e9ebcc16c907) |
+| Сзади | ![image](https://github.com/miem-refugees/sneakers-ml/assets/57370975/ebd62ffd-6ca5-4c39-b713-d6b4482f0dbf) |
+| Передняя часть | ![image](https://github.com/miem-refugees/sneakers-ml/assets/57370975/dbc13ed8-54e3-4ece-9d2d-e49410a29500) |
+| Задняя часть | ![image](https://github.com/miem-refugees/sneakers-ml/assets/57370975/a025d0eb-f9cd-4bab-947f-723af3092ff5) |
 
 Есть, модели в которых не хватает фотографий, есть те, где есть дополнительные.
 

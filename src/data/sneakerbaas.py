@@ -2,7 +2,6 @@ from bs4 import BeautifulSoup
 import requests
 from urllib.parse import urljoin
 import re
-import os
 from tqdm.auto import tqdm, trange
 from typing import Union
 from pathlib import Path

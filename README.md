@@ -7,10 +7,11 @@
 - [ ] [Поиск и сбор данных](https://docs.google.com/document/d/1ZiSaJdyIBDxR2tN6hkaq2Dc5KgajTxphSlj7CzCoUAg)
   - [ ] Парсинг [sneakerbaas](https://www.sneakerbaas.com)
   - [ ] Парсинг [superkicks](https://www.superkicks.in)
+  - [ ] Парсинг [highsnobiety](https://www.highsnobiety.com)
 
   - [ ] Выгрузка данных на s3
   - [ ] Объединение данных в одну базу
-  - [ ] [Документация и описание данных]()
+  - [ ] [Документация и описание данных](notes/data.md)
   - [ ] Настроить poetry
 
 ## План работы

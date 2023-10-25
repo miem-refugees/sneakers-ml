@@ -93,20 +93,20 @@ def image_exists(dir: str, image_binary: bytes) -> bool:
 
 def form_s3_url(path: str) -> str:
     """
-    Returns s3 path in "s3://bucket_name/s3_path" format
+    Returns s3 path in "s3://bucket/path" format.
     """
     s3_url = urlparse("")._replace(scheme="s3", netloc=BUCKET, path=get_parent(path))
     return s3_url.geturl()
 
 
-def upload_local_s3(local_path: str, s3_path: str) -> str:
+def upload_local_s3(local_dir: str, s3_dir: str) -> str:
     """
-    Uploads file from "local_path" path to "s3_path" path and returns
-    s3 path in "s3://bucket_name/s3_path" format
+    Uploads file from "local_dir" dir to "s3_dir" dir and returns
+    s3 dir in "s3://bucket/s3_dir" format
     """
     s3 = boto3.resource(service_name="s3", endpoint_url=YANDEX_URL)
-    s3.Bucket(BUCKET).upload_file(local_path, s3_path)
-    return form_s3_url(s3_path)
+    s3.Bucket(BUCKET).upload_file(local_dir, s3_dir)
+    return form_s3_url(s3_dir)
 
 
 def fix_html_text(text: str) -> str:
@@ -117,28 +117,27 @@ def fix_html_text(text: str) -> str:
 
 
 def save_images(
-    images: tuple[bytes, str], path: str, s3: bool = False
+    images: tuple[bytes, str], dir: str, s3: bool = False
 ) -> tuple[str, str]:
     """
-    Save images to path, upload to s3 if required.
+    Save images to dir, upload to s3 if required.
     """
-    Path(path).mkdir(parents=True, exist_ok=True)
-    s3_path = ""
+    Path(dir).mkdir(parents=True, exist_ok=True)
+    s3_dir = ""
 
-    current_max_file_name = get_max_file_name(path)
+    current_max_file_name = get_max_file_name(dir)
 
     for image_binary, image_ext in images:
-        if not image_exists(path, image_binary):
+        if not image_exists(dir, image_binary):
             current_max_file_name += 1
-            image_path = str(Path(path, str(current_max_file_name) + image_ext))
-            with open(image_path, "wb") as f:
+            image_dir = str(Path(dir, str(current_max_file_name) + image_ext))
+            with open(image_dir, "wb") as f:
                 f.write(image_binary)
 
             if s3:
-                s3_path = upload_local_s3(image_path, image_path)
-            print(f"{path} found new photo")
+                s3_dir = upload_local_s3(image_dir, image_dir)
 
-    return path, s3_path
+    return dir, s3_dir
 
 
 def save_metadata(

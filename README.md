@@ -2,6 +2,10 @@
 
 ## Описание проекта
 
+- [Описание папок с данными](notes/data.md)
+- [Описание данных sneakerbaas](notes/sneakerbaas.md)
+- [Описание данных superkicks](notes/superkicks.md)
+
 ## Чекпоинты
 
 - [ ] [Поиск и сбор данных](https://docs.google.com/document/d/1ZiSaJdyIBDxR2tN6hkaq2Dc5KgajTxphSlj7CzCoUAg)
@@ -11,7 +15,7 @@
 
   - [x] Выгрузка данных на s3
   - [ ] Объединение данных в одну базу
-  - [ ] [Документация и описание данных](notes/data.md)
+  - [x] [Документация и описание данных](notes/)
   - [x] Настроить poetry
 
 ## План работы

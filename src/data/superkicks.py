@@ -1,22 +1,16 @@
 from bs4 import BeautifulSoup
 import requests
 from urllib.parse import urljoin
-from tqdm.auto import tqdm, trange
 import itertools
 from typing import Union
 from pathlib import Path
-
+from base import AbstractParser
 from helper import (
     add_https,
-    add_page,
-    get_image_extension,
     remove_query,
     remove_params,
     fix_string,
     fix_html_text,
-    save_images,
-    save_metadata,
-    HEADERS,
 )
 
 
@@ -30,143 +24,69 @@ COLLECTIONS = [
         ["sneakers", "basketball-sneakers", "classics-sneakers", "skateboard-sneakers"],
     )
 ]
-INDEX_COLUMN = ["url", "collection_name"]
+INDEX_COLUMNS = ["url", "collection_name"]
 
 
-def get_collection_info(collection: str) -> dict[str, Union[str, int]]:
-    info = {"name": collection}
-    info["url"] = urljoin(COLLECTIONS_URL, collection)
+class SuperkicksParser(AbstractParser):
+    def get_collection_info(self, collection: str) -> dict[str, Union[str, int]]:
+        info = {"name": collection}
+        info["url"] = urljoin(self.collections_url, collection)
 
-    r = requests.get(info["url"], headers=HEADERS)
-    soup = BeautifulSoup(r.text, "html.parser")
+        r = requests.get(info["url"], headers=self.headers)
+        soup = BeautifulSoup(r.text, "html.parser")
 
-    pagination = soup.find(name="nav", class_="pagination").ul.find_all(name="li")
+        pagination = soup.find(name="nav", class_="pagination").ul.find_all(name="li")
 
-    info["number_of_pages"] = int(pagination[-2].a.text)
+        info["number_of_pages"] = int(pagination[-2].a.text)
 
-    return info
+        return info
 
+    def get_sneakers_urls(self, page_url: str) -> set[str]:
+        r = requests.get(page_url, headers=self.headers)
+        soup = BeautifulSoup(r.text, "html.parser")
 
-def get_sneakers_urls(page_url: str) -> set[str]:
-    r = requests.get(page_url, headers=HEADERS)
-    soup = BeautifulSoup(r.text, "html.parser")
+        products_section = soup.find_all(
+            name="div", class_="card__information product-card2"
+        )
+        sneakers_urls = [
+            urljoin(self.hostname_url, item.a["href"]) for item in products_section
+        ]
 
-    products_section = soup.find_all(
-        name="div", class_="card__information product-card2"
-    )
-    sneakers_urls = [urljoin(HOSTNAME_URL, item.a["href"]) for item in products_section]
+        return set(sneakers_urls)
 
-    return set(sneakers_urls)
+    def get_sneakers_metadata(self, soup: BeautifulSoup) -> dict[str, str]:
+        metadata = {}
 
+        brand_section = soup.find(name="p", class_="product__text")
+        title_section = soup.find(name="div", class_="product__title").h1
+        price_section = soup.find(name="span", class_="price-item price-item--regular")
+        description_section = soup.find(name="div", class_="product__description")
 
-def get_sneakers_metadata(soup: BeautifulSoup) -> dict[str, str]:
-    metadata = {}
+        metadata["brand"] = fix_string(brand_section.text)
+        metadata["title"] = fix_string(title_section.text)
+        metadata["price"] = fix_html_text(price_section.text)
 
-    brand_section = soup.find(name="p", class_="product__text")
-    title_section = soup.find(name="div", class_="product__title").h1
-    price_section = soup.find(name="span", class_="price-item price-item--regular")
-    description_section = soup.find(name="div", class_="product__description")
+        for span in soup.find_all(name="span", class_="product_description-name"):
+            key = span.contents[0].replace(" :", "").lower().replace(" ", "_")
+            metadata[key] = fix_html_text(span.span.span.text)
 
-    metadata["brand"] = fix_string(brand_section.text)
-    metadata["title"] = fix_string(title_section.text)
-    metadata["price"] = fix_html_text(price_section.text)
+        metadata["description"] = fix_html_text(description_section.text)
 
-    for span in soup.find_all(name="span", class_="product_description-name"):
-        key = span.contents[0].replace(" :", "").lower().replace(" ", "_")
-        metadata[key] = fix_html_text(span.span.span.text)
+        return metadata
 
-    metadata["description"] = fix_html_text(description_section.text)
+    def get_sneakers_images_urls(self, soup: BeautifulSoup) -> list[str]:
+        images_urls = []
 
-    return metadata
+        images_section = soup.find(name="div", class_="product-media-modal__content")
 
+        for raw_image_url in images_section.find_all(name="img"):
+            image_url = add_https(remove_query(remove_params(raw_image_url["src"])))
+            images_urls.append(image_url)
 
-def get_sneakers_images(soup: BeautifulSoup) -> list[tuple[bytes, str]]:
-    images = []
-
-    images_section = soup.find(name="div", class_="product-media-modal__content")
-
-    for raw_image_url in images_section.find_all(name="img"):
-        image_url = add_https(remove_query(remove_params(raw_image_url["src"])))
-        image_binary = requests.get(image_url).content
-        image_ext = get_image_extension(image_url)
-        images.append((image_binary, image_ext))
-
-    return images
-
-
-def parse_sneakers(
-    url: str, collection_info: dict[str, Union[int, str]], dir: str, s3: bool
-) -> dict[str, str]:
-    r = requests.get(url, headers=HEADERS)
-    soup = BeautifulSoup(r.text, "html.parser")
-
-    metadata = get_sneakers_metadata(soup)
-    images = get_sneakers_images(soup)
-
-    metadata["collection_name"] = collection_info["name"]
-    metadata["collection_url"] = collection_info["url"]
-    metadata["url"] = url
-
-    website_dir = str(Path(dir, WEBSITE_NAME))
-    images_dir = str(Path(metadata["collection_name"], "images"))
-    brand_dir = str(Path(metadata["brand"], metadata["title"]))
-    save_dir = str(Path(website_dir, images_dir, brand_dir)).lower()
-
-    images_dir, s3_dir = save_images(images, save_dir, s3)
-
-    metadata["images_dir"] = images_dir
-    metadata["s3_dir"] = s3_dir
-
-    return metadata
-
-
-def parse_superkicks_page(
-    dir: str, collection_info: dict[str, Union[int, str]], page: int, s3: bool
-) -> list[dict[str, str]]:
-    metadata_page = []
-    page_url = add_page(collection_info["url"], page)
-    sneakers_urls = get_sneakers_urls(page_url)
-
-    for sneakers_url in tqdm(sneakers_urls, leave=False):
-        metadata = parse_sneakers(sneakers_url, collection_info, dir, s3)
-        metadata_page.append(metadata)
-
-    return metadata_page
-
-
-def parse_superkicks_collection(
-    dir: str, collection: str, s3: bool
-) -> list[dict[str, str]]:
-    metadata_collection = []
-    collection_info = get_collection_info(collection)
-
-    pbar = trange(1, collection_info["number_of_pages"] + 1, leave=False)
-    for page in pbar:
-        pbar.set_description(f"Page {page}")
-        metadata_collection += parse_superkicks_page(dir, collection_info, page, s3)
-
-    website_dir = str(Path(dir, WEBSITE_NAME))
-    csv_path = str(Path(collection, "metadata.csv"))
-    metadata_path = str(Path(website_dir, csv_path))
-
-    save_metadata(metadata_collection, metadata_path.lower(), INDEX_COLUMN, s3)
-
-    return metadata_collection
-
-
-def parse_superkicks(dir: str, s3: bool) -> None:
-    full_metadata = []
-
-    bar = tqdm(COLLECTIONS)
-    for collection in bar:
-        bar.set_description(f"Collection: {collection}")
-        full_metadata += parse_superkicks_collection(dir, collection, s3)
-
-    website_dir = str(Path(dir, WEBSITE_NAME))
-    metadata_path = str(Path(website_dir, "metadata.csv"))
-    save_metadata(full_metadata, metadata_path, INDEX_COLUMN, s3)
-    print(f"Collected {len(full_metadata)} sneakers from {WEBSITE_NAME} website")
+        return images_urls
 
 
 if __name__ == "__main__":
-    parse_superkicks(dir=str(Path("data", "raw")), s3=False)
+    SuperkicksParser(
+        WEBSITE_NAME, COLLECTIONS_URL, HOSTNAME_URL, COLLECTIONS, INDEX_COLUMNS
+    ).parse_website(dir=str(Path("data", "raw")), s3=False)

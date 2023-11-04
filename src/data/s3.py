@@ -22,8 +22,7 @@ class S3Storage(AbstractStorage):
         """
         Uploads Python binary to s3_path location
         """
-        object = self.s3.Object(self.bucket_name, s3_path)
-        object.put(Body=binary_data)
+        self.s3.Object(self.bucket_name, s3_path).put(Body=binary_data)
 
     def upload_file(self, local_path: str, s3_path: str) -> None:
         """
@@ -52,3 +51,25 @@ class S3Storage(AbstractStorage):
         """
         s3_objects = self.bucket.objects.filter(Prefix=path_prefix).all()
         return [Path(f.key).name for f in s3_objects]
+
+    def get_max_file_name(self, path: str) -> int:
+        """
+        Returns the max integer file number in the "path" folder.
+        Example files: 1.png, 2.png, 3.png. Returned value: 3.
+        Returns -1 if the folder is empty.
+        """
+        filenames = self.get_all_files(path)
+        if filenames:
+            without_ext = [int(Path(fn).stem) for fn in filenames]
+            return max(without_ext)
+        else:
+            return -1
+
+    # def file_exists(self, path: str, image_binary: bytes) -> bool:
+    #     images = self.get_all_files(path)
+
+    #     for image in images:
+    #         if open(image, "rb").read() == image_binary:
+    #             return True
+
+    #     return False

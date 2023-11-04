@@ -7,22 +7,19 @@ from PIL import Image
 from bs4 import BeautifulSoup
 import requests
 from helper import (
-    add_https,
     add_page,
     get_image_extension,
-    remove_query,
-    remove_params,
-    fix_string,
-    fix_html_text,
-    save_images,
-    save_metadata,
-    HEADERS,
 )
 from fake_useragent import UserAgent
 from tqdm.auto import tqdm, trange
+from local import get_filenames, file_exists, get_max_file_name
 
 
 class AbstractStorage(ABC):
+    @abstractmethod
+    def upload_binary(self, binary_data: bytes, s3_path: str) -> None:
+        raise NotImplemented
+
     @abstractmethod
     def upload_file(self, local_path: str, s3_path: str) -> None:
         raise NotImplemented
@@ -65,32 +62,40 @@ class AbstractParser(ABC):
         hostname_url: str,
         collections: list[str],
         index_columns: list[str],
+        path: str,
+        save_local: bool,
+        save_s3: bool,
     ):
         self.website_name = website_name
         self.collections_url = collections_url
         self.hostname_url = hostname_url
         self.collections = collections
         self.index_columns = index_columns
+
+        self.path = path
+        self.save_local = save_local
+        self.save_s3 = save_s3
+
         self.headers = {"User-Agent": UserAgent().random}
+        self.website_path = str(Path(self.path, self.website_name))
 
     @abstractmethod
-    def get_collection_info(collection: str) -> dict[str, Union[str, int]]:
+    def get_collection_info(self, collection: str) -> dict[str, Union[str, int]]:
         raise NotImplemented
 
     @abstractmethod
-    def get_sneakers_urls(page_url: str) -> set[str]:
+    def get_sneakers_urls(self, page_url: str) -> set[str]:
         raise NotImplemented
 
     @abstractmethod
-    def get_sneakers_metadata(soup: BeautifulSoup) -> dict[str, str]:
+    def get_sneakers_metadata(self, soup: BeautifulSoup) -> dict[str, str]:
         raise NotImplemented
 
     @abstractmethod
     def get_sneakers_images_urls(self, soup: BeautifulSoup) -> list[str]:
         raise NotImplemented
 
-    def get_sneakers_images(self, soup: BeautifulSoup) -> list[tuple[bytes, str]]:
-        images_urls = self.get_sneakers_images_urls(soup)
+    def get_sneakers_images(self, images_urls: list[str]) -> list[tuple[bytes, str]]:
         images = []
         for image_url in images_urls:
             image_binary = requests.get(image_url, headers=self.headers).content
@@ -100,32 +105,34 @@ class AbstractParser(ABC):
         return images
 
     def parse_sneakers(
-        self, url: str, collection_info: dict[str, Union[int, str]], dir: str, s3: bool
+        self, url: str, collection_info: dict[str, Union[int, str]]
     ) -> dict[str, str]:
+        """
+        Parses metadata and images of one pair of sneakers
+        """
         r = requests.get(url, headers=self.headers)
         soup = BeautifulSoup(r.text, "html.parser")
 
         metadata = self.get_sneakers_metadata(soup)
-        images = self.get_sneakers_images(soup)
+        images_urls = self.get_sneakers_images_urls(soup)
+        images = self.get_sneakers_images(images_urls)
 
         metadata["collection_name"] = collection_info["name"]
         metadata["collection_url"] = collection_info["url"]
         metadata["url"] = url
 
-        website_dir = str(Path(dir, self.website_name))
-        images_dir = str(Path(metadata["collection_name"], "images"))
-        brand_dir = str(Path(metadata["brand"], metadata["title"]))
-        save_dir = str(Path(website_dir, images_dir, brand_dir))
+        images_path = str(Path(metadata["collection_name"], "images"))
+        brand_path = str(Path(metadata["brand"], metadata["title"]))
+        save_path = str(Path(self.website_path, images_path, brand_path)).lower()
 
-        images_dir, s3_dir = save_images(images, save_dir.lower(), s3)
+        self.save_images(images, save_path)
 
-        metadata["images_dir"] = images_dir
-        metadata["s3_dir"] = s3_dir
+        metadata["images_path"] = save_path
 
         return metadata
 
     def parse_page(
-        self, dir: str, collection_info: dict[str, Union[int, str]], page: int, s3: bool
+        self, collection_info: dict[str, Union[int, str]], page: int
     ) -> list[dict[str, str]]:
         metadata_page = []
 
@@ -133,14 +140,14 @@ class AbstractParser(ABC):
         sneakers_urls = self.get_sneakers_urls(page_url)
 
         for sneakers_url in tqdm(sneakers_urls, leave=False):
-            metadata = self.parse_sneakers(sneakers_url, collection_info, dir, s3)
+            metadata = self.parse_sneakers(
+                sneakers_url, collection_info, self.path_prefix
+            )
             metadata_page.append(metadata)
 
         return metadata_page
 
-    def parse_collection(
-        self, dir: str, collection: str, s3: bool
-    ) -> list[dict[str, str]]:
+    def parse_collection(self, collection: str) -> list[dict[str, str]]:
         metadata_collection = []
 
         collection_info = self.get_collection_info(collection)
@@ -148,27 +155,64 @@ class AbstractParser(ABC):
         pbar = trange(1, collection_info["number_of_pages"] + 1, leave=False)
         for page in pbar:
             pbar.set_description(f"Page {page}")
-            metadata_collection += self.parse_page(dir, collection_info, page, s3)
+            metadata_collection += self.parse_page(collection_info, page)
 
-        website_dir = str(Path(dir, self.website_name))
         csv_path = str(Path(collection, "metadata.csv"))
-        metadata_path = str(Path(website_dir, csv_path)).lower()
+        metadata_path = str(Path(self.website_path, csv_path)).lower()  # todo
 
-        save_metadata(metadata_collection, metadata_path, self.index_columns, s3)
+        self.save_metadata(metadata_collection, metadata_path, self.index_columns)
 
         return metadata_collection
 
-    def parse_website(self, dir: str, s3: bool) -> None:
+    def parse_website(self) -> list[dict[str, str]]:
         full_metadata = []
 
         bar = tqdm(self.collections)
         for collection in bar:
             bar.set_description(f"Collection: {collection}")
-            full_metadata += self.parse_collection(dir, collection, s3)
+            full_metadata += self.parse_collection(collection)
 
-        website_dir = str(Path(dir, self.website_name))
-        metadata_path = str(Path(website_dir, "metadata.csv"))
-        save_metadata(full_metadata, metadata_path, self.index_columns, s3)
+        metadata_path = str(Path(self.website_path, "metadata.csv"))
+        self.save_metadata(full_metadata, metadata_path, self.index_columns)
         print(
             f"Collected {len(full_metadata)} sneakers from {self.website_name} website"
         )
+        return full_metadata
+
+    def images_to_storage(
+        self, storage: AbstractStorage, images: tuple[bytes, str], path: str
+    ):
+        current_max_file_name = storage.get_max_file_name(path)
+
+        for image_binary, image_ext in images:
+            current_max_file_name += 1
+            image_path = str(Path(path, str(current_max_file_name) + image_ext))
+            storage.upload_binary(image_binary, image_path)
+
+    def save_images(self, images: tuple[bytes, str], path: str):
+        if self.save_local:
+            Path(path).mkdir(parents=True, exist_ok=True)
+            self.images_to_storage(LocalStorage(), images, path)
+        if self.save_s3:
+            self.images_to_storage(S3Storage(), images, path)
+
+    def save_metadata(
+        metadata: dict[str, str], path: str, index_column: str, s3: bool = False
+    ) -> None:
+        """
+        Saves metadata dict in .csv format in path. If .csv already exists, concats the data and
+        removes duplicates by index_column. Uploads to s3 if required.
+        """
+        df = pd.DataFrame(metadata)
+
+        if Path(path).is_file():
+            old_df = pd.read_csv(path)
+            df = pd.concat([old_df, df])
+            df = df.drop_duplicates(subset=index_column, keep="first").reset_index(
+                drop=True
+            )
+
+        df.to_csv(path, index=False)
+
+        if s3:
+            upload_local_s3(path, path)

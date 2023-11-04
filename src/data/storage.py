@@ -2,7 +2,6 @@ from base import AbstractStorage
 from pathlib import Path
 import pandas as pd
 
-
 def images_to_storage(storage: AbstractStorage, images: tuple[bytes, str], path: str):
     current_max_file_name = storage.get_max_file_name(path)
 

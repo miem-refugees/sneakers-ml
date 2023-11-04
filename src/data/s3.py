@@ -18,12 +18,6 @@ class S3Storage(AbstractStorage):
         )
         self.bucket = self.s3.Bucket(bucket_name)
 
-    def upload_binary(self, binary_data: bytes, s3_path: str) -> None:
-        """
-        Uploads Python binary to s3_path location
-        """
-        self.s3.Object(self.bucket_name, s3_path).put(Body=binary_data)
-
     def upload_file(self, local_path: str, s3_path: str) -> None:
         """
         Uploads file from "local_path" dir to "s3_path" dir and returns
@@ -31,7 +25,19 @@ class S3Storage(AbstractStorage):
         """
         self.bucket.upload_file(local_path, s3_path)
 
-    def download_file(self, s3_path: str) -> bytes:
+    def upload_binary(self, binary_data: bytes, s3_path: str) -> None:
+        """
+        Uploads Python binary to s3_path location
+        """
+        self.s3.Object(self.bucket_name, s3_path).put(Body=binary_data)
+
+    def download_file(self, s3_path: str, local_path: str) -> None:
+        """
+        Downloads file into local file system.
+        """
+        self.bucket.download_file(s3_path, local_path)  # need test
+
+    def download_binary(self, s3_path: str) -> bytes:
         """
         Downloads file by path
         """
@@ -39,37 +45,50 @@ class S3Storage(AbstractStorage):
         self.bucket.download_fileobj(s3_path, binary_io)
         return binary_io.getvalue()
 
-    def delete_file(self, path: str) -> None:
+    def delete_file(self, s3_path: str) -> None:
         """
         Deletes file. Do not raise or return error if nothing deleted
         """
-        self.s3.Object(self.bucket_name, path).delete()
+        self.s3.Object(self.bucket_name, s3_path).delete()
 
-    def get_all_files(self, path_prefix: str) -> list[str]:
+    def get_all_files(self, s3_dir: str) -> list[str]:
         """
-        Returns all filenames in path
+        Returns all filenames in directory
         """
-        s3_objects = self.bucket.objects.filter(Prefix=path_prefix).all()
+        s3_objects = self.bucket.objects.filter(Prefix=s3_dir).all()
         return [Path(f.key).name for f in s3_objects]
 
-    def get_max_file_name(self, path: str) -> int:
+    def download_all_files_binary(self, s3_dir: str) -> list[bytes]:
+        files = []
+        for filename in self.get_all_files(s3_dir):
+            files.append(self.download_binary(filename))  # need test
+        return files
+
+    def file_exists(self, local_path: str, s3_path: str) -> bool:
+        if local_path in self.get_all_files(s3_path):  # need test
+            return True
+        else:
+            return False
+
+    def exact_file_exists(self, s3_dir: str, binary_data: bytes) -> bool:
         """
-        Returns the max integer file number in the "path" folder.
+        Мб пригодится дубликаты чекать?
+        """
+        images = self.get_all_files(s3_dir)  # need test
+        for image in images:
+            if image == binary_data:
+                return True
+        return False
+
+    def get_max_file_name(self, s3_dir: str) -> int:
+        """
+        Returns the max integer file number in the "s3_dir" folder.
         Example files: 1.png, 2.png, 3.png. Returned value: 3.
         Returns -1 if the folder is empty.
         """
-        filenames = self.get_all_files(path)
+        filenames = self.get_all_files(s3_dir)
         if filenames:
             without_ext = [int(Path(fn).stem) for fn in filenames]
             return max(without_ext)
         else:
             return -1
-
-    # def file_exists(self, path: str, image_binary: bytes) -> bool:
-    #     images = self.get_all_files(path)
-
-    #     for image in images:
-    #         if open(image, "rb").read() == image_binary:
-    #             return True
-
-    #     return False

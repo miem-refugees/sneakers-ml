@@ -39,11 +39,11 @@ class S3Storage(AbstractStorage):
         self.bucket.download_fileobj(s3_path, binary_io)
         return binary_io.getvalue()
 
-    def delete_file(self, s3_path: str) -> None:
+    def delete_file(self, path: str) -> None:
         """
         Deletes file. Do not raise or return error if nothing deleted
         """
-        self.s3.Object(self.bucket_name, s3_path).delete()
+        self.s3.Object(self.bucket_name, path).delete()
 
     def get_all_files(self, path_prefix: str) -> list[str]:
         """

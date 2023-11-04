@@ -134,7 +134,7 @@ def parse_sneakers(
     return metadata
 
 
-def parse_sneakerbaas_page(
+def parse_footshop_page(
     dir: str, collection_info: dict[str, Union[int, str]], page: int, s3: bool
 ) -> list[dict[str, str]]:
     metadata_page = []
@@ -148,7 +148,7 @@ def parse_sneakerbaas_page(
     return metadata_page
 
 
-def parse_sneakerbaas_collection(
+def parse_footshop_collection(
     dir: str, collection: str, s3: bool
 ) -> list[dict[str, str]]:
     metadata_collection = []
@@ -157,7 +157,7 @@ def parse_sneakerbaas_collection(
     pbar = trange(1, collection_info["number_of_pages"] + 1, leave=False)
     for page in pbar:
         pbar.set_description(f"Page {page}")
-        metadata_collection += parse_sneakerbaas_page(dir, collection_info, page, s3)
+        metadata_collection += parse_footshop_page(dir, collection_info, page, s3)
 
     website_dir = str(Path(dir, WEBSITE_NAME))
     csv_path = str(Path(collection, "metadata.csv"))
@@ -168,13 +168,13 @@ def parse_sneakerbaas_collection(
     return metadata_collection
 
 
-def parse_sneakerbaas(dir: str, s3: bool) -> None:
+def parse_footshop(dir: str, s3: bool) -> None:
     full_metadata = []
 
     bar = tqdm(COLLECTIONS)
     for collection in bar:
         bar.set_description(f"Collection: {collection}")
-        full_metadata += parse_sneakerbaas_collection(dir, collection, s3)
+        full_metadata += parse_footshop_collection(dir, collection, s3)
 
     website_dir = str(Path(dir, WEBSITE_NAME))
     metadata_path = str(Path(website_dir, "metadata.csv"))
@@ -183,4 +183,4 @@ def parse_sneakerbaas(dir: str, s3: bool) -> None:
 
 
 if __name__ == "__main__":
-    parse_sneakerbaas(dir=str(Path("data", "raw")), s3=False)
+    parse_footshop(dir=str(Path("data", "raw")), s3=False)

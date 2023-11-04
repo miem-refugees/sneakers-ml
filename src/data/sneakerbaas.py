@@ -12,7 +12,7 @@ from helper import (
     get_image_extension,
     remove_query,
     remove_params,
-    fix_path_for_s3,
+    fix_string,
     fix_html_text,
     save_images,
     save_metadata,
@@ -68,12 +68,12 @@ def get_sneakers_metadata(soup: BeautifulSoup) -> dict[str, str]:
 
     for meta in metadata_section[1:]:
         if meta.has_attr("itemprop") and meta["itemprop"] not in unused_metadata_keys:
-            key = meta["itemprop"].lower().strip()
+            key = fix_string(meta["itemprop"])
             metadata[key] = fix_html_text(meta["content"])
 
     # format metadata as it is used as folder names
-    metadata["brand"] = fix_path_for_s3(metadata["brand"])
-    metadata["title"] = fix_path_for_s3(title_section[2].text.strip())
+    metadata["brand"] = fix_string(metadata["brand"])
+    metadata["title"] = fix_string(title_section[2].text)
 
     return metadata
 
@@ -109,9 +109,9 @@ def parse_sneakers(
     website_dir = str(Path(dir, WEBSITE_NAME))
     images_dir = str(Path(metadata["collection_name"], "images"))
     brand_dir = str(Path(metadata["brand"], metadata["title"]))
-    save_dir = str(Path(website_dir, images_dir, brand_dir))
+    save_dir = str(Path(website_dir, images_dir, brand_dir)).lower()
 
-    images_dir, s3_dir = save_images(images, save_dir.lower(), s3)
+    images_dir, s3_dir = save_images(images, save_dir, s3)
 
     metadata["images_dir"] = images_dir
     metadata["s3_dir"] = s3_dir
@@ -146,7 +146,7 @@ def parse_sneakerbaas_collection(
 
     website_dir = str(Path(dir, WEBSITE_NAME))
     csv_path = str(Path(collection, "metadata.csv"))
-    metadata_path = str(Path(website_dir, csv_path.lower()))
+    metadata_path = str(Path(website_dir, csv_path)).lower()
 
     save_metadata(metadata_collection, metadata_path, INDEX_COLUMN, s3)
 

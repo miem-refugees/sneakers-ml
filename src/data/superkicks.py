@@ -12,7 +12,7 @@ from helper import (
     get_image_extension,
     remove_query,
     remove_params,
-    fix_path_for_s3,
+    fix_string,
     fix_html_text,
     save_images,
     save_metadata,
@@ -67,15 +67,15 @@ def get_sneakers_metadata(soup: BeautifulSoup) -> dict[str, str]:
     price_section = soup.find(name="span", class_="price-item price-item--regular")
     description_section = soup.find(name="div", class_="product__description")
 
-    metadata["brand"] = fix_path_for_s3(brand_section.text.strip())
-    metadata["title"] = fix_path_for_s3(title_section.text.strip())
-    metadata["price"] = price_section.text.strip()
+    metadata["brand"] = fix_string(brand_section.text)
+    metadata["title"] = fix_string(title_section.text)
+    metadata["price"] = fix_html_text(price_section.text)
 
     for span in soup.find_all(name="span", class_="product_description-name"):
         key = span.contents[0].replace(" :", "").lower().replace(" ", "_")
-        metadata[key] = span.span.span.text.strip()
+        metadata[key] = fix_html_text(span.span.span.text)
 
-    metadata["description"] = description_section.text.strip().replace("\n", " ")
+    metadata["description"] = fix_html_text(description_section.text)
 
     return metadata
 

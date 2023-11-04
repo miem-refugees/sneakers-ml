@@ -58,11 +58,17 @@ def add_page(url: str, page_number: int) -> str:
     return urlparse(url)._replace(query=f"page={page_number}").geturl()
 
 
-def fix_path_for_s3(path: str) -> str:
+def fix_string(path: str) -> str:
     """
     Removes ", ', \, / symbols, which cause errors on s3.
     """
-    return path.replace('"', "").replace("'", "").replace("/", "").replace("\\", "")
+    return fix_html_text(
+        path.replace('"', "")
+        .replace("'", "")
+        .replace("/", "")
+        .replace("\\", "")
+        .lower()
+    )
 
 
 def get_filenames(dir: str, s3: bool = False) -> list[str]:
@@ -152,7 +158,9 @@ def save_metadata(
     if Path(path).is_file():
         old_df = pd.read_csv(path)
         df = pd.concat([old_df, df])
-        df = df.drop_duplicates(subset=index_column, keep="first").reset_index(drop=True)
+        df = df.drop_duplicates(subset=index_column, keep="first").reset_index(
+            drop=True
+        )
 
     df.to_csv(path, index=False)
 

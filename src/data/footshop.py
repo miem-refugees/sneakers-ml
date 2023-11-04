@@ -15,15 +15,15 @@ from helper import (
     fix_html_text,
 )
 
-# WEBSITE_NAME = "footshop"
-# COLLECTIONS_URL = "https://www.footshop.eu/en/"
-# HOSTNAME_URL = "https://www.footshop.eu/"
-# COLLECTIONS = [
-#     "5-mens-shoes",
-#     "6-womens-shoes",
-#     "55-kids-sneakers-and-shoes",
-# ]
-# INDEX_COLUMNS = ["url", "collection_name"]
+WEBSITE_NAME = "footshop"
+COLLECTIONS_URL = "https://www.footshop.eu/en/"
+HOSTNAME_URL = "https://www.footshop.eu/"
+COLLECTIONS = [
+    "5-mens-shoes",
+    "6-womens-shoes",
+    "55-kids-sneakers-and-shoes",
+]
+INDEX_COLUMNS = ["url", "collection_name"]
 
 
 class FootshopParser(AbstractParser):

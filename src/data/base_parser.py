@@ -12,6 +12,8 @@ from tqdm.auto import tqdm, trange
 from s3 import S3Storage
 from local import LocalStorage
 from base import AbstractStorage
+import pandas as pd
+from storage import images_to_storage, metadata_to_storage
 
 
 class AbstractParser(ABC):
@@ -139,60 +141,24 @@ class AbstractParser(ABC):
         )
         return full_metadata
 
-    def images_to_storage(
-        self, storage: AbstractStorage, images: tuple[bytes, str], path: str
-    ):
-        current_max_file_name = storage.get_max_file_name(path)
-
-        for image_binary, image_ext in images:
-            current_max_file_name += 1
-            image_path = str(Path(path, str(current_max_file_name) + image_ext))
-            storage.upload_binary(image_binary, image_path)
-
     def save_images(self, images: tuple[bytes, str], path: str):
         if self.save_local:
             Path(path).mkdir(parents=True, exist_ok=True)
-            self.images_to_storage(LocalStorage(), images, path)
+            images_to_storage(LocalStorage(), images, path)
         if self.save_s3:
-            self.images_to_storage(S3Storage(), images, path)
-
-    def metadata_to_storage(
-        self,
-        storage: AbstractStorage,
-        metadata: dict[str, str],
-        path: str,
-        index_column: str,
-    ):
-        df = pd.DataFrame(metadata)
-
-        if storage.file_name_exists(path):
-            old_df = pd.read_csv(path)
-            df = pd.concat([old_df, df])
-            df = df.drop_duplicates(subset=index_column, keep="first").reset_index(
-                drop=True
-            )
-
-        df.to_csv(path, index=False)
+            images_to_storage(S3Storage(), images, path)
 
     def save_metadata(
+        self,
         metadata: dict[str, str],
         path: str,
-        index_column: str,
+        index_columns: str,
     ) -> None:
         """
         Saves metadata dict in .csv format in path. If .csv already exists, concats the data and
-        removes duplicates by index_column. Uploads to s3 if required.
+        removes duplicates by index_column.
         """
-        df = pd.DataFrame(metadata)
-
-        if Path(path).is_file():
-            old_df = pd.read_csv(path)
-            df = pd.concat([old_df, df])
-            df = df.drop_duplicates(subset=index_column, keep="first").reset_index(
-                drop=True
-            )
-
-        df.to_csv(path, index=False)
-
-        if s3:
-            upload_local_s3(path, path)
+        if self.save_local:
+            metadata_to_storage(LocalStorage(), metadata, path, index_columns)
+        if self.save_s3:
+            metadata_to_storage(S3Storage(), metadata, path, index_columns)

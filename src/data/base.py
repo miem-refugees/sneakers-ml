@@ -27,7 +27,7 @@ class AbstractSneaker(ABC):
     def __init__(self, storage: AbstractStorage):
         self.storage = storage
 
-    def preload_image(self, path: str) -> str:
+    def __preload_image(self, path: str) -> str:
         binary = self.storage.download_file(path)
         if len(binary) == 0: raise RuntimeError("")
 

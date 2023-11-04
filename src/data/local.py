@@ -7,7 +7,7 @@ class LocalStorage(AbstractStorage):
     def get_filenames(dir):
         return [str(file) for file in Path(dir).iterdir() if file.is_file()]
 
-    def file_exists(path: str, image_binary: bytes) -> bool:
+    def same_file_exists(path: str, image_binary: bytes) -> bool:
         """
         Checks if the exact same file exists in path folder.
         """
@@ -33,5 +33,9 @@ class LocalStorage(AbstractStorage):
         else:
             return -1
 
-    with open(image_path, "wb") as f:
-                f.write(image_binary)
+    def upload_file():
+        with open(image_path, "wb") as f:
+            f.write(image_binary)
+
+    def file_name_exists(path):
+        return Path(path).is_file()

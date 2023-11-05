@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from base import AbstractStorage
-from helper import split_dir_filename_ext
+from src.data.base import AbstractStorage
+from src.data.helper import split_dir_filename_ext
 from src.data.local import LocalStorage
 
 

@@ -5,8 +5,8 @@ from urllib.parse import urljoin
 import requests
 from bs4 import BeautifulSoup
 
-from base_parser import AbstractParser
-from helper import add_https, remove_query, remove_params, fix_string, fix_html_text
+from src.data.base_parser import AbstractParser
+from src.data.helper import add_https, remove_query, remove_params, fix_string, fix_html_text
 
 
 class SuperkicksParser(AbstractParser):
@@ -15,8 +15,7 @@ class SuperkicksParser(AbstractParser):
     HOSTNAME_URL = "https://www.superkicks.in/"
     COLLECTIONS = [f"{item[0]}-{item[1]}" for item in itertools.product(["men", "women"],
                                                                         ["sneakers", "basketball-sneakers",
-                                                                         "classics-sneakers",
-                                                                         "skateboard-sneakers", ], )]
+                                                                         "classics-sneakers", "skateboard-sneakers"])]
     INDEX_COLUMNS = ["url", "collection_name"]
 
     def get_collection_info(self, collection: str) -> dict[str, Union[str, int]]:
@@ -73,4 +72,4 @@ class SuperkicksParser(AbstractParser):
 
 
 if __name__ == "__main__":
-    SuperkicksParser(path="data/raw", save_local=True, save_s3=False).parse_website()
+    SuperkicksParser(path="test/raw", save_local=False, save_s3=True).parse_website()

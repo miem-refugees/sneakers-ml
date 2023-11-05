@@ -3,18 +3,17 @@ import requests
 from urllib.parse import urljoin
 import re
 from typing import Union
-from pathlib import Path
 import json
-from base_parser import AbstractParser
+from src.data.base_parser import AbstractParser
 
-from helper import (add_https, remove_query, remove_params, fix_string, fix_html_text, )
+from src.data.helper import add_https, remove_query, remove_params, fix_string, fix_html_text
 
 
 class FootshopParser(AbstractParser):
     WEBSITE_NAME = "footshop"
     COLLECTIONS_URL = "https://www.footshop.eu/en/"
     HOSTNAME_URL = "https://www.footshop.eu/"
-    COLLECTIONS = ["5-mens-shoes", "6-womens-shoes", "55-kids-sneakers-and-shoes", ]
+    COLLECTIONS = ["5-mens-shoes", "6-womens-shoes", "55-kids-sneakers-and-shoes"]
     INDEX_COLUMNS = ["url", "collection_name"]
 
     def get_collection_info(self, collection: str) -> dict[str, Union[str, int]]:
@@ -78,4 +77,4 @@ class FootshopParser(AbstractParser):
 
 
 if __name__ == "__main__":
-    FootshopParser(path="data/raw", save_local=True, save_s3=False, ).parse_website()
+    FootshopParser(path="data/raw", save_local=True, save_s3=False).parse_website()

@@ -7,10 +7,10 @@ from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 from tqdm import tqdm, trange
 
-from helper import (add_page, get_image_extension, )
-from local import LocalStorage
-from s3 import S3Storage
-from storage import StorageProcessor
+from src.data.helper import add_page, get_image_extension
+from src.data.local import LocalStorage
+from src.data.s3 import S3Storage
+from src.data.storage import StorageProcessor
 
 
 class AbstractParser(ABC):
@@ -67,9 +67,8 @@ class AbstractParser(ABC):
         metadata["collection_url"] = collection_info["url"]
         metadata["url"] = url
 
-        images_path = str(Path(metadata["collection_name"], "images"))
-        brand_path = str(Path(metadata["brand"], metadata["title"]))
-        save_path = str(Path(self.website_path, images_path, brand_path)).lower()
+        brand_path = str(Path(metadata["collection_name"], metadata["brand"], metadata["title"]))
+        save_path = str(Path(self.website_path, brand_path)).lower()
 
         self.save_images(images, save_path)
         metadata["images_path"] = save_path
@@ -99,7 +98,7 @@ class AbstractParser(ABC):
             metadata_collection += self.parse_page(collection_info, page)
 
         csv_path = str(Path(collection, "metadata.csv"))
-        metadata_path = str(Path(self.website_path, csv_path)).lower() # todo remove this line
+        metadata_path = str(Path(self.website_path, csv_path)).lower()  # todo remove this line
 
         self.save_metadata(metadata_collection, metadata_path, self.INDEX_COLUMNS)
 
@@ -118,13 +117,13 @@ class AbstractParser(ABC):
         print(f"Collected {len(full_metadata)} sneakers from {self.WEBSITE_NAME} website")
         return full_metadata
 
-    def save_images(self, images: list[tuple[bytes, str]], dir: str):
+    def save_images(self, images: list[tuple[bytes, str]], directory: str) -> None:
         if self.save_local:
-            StorageProcessor(LocalStorage()).images_to_storage(images, dir)
+            StorageProcessor(LocalStorage()).images_to_storage(images, directory)
         if self.save_s3:
-            StorageProcessor(S3Storage()).images_to_storage(images, dir)
+            StorageProcessor(S3Storage()).images_to_storage(images, directory)
 
-    def save_metadata(self, metadata: list[dict[str, str]], path: str, index_columns: list[str], ) -> None:
+    def save_metadata(self, metadata: list[dict[str, str]], path: str, index_columns: list[str]) -> None:
         if self.save_local:
             StorageProcessor(LocalStorage()).metadata_to_storage(metadata, path, index_columns)
         if self.save_s3:

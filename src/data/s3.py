@@ -3,7 +3,7 @@ from pathlib import Path
 
 import boto3
 
-from base import AbstractStorage
+from src.data.base import AbstractStorage
 
 
 class S3Storage(AbstractStorage):

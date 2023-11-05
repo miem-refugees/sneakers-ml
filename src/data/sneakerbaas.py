@@ -5,15 +5,15 @@ from urllib.parse import urljoin
 import requests
 from bs4 import BeautifulSoup
 
-from base_parser import AbstractParser
-from helper import (add_https, remove_query, remove_params, fix_string, fix_html_text, )
+from src.data.base_parser import AbstractParser
+from src.data.helper import add_https, remove_query, remove_params, fix_string, fix_html_text
 
 
 class SneakerbaasParser(AbstractParser):
     WEBSITE_NAME = "sneakerbaas"
     COLLECTIONS_URL = "https://www.sneakerbaas.com/collections/sneakers/"
     HOSTNAME_URL = "https://www.sneakerbaas.com/"
-    COLLECTIONS = ["category-kids", "category-unisex", "category-women", "category-men", ]
+    COLLECTIONS = ["category-kids", "category-unisex", "category-women", "category-men"]
     INDEX_COLUMNS = ["url", "collection_name"]
 
     def get_collection_info(self, collection: str) -> dict[str, Union[str, int]]:
@@ -48,7 +48,7 @@ class SneakerbaasParser(AbstractParser):
         unused_metadata_keys = ["url", "image", "name"]
 
         for meta in metadata_section[1:]:
-            if (meta.has_attr("itemprop") and meta["itemprop"] not in unused_metadata_keys):
+            if meta.has_attr("itemprop") and meta["itemprop"] not in unused_metadata_keys:
                 key = fix_string(meta["itemprop"])
                 metadata[key] = fix_html_text(meta["content"])
 

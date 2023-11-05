@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from base import AbstractStorage
+from src.data.base import AbstractStorage
 
 
 class LocalStorage(AbstractStorage):

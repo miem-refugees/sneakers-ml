@@ -13,33 +13,23 @@ from s3 import S3Storage
 from local import LocalStorage
 from base import AbstractStorage
 import pandas as pd
-from storage import images_to_storage, metadata_to_storage
+from storage import StorageProcessor
 
 
 class AbstractParser(ABC):
-    def __init__(
-        self,
-        website_name: str,
-        collections_url: str,
-        hostname_url: str,
-        collections: list[str],
-        index_columns: list[str],
-        path: str,
-        save_local: bool,
-        save_s3: bool,
-    ):
-        self.website_name = website_name
-        self.collections_url = collections_url
-        self.hostname_url = hostname_url
-        self.collections = collections
-        self.index_columns = index_columns
+    WEBSITE_NAME: str
+    COLLECTIONS_URL: str
+    HOSTNAME_URL: str
+    COLLECTIONS: list[str]
+    INDEX_COLUMNS: list[str]
 
+    def __init__(self, path: str, save_local: bool, save_s3: bool):
         self.path = path
         self.save_local = save_local
         self.save_s3 = save_s3
 
         self.headers = {"User-Agent": UserAgent().random}
-        self.website_path = str(Path(self.path, self.website_name))
+        self.website_path = str(Path(self.path, self.WEBSITE_NAME))
 
     @abstractmethod
     def get_collection_info(self, collection: str) -> dict[str, Union[str, int]]:
@@ -102,9 +92,7 @@ class AbstractParser(ABC):
         sneakers_urls = self.get_sneakers_urls(page_url)
 
         for sneakers_url in tqdm(sneakers_urls, leave=False):
-            metadata = self.parse_sneakers(
-                sneakers_url, collection_info, self.path_prefix
-            )
+            metadata = self.parse_sneakers(sneakers_url, collection_info)
             metadata_page.append(metadata)
 
         return metadata_page
@@ -129,7 +117,7 @@ class AbstractParser(ABC):
     def parse_website(self) -> list[dict[str, str]]:
         full_metadata = []
 
-        bar = tqdm(self.collections)
+        bar = tqdm(self.COLLECTIONS)
         for collection in bar:
             bar.set_description(f"Collection: {collection}")
             full_metadata += self.parse_collection(collection)
@@ -141,12 +129,12 @@ class AbstractParser(ABC):
         )
         return full_metadata
 
-    def save_images(self, images: tuple[bytes, str], path: str):
+    def save_images(self, images: tuple[bytes, str], dir: str):
         if self.save_local:
-            Path(path).mkdir(parents=True, exist_ok=True)
-            images_to_storage(LocalStorage(), images, path)
+            Path(dir).mkdir(parents=True, exist_ok=True)
+            StorageProcessor(LocalStorage()).images_to_storage(images, dir)
         if self.save_s3:
-            images_to_storage(S3Storage(), images, path)
+            StorageProcessor(S3Storage()).images_to_storage(images, dir)
 
     def save_metadata(
         self,
@@ -154,11 +142,11 @@ class AbstractParser(ABC):
         path: str,
         index_columns: str,
     ) -> None:
-        """
-        Saves metadata dict in .csv format in path. If .csv already exists, concats the data and
-        removes duplicates by index_column.
-        """
         if self.save_local:
-            metadata_to_storage(LocalStorage(), metadata, path, index_columns)
+            StorageProcessor(LocalStorage()).metadata_to_storage(
+                metadata, path, index_columns
+            )
         if self.save_s3:
-            metadata_to_storage(S3Storage(), metadata, path, index_columns)
+            StorageProcessor(S3Storage()).metadata_to_storage(
+                metadata, path, index_columns
+            )

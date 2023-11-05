@@ -5,7 +5,7 @@ import re
 from typing import Union
 from pathlib import Path
 import json
-from base import AbstractParser
+from base_parser import AbstractParser
 
 from helper import (
     add_https,
@@ -15,21 +15,21 @@ from helper import (
     fix_html_text,
 )
 
-WEBSITE_NAME = "footshop"
-COLLECTIONS_URL = "https://www.footshop.eu/en/"
-HOSTNAME_URL = "https://www.footshop.eu/"
-COLLECTIONS = [
-    "5-mens-shoes",
-    "6-womens-shoes",
-    "55-kids-sneakers-and-shoes",
-]
-INDEX_COLUMNS = ["url", "collection_name"]
-
 
 class FootshopParser(AbstractParser):
+    WEBSITE_NAME = "footshop"
+    COLLECTIONS_URL = "https://www.footshop.eu/en/"
+    HOSTNAME_URL = "https://www.footshop.eu/"
+    COLLECTIONS = [
+        "5-mens-shoes",
+        "6-womens-shoes",
+        "55-kids-sneakers-and-shoes",
+    ]
+    INDEX_COLUMNS = ["url", "collection_name"]
+
     def get_collection_info(self, collection: str) -> dict[str, Union[str, int]]:
         info = {"name": collection}
-        info["url"] = urljoin(self.collections_url, collection)
+        info["url"] = urljoin(self.COLLECTIONS_URL, collection)
 
         r = requests.get(info["url"], headers=self.headers)
         soup = BeautifulSoup(r.text, "html.parser")
@@ -102,5 +102,7 @@ class FootshopParser(AbstractParser):
 
 if __name__ == "__main__":
     FootshopParser(
-        WEBSITE_NAME, COLLECTIONS_URL, HOSTNAME_URL, COLLECTIONS, INDEX_COLUMNS
-    ).parse_website(dir=str(Path("data", "raw")), s3=False)
+        path="data/raw",
+        save_local=True,
+        save_s3=False,
+    ).parse_website()

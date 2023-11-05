@@ -4,7 +4,7 @@ from urllib.parse import urljoin
 import re
 from typing import Union
 from pathlib import Path
-from base import AbstractParser
+from base_parser import AbstractParser
 from helper import (
     add_https,
     remove_query,
@@ -14,23 +14,21 @@ from helper import (
 )
 
 
-WEBSITE_NAME = "sneakerbaas"
-COLLECTIONS_URL = "https://www.sneakerbaas.com/collections/sneakers/"
-HOSTNAME_URL = "https://www.sneakerbaas.com/"
-COLLECTIONS = [
-    "category-kids",
-    "category-unisex",
-    "category-women",
-    "category-men",
-]
-INDEX_COLUMNS = ["url", "collection_name"]
-
-
 class SneakerbaasParser(AbstractParser):
+    WEBSITE_NAME = "sneakerbaas"
+    COLLECTIONS_URL = "https://www.sneakerbaas.com/collections/sneakers/"
+    HOSTNAME_URL = "https://www.sneakerbaas.com/"
+    COLLECTIONS = [
+        "category-kids",
+        "category-unisex",
+        "category-women",
+        "category-men",
+    ]
+    INDEX_COLUMNS = ["url", "collection_name"]
+
     def get_collection_info(self, collection: str) -> dict[str, Union[str, int]]:
         info = {"name": collection}
-        info["url"] = urljoin(self.collections_url, collection)
-
+        info["url"] = urljoin(self.COLLECTIONS_URL, collection)
         r = requests.get(info["url"], headers=self.headers)
         soup = BeautifulSoup(r.text, "html.parser")
 
@@ -50,7 +48,7 @@ class SneakerbaasParser(AbstractParser):
             href=re.compile("/collections/sneakers/products")
         )
         sneakers_urls = [
-            urljoin(self.hostname_url, item["href"]) for item in products_section
+            urljoin(self.HOSTNAME_URL, item["href"]) for item in products_section
         ]
 
         return set(sneakers_urls)
@@ -90,5 +88,7 @@ class SneakerbaasParser(AbstractParser):
 
 if __name__ == "__main__":
     SneakerbaasParser(
-        WEBSITE_NAME, COLLECTIONS_URL, HOSTNAME_URL, COLLECTIONS, INDEX_COLUMNS
-    ).parse_website(dir=str(Path("data", "raw")), s3=False)
+        path="data/raw",
+        save_local=True,
+        save_s3=False,
+    ).parse_website()

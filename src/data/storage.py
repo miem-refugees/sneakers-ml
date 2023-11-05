@@ -37,7 +37,7 @@ class StorageProcessor:
         return False
 
     def images_to_storage(self, images: tuple[bytes, str], dir: str):
-        current_max_file_name = self.get_max_file_name(dir)
+        current_max_file_name = self.get_max_filename(dir)
         for image_binary, image_ext in images:
             current_max_file_name += 1
             image_path = str(Path(dir, str(current_max_file_name) + image_ext))

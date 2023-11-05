@@ -1,9 +1,8 @@
-from helper import get_filenames
 from pathlib import Path
-from src.data.base import AbstractStorage
+from base import AbstractStorage
 
 
-class LocalStorage(AbstractStorage):
+class LocalStorage():
     def upload_binary(self, binary_data: bytes, local_path: str) -> None:
         with open(local_path, "wb") as file:
             file.write(binary_data)

@@ -3,8 +3,7 @@ import requests
 from urllib.parse import urljoin
 import itertools
 from typing import Union
-from pathlib import Path
-from base import AbstractParser
+from base_parser import AbstractParser
 from helper import (
     add_https,
     remove_query,
@@ -14,23 +13,27 @@ from helper import (
 )
 
 
-WEBSITE_NAME = "superkicks"
-COLLECTIONS_URL = "https://www.superkicks.in/collections/"
-HOSTNAME_URL = "https://www.superkicks.in/"
-COLLECTIONS = [
-    f"{item[0]}-{item[1]}"
-    for item in itertools.product(
-        ["men", "women"],
-        ["sneakers", "basketball-sneakers", "classics-sneakers", "skateboard-sneakers"],
-    )
-]
-INDEX_COLUMNS = ["url", "collection_name"]
-
-
 class SuperkicksParser(AbstractParser):
+    WEBSITE_NAME = "superkicks"
+    COLLECTIONS_URL = "https://www.superkicks.in/collections/"
+    HOSTNAME_URL = "https://www.superkicks.in/"
+    COLLECTIONS = [
+        f"{item[0]}-{item[1]}"
+        for item in itertools.product(
+            ["men", "women"],
+            [
+                "sneakers",
+                "basketball-sneakers",
+                "classics-sneakers",
+                "skateboard-sneakers",
+            ],
+        )
+    ]
+    INDEX_COLUMNS = ["url", "collection_name"]
+
     def get_collection_info(self, collection: str) -> dict[str, Union[str, int]]:
         info = {"name": collection}
-        info["url"] = urljoin(self.collections_url, collection)
+        info["url"] = urljoin(self.COLLECTIONS_URL, collection)
 
         r = requests.get(info["url"], headers=self.headers)
         soup = BeautifulSoup(r.text, "html.parser")
@@ -49,7 +52,7 @@ class SuperkicksParser(AbstractParser):
             name="div", class_="card__information product-card2"
         )
         sneakers_urls = [
-            urljoin(self.hostname_url, item.a["href"]) for item in products_section
+            urljoin(self.HOSTNAME_URL, item.a["href"]) for item in products_section
         ]
 
         return set(sneakers_urls)
@@ -88,5 +91,7 @@ class SuperkicksParser(AbstractParser):
 
 if __name__ == "__main__":
     SuperkicksParser(
-        WEBSITE_NAME, COLLECTIONS_URL, HOSTNAME_URL, COLLECTIONS, INDEX_COLUMNS
-    ).parse_website(dir=str(Path("data", "raw")), s3=False)
+        path="data/raw",
+        save_local=True,
+        save_s3=False,
+    ).parse_website()

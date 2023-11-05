@@ -50,14 +50,6 @@ def fix_string(path: str) -> str:
     )
 
 
-# def form_s3_url(path: str) -> str:
-#     """
-#     Returns s3 path in "s3://bucket/path" format.
-#     """
-#     s3_url = urlparse("")._replace(scheme="s3", netloc=BUCKET, path=get_parent(path))
-#     return s3_url.geturl()
-
-
 def fix_html_text(text: str) -> str:
     """
     Strips, removes newline symbols and "\\xa0" symbol which frequently appear in html texts.
@@ -74,3 +66,11 @@ def split_dir_filename_ext(path):
     file_name = path_obj.stem
     file_extension = path_obj.suffix
     return str(directory), str(file_name), str(file_extension)
+
+
+# def form_s3_url(path: str) -> str:
+#     """
+#     Returns s3 path in "s3://bucket/path" format.
+#     """
+#     s3_url = urlparse("")._replace(scheme="s3", netloc=BUCKET, path=get_parent(path))
+#     return s3_url.geturl()

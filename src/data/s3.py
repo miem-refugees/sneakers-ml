@@ -51,44 +51,9 @@ class S3Storage(AbstractStorage):
         """
         self.s3.Object(self.bucket_name, s3_path).delete()
 
-    def get_all_files(self, s3_dir: str) -> list[str]:
+    def get_all_filenames(self, s3_dir: str) -> list[str]:
         """
         Returns all filenames in directory
         """
         s3_objects = self.bucket.objects.filter(Prefix=s3_dir).all()
         return [Path(f.key).name for f in s3_objects]
-
-    def download_all_files_binary(self, s3_dir: str) -> list[bytes]:
-        files = []
-        for filename in self.get_all_files(s3_dir):
-            files.append(self.download_binary(filename))  # need test
-        return files
-
-    def file_exists(self, local_path: str, s3_path: str) -> bool:
-        if local_path in self.get_all_files(s3_path):  # need test
-            return True
-        else:
-            return False
-
-    def exact_file_exists(self, s3_dir: str, binary_data: bytes) -> bool:
-        """
-        Мб пригодится дубликаты чекать?
-        """
-        images = self.get_all_files(s3_dir)  # need test
-        for image in images:
-            if image == binary_data:
-                return True
-        return False
-
-    def get_max_file_name(self, s3_dir: str) -> int:
-        """
-        Returns the max integer file number in the "s3_dir" folder.
-        Example files: 1.png, 2.png, 3.png. Returned value: 3.
-        Returns -1 if the folder is empty.
-        """
-        filenames = self.get_all_files(s3_dir)
-        if filenames:
-            without_ext = [int(Path(fn).stem) for fn in filenames]
-            return max(without_ext)
-        else:
-            return -1

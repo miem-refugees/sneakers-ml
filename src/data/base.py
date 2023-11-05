@@ -28,15 +28,3 @@ class AbstractStorage(ABC):
     @abstractmethod
     def get_all_files(self, dir: str) -> list[str]:
         raise NotImplemented
-
-    @abstractmethod
-    def download_all_files_binary(self, dir: str) -> list[bytes]:
-        raise NotImplemented
-
-    @abstractmethod
-    def file_exists(self, local_path: str, s3_path: str) -> bool:
-        raise NotImplemented
-
-    @abstractmethod
-    def exact_file_exists(self, dir: str, binary_data: bytes) -> bool:
-        raise NotImplemented

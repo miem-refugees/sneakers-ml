@@ -63,3 +63,14 @@ def fix_html_text(text: str) -> str:
     Strips, removes newline symbols and "\\xa0" symbol which frequently appear in html texts.
     """
     return text.replace("\xa0", " ").strip().replace("\n", " ")
+
+
+from pathlib import Path
+
+
+def split_dir_filename_ext(path):
+    path_obj = Path(path)
+    directory = path_obj.parent
+    file_name = path_obj.stem
+    file_extension = path_obj.suffix
+    return str(directory), str(file_name), str(file_extension)

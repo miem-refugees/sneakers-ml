@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Union
+from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup
@@ -27,13 +28,19 @@ class AbstractParser(ABC):
 
         self.headers = {"User-Agent": UserAgent().random}
         self.website_path = str(Path(self.path, self.WEBSITE_NAME))
+        self.parser = "html.parser"
+
+    def get_soup(self, url):
+        r = requests.get(url, headers=self.headers)
+        soup = BeautifulSoup(r.text, self.parser)
+        return soup
 
     @abstractmethod
-    def get_collection_info(self, collection: str) -> dict[str, Union[str, int]]:
+    def get_collection_info(self, soup: BeautifulSoup) -> dict[str, Union[str, int]]:
         raise NotImplemented
 
     @abstractmethod
-    def get_sneakers_urls(self, page_url: str) -> set[str]:
+    def get_sneakers_urls(self, soup: BeautifulSoup) -> set[str]:
         raise NotImplemented
 
     @abstractmethod
@@ -56,9 +63,7 @@ class AbstractParser(ABC):
         """
         Parses metadata and images of one pair of sneakers
         """
-        r = requests.get(url, headers=self.headers)
-        soup = BeautifulSoup(r.text, "html.parser")
-
+        soup = self.get_soup(url)
         metadata = self.get_sneakers_metadata(soup)
         images_urls = self.get_sneakers_images_urls(soup)
         images = self.get_sneakers_images(images_urls)
@@ -67,8 +72,8 @@ class AbstractParser(ABC):
         metadata["collection_url"] = collection_info["url"]
         metadata["url"] = url
 
-        brand_path = str(Path(metadata["collection_name"], metadata["brand"], metadata["title"]))
-        save_path = str(Path(self.website_path, brand_path)).lower()
+        model_path = str(Path(metadata["collection_name"], metadata["brand"], metadata["title"]))
+        save_path = str(Path(self.website_path, model_path)).lower()
 
         self.save_images(images, save_path)
         metadata["images_path"] = save_path
@@ -79,7 +84,8 @@ class AbstractParser(ABC):
         metadata_page = []
 
         page_url = add_page(collection_info["url"], page)
-        sneakers_urls = self.get_sneakers_urls(page_url)
+        soup = self.get_soup(page_url)
+        sneakers_urls = self.get_sneakers_urls(soup)
 
         for sneakers_url in tqdm(sneakers_urls, leave=False):
             metadata = self.parse_sneakers(sneakers_url, collection_info)
@@ -90,17 +96,17 @@ class AbstractParser(ABC):
     def parse_collection(self, collection: str) -> list[dict[str, str]]:
         metadata_collection = []
 
-        collection_info = self.get_collection_info(collection)
+        collection_url = urljoin(self.COLLECTIONS_URL, collection)
+        soup = self.get_soup(collection_url)
+        collection_info = self.get_collection_info(soup)
+
+        collection_info["name"] = collection
+        collection_info["url"] = collection_url
 
         pbar = trange(1, collection_info["number_of_pages"] + 1, leave=False)
         for page in pbar:
             pbar.set_description(f"Page {page}")
             metadata_collection += self.parse_page(collection_info, page)
-
-        csv_path = str(Path(collection, "metadata.csv"))
-        metadata_path = str(Path(self.website_path, csv_path)).lower()  # todo remove this line
-
-        self.save_metadata(metadata_collection, metadata_path, self.INDEX_COLUMNS)
 
         return metadata_collection
 

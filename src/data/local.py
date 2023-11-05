@@ -22,4 +22,4 @@ class LocalStorage(AbstractStorage):
         Path(path).unlink()
 
     def get_all_filenames(self, directory: str) -> list[str]:
-        return [str(file) for file in Path(directory).iterdir() if file.is_file()]
+        return [str(file.stem + file.suffix) for file in Path(directory).iterdir() if file.is_file()]

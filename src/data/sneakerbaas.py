@@ -2,7 +2,6 @@ import re
 from typing import Union
 from urllib.parse import urljoin
 
-import requests
 from bs4 import BeautifulSoup
 
 from src.data.base_parser import AbstractParser
@@ -16,26 +15,15 @@ class SneakerbaasParser(AbstractParser):
     COLLECTIONS = ["category-kids", "category-unisex", "category-women", "category-men"]
     INDEX_COLUMNS = ["url", "collection_name"]
 
-    def get_collection_info(self, collection: str) -> dict[str, Union[str, int]]:
-        info = {"name": collection, "url": urljoin(self.COLLECTIONS_URL, collection)}
-        r = requests.get(info["url"], headers=self.headers)
-        soup = BeautifulSoup(r.text, "html.parser")
+    def get_collection_info(self, soup: BeautifulSoup) -> dict[str, Union[str, int]]:
 
-        products = soup.find(class_=re.compile("collection-size")).text.strip()
         pagination = soup.find(class_=re.compile("(?<!\S)pagination(?!\S)"))
-
-        info["number_of_products"] = int(re.search(r"\d+", products).group())
-        info["number_of_pages"] = int(pagination.find_all("span")[-2].a.text)
-
+        info = {"number_of_pages": int(pagination.find_all("span")[-2].a.text)}
         return info
 
-    def get_sneakers_urls(self, page_url: str) -> set[str]:
-        r = requests.get(page_url, headers=self.headers)
-        soup = BeautifulSoup(r.text, "html.parser")
-
+    def get_sneakers_urls(self, soup: BeautifulSoup) -> set[str]:
         products_section = soup.find_all(href=re.compile("/collections/sneakers/products"))
         sneakers_urls = [urljoin(self.HOSTNAME_URL, item["href"]) for item in products_section]
-
         return set(sneakers_urls)
 
     def get_sneakers_metadata(self, soup: BeautifulSoup) -> dict[str, str]:
@@ -69,4 +57,4 @@ class SneakerbaasParser(AbstractParser):
 
 
 if __name__ == "__main__":
-    SneakerbaasParser(path="data/raw", save_local=True, save_s3=False, ).parse_website()
+    SneakerbaasParser(path="data/raw", save_local=True, save_s3=False).parse_website()

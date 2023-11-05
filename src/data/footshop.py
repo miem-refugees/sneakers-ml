@@ -1,11 +1,10 @@
-from bs4 import BeautifulSoup
-import requests
-from urllib.parse import urljoin
+import json
 import re
 from typing import Union
-import json
-from src.data.base_parser import AbstractParser
 
+from bs4 import BeautifulSoup
+
+from src.data.base_parser import AbstractParser
 from src.data.helper import add_https, remove_query, remove_params, fix_string, fix_html_text
 
 
@@ -16,25 +15,14 @@ class FootshopParser(AbstractParser):
     COLLECTIONS = ["5-mens-shoes", "6-womens-shoes", "55-kids-sneakers-and-shoes"]
     INDEX_COLUMNS = ["url", "collection_name"]
 
-    def get_collection_info(self, collection: str) -> dict[str, Union[str, int]]:
-        info = {"name": collection, "url": urljoin(self.COLLECTIONS_URL, collection)}
-
-        r = requests.get(info["url"], headers=self.headers)
-        soup = BeautifulSoup(r.text, "html.parser")
-
+    def get_collection_info(self, soup: BeautifulSoup) -> dict[str, Union[str, int]]:
         pagination = soup.findAll(class_=re.compile("PaginationLink_item"))
-
-        info["number_of_pages"] = int(pagination[-2].text)
-
+        info = {"number_of_pages": int(pagination[-2].text)}
         return info
 
-    def get_sneakers_urls(self, page_url: str) -> set[str]:
-        r = requests.get(page_url, headers=self.headers)
-        soup = BeautifulSoup(r.text, "html.parser")
-
+    def get_sneakers_urls(self, soup: BeautifulSoup) -> set[str]:
         products_section = soup.findAll(name="div", itemprop="itemListElement")
         sneakers_urls = [item.find(itemprop="url")["content"] for item in products_section]
-
         return set(sneakers_urls)
 
     def get_sneakers_metadata(self, soup: BeautifulSoup) -> dict[str, str]:

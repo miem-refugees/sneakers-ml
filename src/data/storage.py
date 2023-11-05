@@ -15,7 +15,8 @@ class StorageProcessor:
     def download_all_files_binary(self, directory: str) -> list[bytes]:
         files = []
         for filename in self.storage.get_all_filenames(directory):
-            files.append(self.storage.download_binary(filename))
+            path = str(Path(directory, filename))
+            files.append(self.storage.download_binary(path))
         return files
 
     def filename_exists(self, name: str, directory: str) -> bool:
@@ -32,21 +33,23 @@ class StorageProcessor:
         else:
             return -1
 
-    def exact_binary_exists(self, binary: bytes, directory: str) -> bool:
-        binaries = self.download_all_files_binary(directory)
-        for binary_ in binaries:
-            if binary_ == binary:
-                return True
-        return False
+    # def exact_binary_exists(self, binary: bytes, directory: str) -> bool:
+    #     binaries = self.download_all_files_binary(directory)
+    #     for binary_ in binaries:
+    #         if binary_ == binary:
+    #             return True
+    #     return False
 
     def images_to_storage(self, images: list[tuple[bytes, str]], directory: str):
         if isinstance(self.storage, LocalStorage):
             Path(directory).mkdir(parents=True, exist_ok=True)
         current_max_file_name = self.get_max_filename(directory)
+        existing_images = self.download_all_files_binary(directory)
         for image_binary, image_ext in images:
-            current_max_file_name += 1
-            image_path = str(Path(directory, str(current_max_file_name) + image_ext))
-            self.storage.upload_binary(image_binary, image_path)
+            if image_binary not in existing_images:
+                current_max_file_name += 1
+                image_path = str(Path(directory, str(current_max_file_name) + image_ext))
+                self.storage.upload_binary(image_binary, image_path)
 
     def metadata_to_storage(self, metadata: list[dict[str, str]], path: str, index_columns: list[str]):
         df = pd.DataFrame(metadata)

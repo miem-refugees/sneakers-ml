@@ -40,7 +40,7 @@ def fix_string(path: str) -> str:
     """
     Removes ", ', \, / symbols, which cause errors on s3.
     """
-    return fix_html_text(path.replace('"', "").replace("'", "").replace("/", "").replace("\\", "").lower())
+    return fix_html_text(path.replace('"', "").replace("'", "").replace("/", "|").replace("\\", "|").lower())
 
 
 def fix_html_text(text: str) -> str:

@@ -10,7 +10,15 @@ class AbstractStorage(ABC):
         raise NotImplemented
 
     @abstractmethod
-    def download_file(self, path: str) -> bytes:
+    def upload_binary(self, binary_data: bytes, path: str) -> None:
+        raise NotImplemented
+
+    @abstractmethod
+    def download_file(self, path: str, local_path: str) -> None:
+        raise NotImplemented
+
+    @abstractmethod
+    def download_binary(self, path: str) -> bytes:
         raise NotImplemented
 
     @abstractmethod

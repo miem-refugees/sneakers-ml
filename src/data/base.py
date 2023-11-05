@@ -26,5 +26,5 @@ class AbstractStorage(ABC):
         raise NotImplemented
 
     @abstractmethod
-    def get_all_files(self, dir: str) -> list[str]:
+    def get_all_filenames(self, directory: str) -> list[str]:
         raise NotImplemented

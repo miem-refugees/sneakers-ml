@@ -1,34 +1,23 @@
-from bs4 import BeautifulSoup
-import requests
-from urllib.parse import urljoin
 import re
 from typing import Union
-from pathlib import Path
+from urllib.parse import urljoin
+
+import requests
+from bs4 import BeautifulSoup
+
 from base_parser import AbstractParser
-from helper import (
-    add_https,
-    remove_query,
-    remove_params,
-    fix_string,
-    fix_html_text,
-)
+from helper import (add_https, remove_query, remove_params, fix_string, fix_html_text, )
 
 
 class SneakerbaasParser(AbstractParser):
     WEBSITE_NAME = "sneakerbaas"
     COLLECTIONS_URL = "https://www.sneakerbaas.com/collections/sneakers/"
     HOSTNAME_URL = "https://www.sneakerbaas.com/"
-    COLLECTIONS = [
-        "category-kids",
-        "category-unisex",
-        "category-women",
-        "category-men",
-    ]
+    COLLECTIONS = ["category-kids", "category-unisex", "category-women", "category-men", ]
     INDEX_COLUMNS = ["url", "collection_name"]
 
     def get_collection_info(self, collection: str) -> dict[str, Union[str, int]]:
-        info = {"name": collection}
-        info["url"] = urljoin(self.COLLECTIONS_URL, collection)
+        info = {"name": collection, "url": urljoin(self.COLLECTIONS_URL, collection)}
         r = requests.get(info["url"], headers=self.headers)
         soup = BeautifulSoup(r.text, "html.parser")
 
@@ -44,12 +33,8 @@ class SneakerbaasParser(AbstractParser):
         r = requests.get(page_url, headers=self.headers)
         soup = BeautifulSoup(r.text, "html.parser")
 
-        products_section = soup.find_all(
-            href=re.compile("/collections/sneakers/products")
-        )
-        sneakers_urls = [
-            urljoin(self.HOSTNAME_URL, item["href"]) for item in products_section
-        ]
+        products_section = soup.find_all(href=re.compile("/collections/sneakers/products"))
+        sneakers_urls = [urljoin(self.HOSTNAME_URL, item["href"]) for item in products_section]
 
         return set(sneakers_urls)
 
@@ -63,10 +48,7 @@ class SneakerbaasParser(AbstractParser):
         unused_metadata_keys = ["url", "image", "name"]
 
         for meta in metadata_section[1:]:
-            if (
-                meta.has_attr("itemprop")
-                and meta["itemprop"] not in unused_metadata_keys
-            ):
+            if (meta.has_attr("itemprop") and meta["itemprop"] not in unused_metadata_keys):
                 key = fix_string(meta["itemprop"])
                 metadata[key] = fix_html_text(meta["content"])
 
@@ -87,8 +69,4 @@ class SneakerbaasParser(AbstractParser):
 
 
 if __name__ == "__main__":
-    SneakerbaasParser(
-        path="data/raw",
-        save_local=True,
-        save_s3=False,
-    ).parse_website()
+    SneakerbaasParser(path="data/raw", save_local=True, save_s3=False, ).parse_website()

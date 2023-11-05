@@ -1,18 +1,15 @@
-from typing import Union
 from abc import ABC, abstractmethod
 from pathlib import Path
-from bs4 import BeautifulSoup
+from typing import Union
+
 import requests
-from helper import (
-    add_page,
-    get_image_extension,
-)
+from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
-from tqdm.auto import tqdm, trange
-from s3 import S3Storage
+from tqdm import tqdm, trange
+
+from helper import (add_page, get_image_extension, )
 from local import LocalStorage
-from base import AbstractStorage
-import pandas as pd
+from s3 import S3Storage
 from storage import StorageProcessor
 
 
@@ -53,12 +50,9 @@ class AbstractParser(ABC):
             image_binary = requests.get(image_url, headers=self.headers).content
             image_ext = get_image_extension(image_url)
             images.append((image_binary, image_ext))
-
         return images
 
-    def parse_sneakers(
-        self, url: str, collection_info: dict[str, Union[int, str]]
-    ) -> dict[str, str]:
+    def parse_sneakers(self, url: str, collection_info: dict[str, Union[int, str]]) -> dict[str, str]:
         """
         Parses metadata and images of one pair of sneakers
         """
@@ -78,14 +72,11 @@ class AbstractParser(ABC):
         save_path = str(Path(self.website_path, images_path, brand_path)).lower()
 
         self.save_images(images, save_path)
-
         metadata["images_path"] = save_path
 
         return metadata
 
-    def parse_page(
-        self, collection_info: dict[str, Union[int, str]], page: int
-    ) -> list[dict[str, str]]:
+    def parse_page(self, collection_info: dict[str, Union[int, str]], page: int) -> list[dict[str, str]]:
         metadata_page = []
 
         page_url = add_page(collection_info["url"], page)
@@ -108,9 +99,9 @@ class AbstractParser(ABC):
             metadata_collection += self.parse_page(collection_info, page)
 
         csv_path = str(Path(collection, "metadata.csv"))
-        metadata_path = str(Path(self.website_path, csv_path)).lower()  # todo
+        metadata_path = str(Path(self.website_path, csv_path)).lower() # todo remove this line
 
-        self.save_metadata(metadata_collection, metadata_path, self.index_columns)
+        self.save_metadata(metadata_collection, metadata_path, self.INDEX_COLUMNS)
 
         return metadata_collection
 
@@ -123,30 +114,18 @@ class AbstractParser(ABC):
             full_metadata += self.parse_collection(collection)
 
         metadata_path = str(Path(self.website_path, "metadata.csv"))
-        self.save_metadata(full_metadata, metadata_path, self.index_columns)
-        print(
-            f"Collected {len(full_metadata)} sneakers from {self.website_name} website"
-        )
+        self.save_metadata(full_metadata, metadata_path, self.INDEX_COLUMNS)
+        print(f"Collected {len(full_metadata)} sneakers from {self.WEBSITE_NAME} website")
         return full_metadata
 
-    def save_images(self, images: tuple[bytes, str], dir: str):
+    def save_images(self, images: list[tuple[bytes, str]], dir: str):
         if self.save_local:
-            Path(dir).mkdir(parents=True, exist_ok=True)
             StorageProcessor(LocalStorage()).images_to_storage(images, dir)
         if self.save_s3:
             StorageProcessor(S3Storage()).images_to_storage(images, dir)
 
-    def save_metadata(
-        self,
-        metadata: dict[str, str],
-        path: str,
-        index_columns: str,
-    ) -> None:
+    def save_metadata(self, metadata: list[dict[str, str]], path: str, index_columns: list[str], ) -> None:
         if self.save_local:
-            StorageProcessor(LocalStorage()).metadata_to_storage(
-                metadata, path, index_columns
-            )
+            StorageProcessor(LocalStorage()).metadata_to_storage(metadata, path, index_columns)
         if self.save_s3:
-            StorageProcessor(S3Storage()).metadata_to_storage(
-                metadata, path, index_columns
-            )
+            StorageProcessor(S3Storage()).metadata_to_storage(metadata, path, index_columns)

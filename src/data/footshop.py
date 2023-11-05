@@ -1,54 +1,28 @@
-from bs4 import BeautifulSoup
-import requests
-from urllib.parse import urljoin
+import json
 import re
 from typing import Union
-from pathlib import Path
-import json
-from base_parser import AbstractParser
 
-from helper import (
-    add_https,
-    remove_query,
-    remove_params,
-    fix_string,
-    fix_html_text,
-)
+from bs4 import BeautifulSoup
+
+from src.data.base_parser import AbstractParser
+from src.data.helper import add_https, remove_query, remove_params, fix_string, fix_html_text
 
 
 class FootshopParser(AbstractParser):
     WEBSITE_NAME = "footshop"
     COLLECTIONS_URL = "https://www.footshop.eu/en/"
     HOSTNAME_URL = "https://www.footshop.eu/"
-    COLLECTIONS = [
-        "5-mens-shoes",
-        "6-womens-shoes",
-        "55-kids-sneakers-and-shoes",
-    ]
+    COLLECTIONS = ["5-mens-shoes", "6-womens-shoes", "55-kids-sneakers-and-shoes"]
     INDEX_COLUMNS = ["url", "collection_name"]
 
-    def get_collection_info(self, collection: str) -> dict[str, Union[str, int]]:
-        info = {"name": collection}
-        info["url"] = urljoin(self.COLLECTIONS_URL, collection)
-
-        r = requests.get(info["url"], headers=self.headers)
-        soup = BeautifulSoup(r.text, "html.parser")
-
+    def get_collection_info(self, soup: BeautifulSoup) -> dict[str, Union[str, int]]:
         pagination = soup.findAll(class_=re.compile("PaginationLink_item"))
-
-        info["number_of_pages"] = int(pagination[-2].text)
-
+        info = {"number_of_pages": int(pagination[-2].text)}
         return info
 
-    def get_sneakers_urls(self, page_url: str) -> set[str]:
-        r = requests.get(page_url, headers=self.headers)
-        soup = BeautifulSoup(r.text, "html.parser")
-
+    def get_sneakers_urls(self, soup: BeautifulSoup) -> set[str]:
         products_section = soup.findAll(name="div", itemprop="itemListElement")
-        sneakers_urls = [
-            item.find(itemprop="url")["content"] for item in products_section
-        ]
-
+        sneakers_urls = [item.find(itemprop="url")["content"] for item in products_section]
         return set(sneakers_urls)
 
     def get_sneakers_metadata(self, soup: BeautifulSoup) -> dict[str, str]:
@@ -59,13 +33,9 @@ class FootshopParser(AbstractParser):
         title_section = properties_section.find(class_=re.compile("Headline_wrapper_"))
         color_section = properties_section.find(class_=re.compile("Headline_wrapper_"))
 
-        meta_section = soup.find(
-            name="div", class_=re.compile("Product_productProperties")
-        )
+        meta_section = soup.find(name="div", class_=re.compile("Product_productProperties"))
         pricecurrency_section = meta_section.find(name="meta", itemprop="priceCurrency")
-        price_section = soup.find(
-            name="strong", class_=re.compile("Properties_priceValue")
-        )
+        price_section = soup.find(name="strong", class_=re.compile("Properties_priceValue"))
 
         # format metadata as it is used as folder names
         metadata["brand"] = fix_string(brand_section["title"])
@@ -80,16 +50,10 @@ class FootshopParser(AbstractParser):
     def get_sneakers_images_urls(self, soup: BeautifulSoup) -> list[str]:
         images_urls = []
 
-        script = soup.find(
-            name="script",
-            type="application/json",
-            attrs={"data-hypernova-key": "ProductDetail"},
-        )
+        script = soup.find(name="script", type="application/json", attrs={"data-hypernova-key": "ProductDetail"}, )
         script = script.text.replace("-->", "").replace("<!--", "")[1:-1]
 
-        script_cut = script[
-            script.find("product_data") - 1 : script.find("last_image") - 2
-        ]
+        script_cut = script[script.find("product_data") - 1: script.find("last_image") - 2]
 
         script_json = json.loads("{" + script_cut + "}}")
 
@@ -101,8 +65,4 @@ class FootshopParser(AbstractParser):
 
 
 if __name__ == "__main__":
-    FootshopParser(
-        path="data/raw",
-        save_local=True,
-        save_s3=False,
-    ).parse_website()
+    FootshopParser(path="data/raw", save_local=True, save_s3=False).parse_website()

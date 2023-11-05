@@ -1,6 +1,5 @@
-from urllib.parse import urlparse, urlsplit
 from pathlib import Path
-import pandas as pd
+from urllib.parse import urlparse, urlsplit
 
 
 def get_parent(path: str) -> str:
@@ -41,13 +40,7 @@ def fix_string(path: str) -> str:
     """
     Removes ", ', \, / symbols, which cause errors on s3.
     """
-    return fix_html_text(
-        path.replace('"', "")
-        .replace("'", "")
-        .replace("/", "")
-        .replace("\\", "")
-        .lower()
-    )
+    return fix_html_text(path.replace('"', "").replace("'", "").replace("/", "|").replace("\\", "|").lower())
 
 
 def fix_html_text(text: str) -> str:
@@ -57,16 +50,12 @@ def fix_html_text(text: str) -> str:
     return text.replace("\xa0", " ").strip().replace("\n", " ")
 
 
-from pathlib import Path
-
-
 def split_dir_filename_ext(path):
     path_obj = Path(path)
     directory = path_obj.parent
-    file_name = path_obj.stem
+    filename = path_obj.stem
     file_extension = path_obj.suffix
-    return str(directory), str(file_name), str(file_extension)
-
+    return str(directory), str(filename), str(file_extension)
 
 # def form_s3_url(path: str) -> str:
 #     """

@@ -29,7 +29,8 @@ class AbstractParser(ABC):
         self.save_s3 = save_s3
 
         self.headers = {"User-Agent": UserAgent().random}
-        self.website_path = str(Path(self.path, self.WEBSITE_NAME))
+        self.images_path = str(Path(path, "images", self.WEBSITE_NAME))
+        self.metadata_path = str(Path(path, "metadata", f"{self.WEBSITE_NAME}.csv"))
         self.parser = "html.parser"
 
     async def get_soup(self, url: str) -> BeautifulSoup:
@@ -85,7 +86,7 @@ class AbstractParser(ABC):
                 metadata["url"] = url
 
                 model_path = str(Path(metadata["collection_name"], metadata["brand"], metadata["title"]))
-                save_path = str(Path(self.website_path, model_path)).lower()
+                save_path = str(Path(self.images_path, model_path)).lower()
 
                 self.save_images(images, save_path)
                 metadata["images_path"] = save_path
@@ -134,8 +135,7 @@ class AbstractParser(ABC):
             bar.set_description(f"Collection: {collection}")
             full_metadata += await self.parse_collection(collection)
 
-        metadata_path = str(Path(self.website_path, "metadata.csv"))
-        self.save_metadata(full_metadata, metadata_path, self.INDEX_COLUMNS)
+        self.save_metadata(full_metadata, self.metadata_path, self.INDEX_COLUMNS)
         print(f"Collected {len(full_metadata)} sneakers from {self.WEBSITE_NAME} website")
         return full_metadata
 

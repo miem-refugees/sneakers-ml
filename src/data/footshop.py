@@ -4,8 +4,9 @@ from typing import Union
 
 from bs4 import BeautifulSoup
 
-from src.data.base_parser_sync import AbstractParser
+from src.data.base_parser import AbstractParser
 from src.data.helper import add_https, remove_query, remove_params, fix_string, fix_html_text
+import asyncio
 
 
 class FootshopParser(AbstractParser):
@@ -64,5 +65,12 @@ class FootshopParser(AbstractParser):
         return images_urls
 
 
+async def main():
+    await FootshopParser(path="data/raw", save_local=True, save_s3=True).parse_website()
+
+
 if __name__ == "__main__":
-    FootshopParser(path="data/raw", save_local=True, save_s3=True).parse_website()
+    asyncio.run(main())
+
+# if __name__ == "__main__":
+#     FootshopParser(path="data/raw", save_local=True, save_s3=True).parse_website()

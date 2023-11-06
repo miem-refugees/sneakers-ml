@@ -73,22 +73,29 @@ class AbstractParser(ABC):
         """
         Parses metadata and images of one pair of sneakers
         """
-        soup = await self.get_soup(url)
-        metadata = self.get_sneakers_metadata(soup)
-        images_urls = self.get_sneakers_images_urls(soup)
-        images = await self.get_sneakers_images(images_urls)
+        for attempt in range(2):
+            try:
+                soup = await self.get_soup(url)
+                metadata = self.get_sneakers_metadata(soup)
+                images_urls = self.get_sneakers_images_urls(soup)
+                images = await self.get_sneakers_images(images_urls)
 
-        metadata["collection_name"] = collection_info["name"]
-        metadata["collection_url"] = collection_info["url"]
-        metadata["url"] = url
+                metadata["collection_name"] = collection_info["name"]
+                metadata["collection_url"] = collection_info["url"]
+                metadata["url"] = url
 
-        model_path = str(Path(metadata["collection_name"], metadata["brand"], metadata["title"]))
-        save_path = str(Path(self.website_path, model_path)).lower()
+                model_path = str(Path(metadata["collection_name"], metadata["brand"], metadata["title"]))
+                save_path = str(Path(self.website_path, model_path)).lower()
 
-        self.save_images(images, save_path)
-        metadata["images_path"] = save_path
+                self.save_images(images, save_path)
+                metadata["images_path"] = save_path
 
-        return metadata
+                return metadata
+            except Exception as e:
+                print(e)
+                print(url)
+
+        return {}
 
     async def parse_page(self, collection_info: dict[str, Union[int, str]], page: int) -> list[dict[str, str]]:
         page_url = add_page(collection_info["url"], page)

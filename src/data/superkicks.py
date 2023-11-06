@@ -56,7 +56,7 @@ class SuperkicksParser(AbstractParser):
 
 
 async def main():
-    await SuperkicksParser(path="test/raw", save_local=True, save_s3=True).parse_website()
+    await SuperkicksParser(path="data/raw", save_local=True, save_s3=True).parse_website()
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 import json
 import re
 from typing import Union
+import asyncio
 
 from bs4 import BeautifulSoup
 
@@ -64,5 +65,9 @@ class FootshopParser(AbstractParser):
         return images_urls
 
 
+async def main():
+    await FootshopParser(path="data/raw", save_local=True, save_s3=True).parse_website()
+
+
 if __name__ == "__main__":
-    FootshopParser(path="data/raw", save_local=True, save_s3=True).parse_website()
+    asyncio.run(main())

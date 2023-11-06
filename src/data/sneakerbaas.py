@@ -1,3 +1,4 @@
+import asyncio
 import re
 from typing import Union
 from urllib.parse import urljoin
@@ -56,5 +57,9 @@ class SneakerbaasParser(AbstractParser):
         return images_urls
 
 
+async def main():
+    await SneakerbaasParser(path="data/raw", save_local=True, save_s3=True).parse_website()
+
+
 if __name__ == "__main__":
-    SneakerbaasParser(path="data/raw", save_local=True, save_s3=True).parse_website()
+    asyncio.run(main())

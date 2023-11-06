@@ -1,14 +1,12 @@
-import asyncio
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Union
 from urllib.parse import urljoin
 
-import aiohttp
+import requests
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
-from tqdm import trange, tqdm
-from tqdm.asyncio import tqdm as tqdm_async
+from tqdm import tqdm, trange
 
 from src.data.helper import add_page, get_image_extension
 from src.data.local import LocalStorage
@@ -32,17 +30,10 @@ class AbstractParser(ABC):
         self.website_path = str(Path(self.path, self.WEBSITE_NAME))
         self.parser = "html.parser"
 
-    async def get_soup(self, url: str) -> BeautifulSoup:
-        async with aiohttp.ClientSession(headers=self.headers) as session:
-            async with session.get(url) as resp:
-                text = await resp.text()
-        soup = BeautifulSoup(text, self.parser)
+    def get_soup(self, url):
+        r = requests.get(url, headers=self.headers)
+        soup = BeautifulSoup(r.text, self.parser)
         return soup
-
-    async def get_image(self, image_url: str) -> bytes:
-        async with aiohttp.ClientSession(headers=self.headers) as session:
-            async with session.get(image_url) as resp:
-                return await resp.read()
 
     @abstractmethod
     def get_collection_info(self, soup: BeautifulSoup) -> dict[str, Union[str, int]]:
@@ -60,23 +51,22 @@ class AbstractParser(ABC):
     def get_sneakers_images_urls(self, soup: BeautifulSoup) -> list[str]:
         raise NotImplemented
 
-    async def get_sneakers_images(self, images_urls: list[str]) -> list[tuple[bytes, str]]:
-        async def download_image(image_url: str) -> tuple[bytes, str]:
-            image_binary = await self.get_image(image_url)
+    def get_sneakers_images(self, images_urls: list[str]) -> list[tuple[bytes, str]]:
+        images = []
+        for image_url in images_urls:
+            image_binary = requests.get(image_url, headers=self.headers).content
             image_ext = get_image_extension(image_url)
-            return image_binary, image_ext
-
-        images = await asyncio.gather(*[download_image(image_url) for image_url in images_urls])
+            images.append((image_binary, image_ext))
         return images
 
-    async def parse_sneakers(self, url: str, collection_info: dict[str, Union[int, str]]) -> dict[str, str]:
+    def parse_sneakers(self, url: str, collection_info: dict[str, Union[int, str]]) -> dict[str, str]:
         """
         Parses metadata and images of one pair of sneakers
         """
-        soup = await self.get_soup(url)
+        soup = self.get_soup(url)
         metadata = self.get_sneakers_metadata(soup)
         images_urls = self.get_sneakers_images_urls(soup)
-        images = await self.get_sneakers_images(images_urls)
+        images = self.get_sneakers_images(images_urls)
 
         metadata["collection_name"] = collection_info["name"]
         metadata["collection_url"] = collection_info["url"]
@@ -90,20 +80,24 @@ class AbstractParser(ABC):
 
         return metadata
 
-    async def parse_page(self, collection_info: dict[str, Union[int, str]], page: int) -> list[dict[str, str]]:
+    def parse_page(self, collection_info: dict[str, Union[int, str]], page: int) -> list[dict[str, str]]:
+        metadata_page = []
+
         page_url = add_page(collection_info["url"], page)
-        soup = await self.get_soup(page_url)
+        soup = self.get_soup(page_url)
         sneakers_urls = self.get_sneakers_urls(soup)
 
-        metadata_page = await tqdm_async.gather(
-            *[self.parse_sneakers(sneakers_url, collection_info) for sneakers_url in sneakers_urls], leave=False)
+        for sneakers_url in tqdm(sneakers_urls, leave=False):
+            metadata = self.parse_sneakers(sneakers_url, collection_info)
+            metadata_page.append(metadata)
+
         return metadata_page
 
-    async def parse_collection(self, collection: str) -> list[dict[str, str]]:
+    def parse_collection(self, collection: str) -> list[dict[str, str]]:
         metadata_collection = []
 
         collection_url = urljoin(self.COLLECTIONS_URL, collection)
-        soup = await self.get_soup(collection_url)
+        soup = self.get_soup(collection_url)
         collection_info = self.get_collection_info(soup)
 
         collection_info["name"] = collection
@@ -112,17 +106,17 @@ class AbstractParser(ABC):
         pbar = trange(1, collection_info["number_of_pages"] + 1, leave=False)
         for page in pbar:
             pbar.set_description(f"Page {page}")
-            metadata_collection += await self.parse_page(collection_info, page)
+            metadata_collection += self.parse_page(collection_info, page)
 
         return metadata_collection
 
-    async def parse_website(self) -> list[dict[str, str]]:
+    def parse_website(self) -> list[dict[str, str]]:
         full_metadata = []
 
         bar = tqdm(self.COLLECTIONS)
         for collection in bar:
             bar.set_description(f"Collection: {collection}")
-            full_metadata += await self.parse_collection(collection)
+            full_metadata += self.parse_collection(collection)
 
         metadata_path = str(Path(self.website_path, "metadata.csv"))
         self.save_metadata(full_metadata, metadata_path, self.INDEX_COLUMNS)

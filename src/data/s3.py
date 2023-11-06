@@ -52,5 +52,5 @@ class S3Storage(AbstractStorage):
         """
         Returns all filenames in directory
         """
-        s3_objects = self.bucket.objects.filter(Prefix=s3_dir).all()
+        s3_objects = self.bucket.objects.filter(Prefix=s3_dir + "/").all()  # prefix acts like regex pattern
         return [Path(f.key).name for f in s3_objects]

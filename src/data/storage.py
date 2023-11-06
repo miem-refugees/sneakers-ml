@@ -59,7 +59,7 @@ class StorageProcessor:
 
         if self.filename_exists(name, directory):
             csv_binary = self.storage.download_binary(path)
-            old_df = pd.read_csv(csv_binary)
+            old_df = pd.read_csv(io.BytesIO(csv_binary))
             df = pd.concat([old_df, df])
             df = df.drop_duplicates(subset=index_columns, keep="first").reset_index(drop=True)
 

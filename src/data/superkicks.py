@@ -55,4 +55,4 @@ class SuperkicksParser(AbstractParser):
 
 
 if __name__ == "__main__":
-    SuperkicksParser(path="data/raw", save_local=True, save_s3=False).parse_website()
+    SuperkicksParser(path="data/raw", save_local=True, save_s3=True).parse_website()

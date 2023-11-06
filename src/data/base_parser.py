@@ -74,7 +74,7 @@ class AbstractParser(ABC):
         """
         Parses metadata and images of one pair of sneakers
         """
-        for attempt in range(2):
+        for attempt in range(3):
             try:
                 soup = await self.get_soup(url)
                 metadata = self.get_sneakers_metadata(soup)
@@ -91,7 +91,7 @@ class AbstractParser(ABC):
                 self.save_images(images, save_path)
                 metadata["images_path"] = save_path
 
-                if attempt == 1:
+                if attempt == 1 or attempt == 2:
                     print("RETRY: OK")
 
                 return metadata

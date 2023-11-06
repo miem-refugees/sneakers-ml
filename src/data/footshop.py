@@ -1,3 +1,4 @@
+import asyncio
 import json
 import re
 from typing import Union
@@ -6,7 +7,6 @@ from bs4 import BeautifulSoup
 
 from src.data.base_parser import AbstractParser
 from src.data.helper import add_https, remove_query, remove_params, fix_string, fix_html_text
-import asyncio
 
 
 class FootshopParser(AbstractParser):
@@ -71,6 +71,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-# if __name__ == "__main__":
-#     FootshopParser(path="data/raw", save_local=True, save_s3=True).parse_website()

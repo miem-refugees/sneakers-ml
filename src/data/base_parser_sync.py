@@ -80,11 +80,14 @@ class AbstractParser(ABC):
                 self.save_images(images, save_path)
                 metadata["images_path"] = save_path
 
+                if attempt == 1:
+                    print("RETRY: OK")
+
                 return metadata
             except Exception as e:
-                print(e)
-                print(url)
+                print(e, url)
 
+        print("RETRY: FAIL")
         return {}
 
     def parse_page(self, collection_info: dict[str, Union[int, str]], page: int) -> list[dict[str, str]]:
@@ -96,10 +99,9 @@ class AbstractParser(ABC):
 
         for sneakers_url in tqdm(sneakers_urls, leave=False):
             metadata = self.parse_sneakers(sneakers_url, collection_info)
-            if metadata_page:
-                metadata_page.append(metadata)
+            metadata_page.append(metadata)
 
-        return metadata_page
+        return list(filter(None, metadata_page))
 
     def parse_collection(self, collection: str) -> list[dict[str, str]]:
         metadata_collection = []

@@ -17,8 +17,12 @@ class FootshopParser(AbstractParser):
     INDEX_COLUMNS = ["url", "collection_name"]
 
     def get_collection_info(self, soup: BeautifulSoup) -> dict[str, Union[str, int]]:
-        pagination = soup.findAll(class_=re.compile("PaginationLink_item"))
-        info = {"number_of_pages": int(pagination[-2].text)}
+        try:
+            pagination = soup.findAll(class_=re.compile("PaginationLink_item"))[-2].text
+        except Exception as e:
+            print("Pagination:", e)
+            pagination = 0
+        info = {"number_of_pages": int(pagination)}
         return info
 
     def get_sneakers_urls(self, soup: BeautifulSoup) -> set[str]:
@@ -66,7 +70,7 @@ class FootshopParser(AbstractParser):
 
 
 async def main():
-    await FootshopParser(path="data/raw", save_local=True, save_s3=True).parse_website()
+    await FootshopParser(path="data/raw", save_local=False, save_s3=True).parse_website()
 
 
 if __name__ == "__main__":

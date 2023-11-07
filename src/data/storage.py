@@ -58,6 +58,9 @@ class StorageProcessor:
         directory, filename, ext = split_dir_filename_ext(path)
         name = filename + ext
 
+        if isinstance(self.storage, LocalStorage):
+            Path(directory).mkdir(parents=True, exist_ok=True)
+
         if self.filename_exists(name, directory):
             csv_binary = self.storage.download_binary(path)
             old_df = pd.read_csv(io.BytesIO(csv_binary))

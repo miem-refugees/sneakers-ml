@@ -21,7 +21,7 @@ class FootshopParser(AbstractParser):
             pagination = soup.findAll(class_=re.compile("PaginationLink_item"))[-2].text
         except Exception as e:
             print("Pagination:", e)
-            pagination = 0
+            pagination = 1
         info = {"number_of_pages": int(pagination)}
         return info
 

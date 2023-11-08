@@ -44,12 +44,13 @@ class StorageProcessor:
         if isinstance(self.storage, LocalStorage):
             Path(directory).mkdir(parents=True, exist_ok=True)
         current_max_file_name = self.get_max_filename(directory)
-        existing_images = self.download_all_files_binary(directory)
+        # checking for existing images slows dong process by a lot
+        # existing_images = self.download_all_files_binary(directory)
         for image_binary, image_ext in images:
-            if image_binary not in existing_images:
-                current_max_file_name += 1
-                image_path = str(Path(directory, str(current_max_file_name) + image_ext))
-                self.storage.upload_binary(image_binary, image_path)
+            # if image_binary not in existing_images:
+            current_max_file_name += 1
+            image_path = str(Path(directory, str(current_max_file_name) + image_ext))
+            self.storage.upload_binary(image_binary, image_path)
 
     def metadata_to_storage(self, metadata: list[dict[str, str]], path: str, index_columns: list[str]):
         df = pd.DataFrame(metadata)
@@ -57,9 +58,12 @@ class StorageProcessor:
         directory, filename, ext = split_dir_filename_ext(path)
         name = filename + ext
 
+        if isinstance(self.storage, LocalStorage):
+            Path(directory).mkdir(parents=True, exist_ok=True)
+
         if self.filename_exists(name, directory):
             csv_binary = self.storage.download_binary(path)
-            old_df = pd.read_csv(csv_binary)
+            old_df = pd.read_csv(io.BytesIO(csv_binary))
             df = pd.concat([old_df, df])
             df = df.drop_duplicates(subset=index_columns, keep="first").reset_index(drop=True)
 

@@ -1,3 +1,4 @@
+import asyncio
 import itertools
 import json
 from typing import Union
@@ -54,5 +55,9 @@ class SuperkicksParser(AbstractParser):
         return images_urls
 
 
+async def main():
+    await SuperkicksParser(path="data/raw", save_local=True, save_s3=True).parse_website()
+
+
 if __name__ == "__main__":
-    SuperkicksParser(path="data/raw", save_local=True, save_s3=False).parse_website()
+    asyncio.run(main())

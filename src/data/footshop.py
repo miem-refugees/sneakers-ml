@@ -70,7 +70,7 @@ class FootshopParser(AbstractParser):
 
 
 async def main():
-    await FootshopParser(path="data/raw_new", save_local=True, save_s3=False).parse_website()
+    await FootshopParser(path="data/raw", save_local=True, save_s3=False).parse_website()
 
 
 if __name__ == "__main__":

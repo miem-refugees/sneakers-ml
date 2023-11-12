@@ -34,9 +34,9 @@ class AbstractParser(ABC):
         self.metadata_path = str(Path(path, "metadata", f"{self.WEBSITE_NAME}.csv"))
         self.parser = "html.parser"
 
-        if save_local:
+        if self.save_local:
             self.local = StorageProcessor(LocalStorage())
-        if save_s3:
+        if self.save_s3:
             self.s3 = StorageProcessor(S3Storage())
 
     async def get_soup(self, url: str) -> BeautifulSoup:
@@ -53,19 +53,19 @@ class AbstractParser(ABC):
 
     @abstractmethod
     def get_collection_info(self, soup: BeautifulSoup) -> dict[str, Union[str, int]]:
-        raise NotImplemented
+        raise NotImplementedError
 
     @abstractmethod
     def get_sneakers_urls(self, soup: BeautifulSoup) -> set[str]:
-        raise NotImplemented
+        raise NotImplementedError
 
     @abstractmethod
     def get_sneakers_metadata(self, soup: BeautifulSoup) -> dict[str, str]:
-        raise NotImplemented
+        raise NotImplementedError
 
     @abstractmethod
     def get_sneakers_images_urls(self, soup: BeautifulSoup) -> list[str]:
-        raise NotImplemented
+        raise NotImplementedError
 
     async def get_sneakers_images(self, images_urls: list[str]) -> list[tuple[bytes, str]]:
         async def download_image(image_url: str) -> tuple[bytes, str]:
@@ -80,7 +80,7 @@ class AbstractParser(ABC):
         """
         Parses metadata and images of one pair of sneakers
         """
-        for attempt in range(3):
+        for attempt in range(5):
             try:
                 soup = await self.get_soup(url)
                 metadata = self.get_sneakers_metadata(soup)
@@ -104,7 +104,7 @@ class AbstractParser(ABC):
             except Exception as e:
                 print(e, url)
 
-        print("RETRY: FAIL")
+        print("RETRY: FAIL", url)
         return {}
 
     async def parse_page(self, collection_info: dict[str, Union[int, str]], page: int) -> list[dict[str, str]]:

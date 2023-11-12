@@ -7,8 +7,8 @@ import pandas as pd
 
 color_path = "notebooks/merger/color_words.txt"
 color_words = set([word.strip().lower() for word in open(color_path, "r").readlines()])
-allowed_symbols = ascii_letters + digits + " "
 
+allowed_symbols = ascii_letters + digits + " "
 not_allowed_extra_symbols = ['‘', '’', '“', '”', '™', '®', "'", '"', "~"]
 allowed_extra_symbols = {'#', '&', '*', '+', ',', '-', '.', ':', '?', '_', 'ß', 'ç', 'é', 'ê', 'ü', 'β', "%", "!", "+",
                          "=", '(', ')'}
@@ -21,10 +21,11 @@ class AbstractFormatter(ABC):
         self.df = df
 
     def _format_columns(self):
+        self.df["title_old"] = self.df["title"]  # backup title
         self.df.columns = [x.lower() for x in self.df.columns]
 
     def _format_title(self):
-        self.df["title"] = self.df["title"].apply(format_text)
+        self.df["title"] = self.df["title"].apply(format_title)
 
     def _format_brand(self):
         self.df["brand"] = self.df["brand"].apply(remove_extra_whitespaces)
@@ -171,21 +172,25 @@ def check_extra_symbols(datasets: dict, column="title"):
         print(dataset, get_extra_symbols(datasets[dataset], column))
 
 
-def format_text(text):
-    text = remove_extra_symbols(text)
-
+def format_title(text):
     text = text.replace("/", " ")
     text = text.replace("|", " ")
     text = text.replace("–", "-")
     text = text.replace("&amp;", "&")
 
+    text = remove_extra_symbols(text)
+
     text = remove_extra_whitespaces(text)
     text = text.lower()
+
+    text = remove_color_words(text)
+
     return text
 
 
 def remove_extra_symbols(input_string: str) -> str:
-    return ''.join(char for char in input_string if char not in not_allowed_extra_symbols)
+    # return ''.join(char for char in input_string if char not in not_allowed_extra_symbols)
+    return ''.join(char for char in input_string if char in allowed_symbols)
 
 
 def remove_extra_whitespaces(text):

@@ -25,13 +25,13 @@ class AbstractFormatter(ABC):
         self.df.columns = [x.lower() for x in self.df.columns]
 
     def _format_title(self):
-        self.df["title"] = self.df["title"].apply(format_title)
+        self.df["title"] = self.df["title"].apply(self.format_title)
 
     def _format_brand(self):
-        self.df["brand"] = self.df["brand"].apply(remove_extra_whitespaces)
+        self.df["brand"] = self.df["brand"].apply(self.remove_extra_whitespaces)
 
     def _format_description(self):
-        self.df["description"] = self.df["description"].apply(remove_extra_whitespaces)
+        self.df["description"] = self.df["description"].apply(self.remove_extra_whitespaces)
 
     def _format_price(self):
         pass
@@ -49,6 +49,57 @@ class AbstractFormatter(ABC):
         self._format_color()
         self.df = self.df.drop("description", axis=1, errors="ignore")  # мб пригодится потом
         return self.df
+
+    @classmethod
+    def format_title(cls,text):
+        text = text.replace("/", " ")
+        text = text.replace("|", " ")
+        text = text.replace("–", "-")
+        text = text.replace("&amp;", "&")
+
+        text = cls.remove_extra_symbols(text)
+
+        text = cls.remove_extra_whitespaces(text)
+        text = text.lower()
+
+        text = cls.remove_color_words(text)
+
+        return text
+
+    @staticmethod
+    def remove_extra_symbols(input_string: str) -> str:
+        # return ''.join(char for char in input_string if char not in not_allowed_extra_symbols)
+        return ''.join(char for char in input_string if char in allowed_symbols).strip()
+
+    @staticmethod
+    def remove_extra_whitespaces(text):
+        if pd.notnull(text):
+            return " ".join(text.split())
+        else:
+            return text
+
+    @staticmethod
+    def remove_color_words(text):
+        # мб идти справа налево
+        out = []
+        text_split = text.split()
+        for word in text_split:
+            if word not in color_words:
+                out.append(word)
+        return " ".join(out)
+
+    @staticmethod
+    def check_extra_symbols(datasets: dict, column="title"):
+        def get_extra_symbols(df: pd.DataFrame, column="title") -> set:
+            out = set()
+            for text in df[column].tolist():
+                for symbol in text:
+                    if symbol not in allowed_symbols and symbol not in allowed_extra_symbols:
+                        out.add(symbol)
+            return out
+
+        for dataset in datasets:
+            print(dataset, get_extra_symbols(datasets[dataset], column))
 
 
 class SuperkicksFormatter(AbstractFormatter):
@@ -146,55 +197,3 @@ class HighsnobietyFormatter(AbstractFormatter):
             lambda columns: [columns["right-side-img"], columns["left-side-img"], columns["front-both-img"]], axis=1)
         self.df = self.df.drop_duplicates(subset=["title", "brand", "url"])
         self.df = self.df.drop(["right-side-img", "left-side-img", "front-both-img"], axis=1)
-
-
-def remove_color_words(text):
-    # Мб идти справа налево по словам и удалять до тех пор пока не встретими слово, которое не является цветом
-    # Потом это можно применить чтобы почистить title колонку
-    out = []
-    text_split = text.split()
-    for word in text_split:
-        if word not in color_words:
-            out.append(word)
-    return " ".join(out)
-
-
-def check_extra_symbols(datasets: dict, column="title"):
-    def get_extra_symbols(df: pd.DataFrame, column="title") -> set:
-        out = set()
-        for text in df[column].tolist():
-            for symbol in text:
-                if symbol not in allowed_symbols and symbol not in allowed_extra_symbols:
-                    out.add(symbol)
-        return out
-
-    for dataset in datasets:
-        print(dataset, get_extra_symbols(datasets[dataset], column))
-
-
-def format_title(text):
-    text = text.replace("/", " ")
-    text = text.replace("|", " ")
-    text = text.replace("–", "-")
-    text = text.replace("&amp;", "&")
-
-    text = remove_extra_symbols(text)
-
-    text = remove_extra_whitespaces(text)
-    text = text.lower()
-
-    text = remove_color_words(text)
-
-    return text
-
-
-def remove_extra_symbols(input_string: str) -> str:
-    # return ''.join(char for char in input_string if char not in not_allowed_extra_symbols)
-    return ''.join(char for char in input_string if char in allowed_symbols)
-
-
-def remove_extra_whitespaces(text):
-    if pd.notnull(text):
-        return " ".join(text.split())
-    else:
-        return text

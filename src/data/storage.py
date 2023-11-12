@@ -4,11 +4,18 @@ from pathlib import Path
 import pandas as pd
 
 from src.data.base import AbstractStorage
-from src.data.helper import split_dir_filename_ext
 from src.data.local import LocalStorage
 
 
+# def form_s3_url(path: str) -> str:
+#     """
+#     Returns s3 path in "s3://bucket/path" format.
+#     """
+#     s3_url = urlparse("")._replace(scheme="s3", netloc=BUCKET, path=get_parent(path))
+#     return s3_url.geturl()
+
 class StorageProcessor:
+
     def __init__(self, storage: AbstractStorage) -> None:
         self.storage = storage
 
@@ -44,7 +51,7 @@ class StorageProcessor:
         if isinstance(self.storage, LocalStorage):
             Path(directory).mkdir(parents=True, exist_ok=True)
         current_max_file_name = self.get_max_filename(directory)
-        # checking for existing images slows dong process by a lot
+        # checking for existing images slows down process by a lot
         # existing_images = self.download_all_files_binary(directory)
         for image_binary, image_ext in images:
             # if image_binary not in existing_images:
@@ -55,7 +62,7 @@ class StorageProcessor:
     def metadata_to_storage(self, metadata: list[dict[str, str]], path: str, index_columns: list[str]):
         df = pd.DataFrame(metadata)
 
-        directory, filename, ext = split_dir_filename_ext(path)
+        directory, filename, ext = self.split_dir_filename_ext(path)
         name = filename + ext
 
         if isinstance(self.storage, LocalStorage):
@@ -70,3 +77,11 @@ class StorageProcessor:
         binary_io = io.BytesIO()
         df.to_csv(binary_io, index=False)
         self.storage.upload_binary(binary_io.getvalue(), path)
+
+    @staticmethod
+    def split_dir_filename_ext(path):
+        path_obj = Path(path)
+        directory = path_obj.parent
+        filename = path_obj.stem
+        file_extension = path_obj.suffix
+        return str(directory), str(filename), str(file_extension)

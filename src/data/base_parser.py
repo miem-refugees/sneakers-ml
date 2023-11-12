@@ -1,8 +1,8 @@
 import asyncio
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Union
-from urllib.parse import urljoin
+from typing import Union, Tuple, Any
+from urllib.parse import urljoin, urlparse, urlsplit
 
 import aiohttp
 from bs4 import BeautifulSoup
@@ -10,10 +10,11 @@ from fake_useragent import UserAgent
 from tqdm import trange, tqdm
 from tqdm.asyncio import tqdm as tqdm_async
 
-from src.data.helper import add_page, get_image_extension
 from src.data.local import LocalStorage
 from src.data.s3 import S3Storage
 from src.data.storage import StorageProcessor
+
+from string import ascii_letters, digits
 
 
 class AbstractParser(ABC):
@@ -32,6 +33,11 @@ class AbstractParser(ABC):
         self.images_path = str(Path(path, "images", self.WEBSITE_NAME))
         self.metadata_path = str(Path(path, "metadata", f"{self.WEBSITE_NAME}.csv"))
         self.parser = "html.parser"
+
+        if save_local:
+            self.local = StorageProcessor(LocalStorage())
+        if save_s3:
+            self.s3 = StorageProcessor(S3Storage())
 
     async def get_soup(self, url: str) -> BeautifulSoup:
         async with aiohttp.ClientSession(headers=self.headers) as session:
@@ -64,7 +70,7 @@ class AbstractParser(ABC):
     async def get_sneakers_images(self, images_urls: list[str]) -> list[tuple[bytes, str]]:
         async def download_image(image_url: str) -> tuple[bytes, str]:
             image_binary = await self.get_image(image_url)
-            image_ext = get_image_extension(image_url)
+            image_ext = self.get_image_extension(image_url)
             return image_binary, image_ext
 
         images = await asyncio.gather(*[download_image(image_url) for image_url in images_urls])
@@ -85,14 +91,14 @@ class AbstractParser(ABC):
                 metadata["collection_url"] = collection_info["url"]
                 metadata["url"] = url
 
-                model_path = str(Path(metadata["collection_name"], metadata["brand"], metadata["title"]))
+                model_path = str(Path(metadata["collection_name"], metadata["brand_slug"], metadata["slug"]))
                 save_path = str(Path(self.images_path, model_path)).lower()
 
                 self.save_images(images, save_path)
                 metadata["images_path"] = save_path
 
-                if attempt == 1 or attempt == 2:
-                    print("RETRY: OK")
+                # if attempt == 1 or attempt == 2:
+                #     print("RETRY: OK")
 
                 return metadata
             except Exception as e:
@@ -102,7 +108,7 @@ class AbstractParser(ABC):
         return {}
 
     async def parse_page(self, collection_info: dict[str, Union[int, str]], page: int) -> list[dict[str, str]]:
-        page_url = add_page(collection_info["url"], page)
+        page_url = self.add_page(collection_info["url"], page)
         soup = await self.get_soup(page_url)
         sneakers_urls = self.get_sneakers_urls(soup)
 
@@ -141,12 +147,55 @@ class AbstractParser(ABC):
 
     def save_images(self, images: list[tuple[bytes, str]], directory: str) -> None:
         if self.save_local:
-            StorageProcessor(LocalStorage()).images_to_storage(images, directory)
+            self.local.images_to_storage(images, directory)
         if self.save_s3:
-            StorageProcessor(S3Storage()).images_to_storage(images, directory)
+            self.s3.images_to_storage(images, directory)
 
     def save_metadata(self, metadata: list[dict[str, str]], path: str, index_columns: list[str]) -> None:
         if self.save_local:
-            StorageProcessor(LocalStorage()).metadata_to_storage(metadata, path, index_columns)
+            self.local.metadata_to_storage(metadata, path, index_columns)
         if self.save_s3:
-            StorageProcessor(S3Storage()).metadata_to_storage(metadata, path, index_columns)
+            self.s3.metadata_to_storage(metadata, path, index_columns)
+
+    @staticmethod
+    def get_parent(path: str) -> str:
+        return str(Path(path).parent)
+
+    @staticmethod
+    def get_hostname_url(url: str) -> str:
+        parsed_url = urlsplit(url)
+        return f"{parsed_url.scheme}://{parsed_url.netloc}"
+
+    @staticmethod
+    def remove_query(url: str) -> str:
+        return urlparse(url)._replace(query="").geturl()
+
+    @staticmethod
+    def remove_params(url: str) -> str:
+        return urlparse(url)._replace(params="").geturl()
+
+    @staticmethod
+    def add_https(url: str) -> str:
+        return urlparse(url)._replace(scheme="https").geturl()
+
+    @staticmethod
+    def get_image_extension(url: str) -> str:
+        return Path(urlparse(url).path).suffix
+
+    @staticmethod
+    def add_page(url: str, page_number: int) -> str:
+        return urlparse(url)._replace(query=f"page={page_number}").geturl()
+
+    @staticmethod
+    def get_slug(input_string: str) -> str:
+        allowed_symbols = ascii_letters + digits + " "
+        input_string = input_string.lower()
+        input_string = ''.join(char for char in input_string if char in allowed_symbols).strip()
+        input_string = input_string.replace(" ", "-")
+        return input_string
+
+    @staticmethod
+    def fix_html(text: str) -> str:
+        text = text.replace("\xa0", " ")
+        text = text.replace("\n", " ")
+        return text.strip()

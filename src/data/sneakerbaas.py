@@ -6,7 +6,6 @@ from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 
 from src.data.base_parser import AbstractParser
-from src.data.helper import add_https, remove_query, remove_params, fix_string, fix_html_text
 
 
 class SneakerbaasParser(AbstractParser):
@@ -17,7 +16,6 @@ class SneakerbaasParser(AbstractParser):
     INDEX_COLUMNS = ["url", "collection_name"]
 
     def get_collection_info(self, soup: BeautifulSoup) -> dict[str, Union[str, int]]:
-
         pagination = soup.find(class_=re.compile("(?<!\S)pagination(?!\S)"))
         info = {"number_of_pages": int(pagination.find_all("span")[-2].a.text)}
         return info
@@ -38,12 +36,12 @@ class SneakerbaasParser(AbstractParser):
 
         for meta in metadata_section[1:]:
             if meta.has_attr("itemprop") and meta["itemprop"] not in unused_metadata_keys:
-                key = fix_string(meta["itemprop"])
-                metadata[key] = fix_html_text(meta["content"])
+                key = self.get_slug((meta["itemprop"]))
+                metadata[key] = self.fix_html(meta["content"])
 
-        # format metadata as it is used as folder names
-        metadata["brand"] = fix_string(metadata["brand"])
-        metadata["title"] = fix_string(title_section[2].text)
+        metadata["title"] = self.fix_html(title_section[2].text)
+        metadata["slug"] = self.get_slug(metadata["title"])
+        metadata["brand_slug"] = self.get_slug(metadata["brand"])
 
         return metadata
 
@@ -52,13 +50,13 @@ class SneakerbaasParser(AbstractParser):
         images_section = soup.find_all(name="div", class_="swiper-slide product-image")
         for section in images_section:
             image_section = section.find("a", {"data-fancybox": "productGallery"})
-            image_url = add_https(remove_query(remove_params(image_section["href"])))
+            image_url = self.add_https(self.remove_query(self.remove_params(image_section["href"])))
             images_urls.append(image_url)
         return images_urls
 
 
 async def main():
-    await SneakerbaasParser(path="data/raw", save_local=True, save_s3=True).parse_website()
+    await SneakerbaasParser(path="data/raw_new", save_local=True, save_s3=False).parse_website()
 
 
 if __name__ == "__main__":

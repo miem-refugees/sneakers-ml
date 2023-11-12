@@ -85,7 +85,7 @@ class SneakerbaasFormatter(AbstractFormatter):
 
     def _format_columns(self):
         super()._format_columns()
-        self.df = self.df.drop(["collection_url"], axis=1)
+        self.df = self.df.drop("collection_url", axis=1)
 
     def _format_color(self):
         def get_color(input_string: str) -> Union[list[str], None]:
@@ -115,7 +115,7 @@ class FootshopFormatter(AbstractFormatter):
         self.df["price"] = self.df["price"].apply(lambda x: float(x.replace("€", "").replace("$", "")))
 
     def _format_description(self):
-        pass
+        return
 
     def _format_color(self):
         def get_color(text):
@@ -127,6 +127,35 @@ class FootshopFormatter(AbstractFormatter):
     def format(self):
         super().format()
         self.df = self.df.drop_duplicates(subset=["title", "collection_name", "url"])
+        return self.df
+
+
+class KickscrewFormatter(AbstractFormatter):
+    website_name = "kickscrew"
+
+    def _format_columns(self):
+        super()._format_columns()
+        self.df = self.df.drop("slug", axis=1)
+
+    def _format_description(self):
+        return
+
+    def format(self):
+        super().format()
+        self.df = self.df.drop_duplicates(subset=["title", "brand", "url"])
+        return self.df
+
+
+class HighsnobietyFormatter(AbstractFormatter):
+    website_name = "highsnobiety"
+
+    def _format_columns(self):
+        super()._format_columns()
+        self.df = self.df.drop("slug", axis=1)
+
+    def format(self):
+        super().format()
+        self.df = self.df.drop_duplicates(subset=["title", "brand", "url"])
         return self.df
 
 
@@ -161,6 +190,7 @@ def format_text(text):
     text = text.replace("–", "-")
 
     text = remove_extra_whitespaces(text)
+    text = text.lower()
     return text
 
 

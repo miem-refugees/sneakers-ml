@@ -16,8 +16,13 @@ class SneakerbaasParser(AbstractParser):
     INDEX_COLUMNS = ["url", "collection_name"]
 
     def get_collection_info(self, soup: BeautifulSoup) -> dict[str, Union[str, int]]:
-        pagination = soup.find(class_=re.compile("(?<!\S)pagination(?!\S)"))
-        info = {"number_of_pages": int(pagination.find_all("span")[-2].a.text)}
+        try:
+            pagination_section = soup.find(class_=re.compile("(?<!\S)pagination(?!\S)"))
+            pagination = pagination_section.find_all("span")[-2].a.text
+        except Exception as e:
+            print("Pagination:", e)
+            pagination = 1
+        info = {"number_of_pages": int(pagination)}
         return info
 
     def get_sneakers_urls(self, soup: BeautifulSoup) -> set[str]:
@@ -50,7 +55,7 @@ class SneakerbaasParser(AbstractParser):
         images_section = soup.find_all(name="div", class_="swiper-slide product-image")
         for section in images_section:
             image_section = section.find("a", {"data-fancybox": "productGallery"})
-            image_url = self.add_https(self.remove_query(self.remove_params(image_section["href"])))
+            image_url = self.fix_image_url(image_section["href"])
             images_urls.append(image_url)
         return images_urls
 

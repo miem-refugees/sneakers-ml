@@ -53,12 +53,12 @@ class SuperkicksParser(AbstractParser):
     def get_sneakers_images_urls(self, soup: BeautifulSoup) -> list[str]:
         script = soup.findAll("script")[3].text.split("\n")[2]
         json_script = json.loads(script[script.find("{"): -1])
-        images_urls = [self.add_https(self.remove_query(self.remove_params(url))) for url in json_script["images"]]
+        images_urls = [self.fix_image_url(url) for url in json_script["images"]]
         return images_urls
 
 
 async def main():
-    await SuperkicksParser(path="data/_new", save_local=True, save_s3=False).parse_website()
+    await SuperkicksParser(path="data/raw_new", save_local=True, save_s3=False).parse_website()
 
 
 if __name__ == "__main__":

@@ -199,3 +199,7 @@ class AbstractParser(ABC):
         text = text.replace("\xa0", " ")
         text = text.replace("\n", " ")
         return text.strip()
+
+    @classmethod
+    def fix_image_url(cls, url: str) -> str:
+        return cls.add_https(cls.remove_query(cls.remove_params(url)))

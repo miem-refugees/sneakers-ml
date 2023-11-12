@@ -63,7 +63,7 @@ class FootshopParser(AbstractParser):
         script_json = json.loads("{" + script_cut + "}}")
 
         for image in script_json["product_data"]["images"]["other"]:
-            image_url = self.add_https(self.remove_query(self.remove_params(image["image"])))
+            image_url = self.fix_image_url(image["image"])
             images_urls.append(image_url)
 
         return images_urls

@@ -45,7 +45,7 @@ class SuperkicksParser(AbstractParser):
         metadata["brand_slug"] = self.get_slug(metadata["brand"])
 
         for span in soup.find_all(name="span", class_="product_description-name"):
-            key = self.get_slug(span.contents[0])
+            key = self.get_slug(span.contents[0].replace(" :", "").replace("_", " "))
             metadata[key] = self.fix_html(span.span.span.text)
 
         return metadata

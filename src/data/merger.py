@@ -30,14 +30,12 @@ class Merger:
 
     def get_datasets(self):
         return {"superkicks": self.datasets["superkicks"], "sneakerbaas": self.datasets["sneakerbaas"],
-                "footshop": self.datasets["footshop"], "highsnobiety": self.datasets["highsnobiety"],
-                "kickscrew": self.datasets["kickscrew"]}
+                "footshop": self.datasets["footshop"], "kickscrew": self.datasets["kickscrew"]}
 
     def get_formatted(self):
         return {"superkicks": self.format_superkicks(self.datasets["superkicks"]),
                 "sneakerbaas": self.format_sneakerbaas(self.datasets["sneakerbaas"]),
                 "footshop": self.format_footshop(self.datasets["footshop"]),
-                "highsnobiety": self.format_highsnobiety(self.datasets["highsnobiety"]),
                 "kickscrew": self.format_kickscrew(self.datasets["kickscrew"])}
 
     def format_superkicks(self, df):
@@ -119,22 +117,6 @@ class Merger:
 
         df[["title_without_color", "color"]] = df["title"].apply(lambda x: pd.Series(self.split_title_and_color(x)))
 
-        df["title_merge"] = df["title_without_color"].apply(self.format_merge_title)
-        return df
-
-    def format_highsnobiety(self, df):
-        df["website"] = "highsnobiety"
-        df.columns = [x.lower() for x in df.columns]
-
-        df = df.drop("slug", axis=1)
-        df["images_path"] = df.apply(
-            lambda columns: [columns["right-side-img"], columns["left-side-img"], columns["front-both-img"]], axis=1)
-        df = df.drop_duplicates(subset=["title", "brand", "url"])
-        df = df.drop(["right-side-img", "left-side-img", "front-both-img"], axis=1)
-
-        df["title_without_color"] = df["title"].apply(lambda x: self.apply_replacements(x, default_replacements))
-
-        # todo
         df["title_merge"] = df["title_without_color"].apply(self.format_merge_title)
         return df
 

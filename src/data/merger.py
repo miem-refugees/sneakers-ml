@@ -1,20 +1,27 @@
 import os
 import re
+from itertools import permutations
 from pathlib import Path
 from string import ascii_letters, digits
 from typing import Union
 
 import pandas as pd
+from pandarallel import pandarallel
 
-# color_path = "notebooks/merger/color_words.txt"
-# color_words = set([word.strip().lower() for word in open(color_path, "r").readlines()])
+pandarallel.initialize(progress_bar=True)
+
+color_path = "notebooks/merger/color_words.txt"
+color_words = list({word.strip().lower() for word in open(color_path, "r").readlines()})
 
 allowed_symbols = ascii_letters + digits + " "
 
 default_replacements = {"ê": "e", "ä": "a", "é": "e", "ç": "c", "ô": "o", "ü": "u", "&amp;": "&", "β": "beta",
-                        "ß": "beta", "–": "-", '‘': "'", '’': "'", '”': '"', '“': '"', "\'\'": '"'}
-
+                        "ß": "beta", "–": "-", '‘': "'", '’': "'", '”': '"', '“': '"', "\\'\\'": '"', '""': '"',
+                        "''": "'"}
 whitespace_replacements = dict.fromkeys({"-", "_", "\\", "/", "&"}, " ")
+
+additional_brands = {"andersson", "wales bonner", "crosc", "beams", "ader", "ami", "andre saraiva", "april skateboards",
+                     "asphaltgold", "auralee", "awake", "beams", "bianca chandon", "billie eilish"}
 
 
 class Merger:
@@ -28,6 +35,24 @@ class Merger:
             print(f"Some dataset could not be resolved:")
             raise
 
+        self.brands = self.get_all_brands()
+
+    def get_all_brands(self):
+        brands_raw = []
+        for name, dataset in self.datasets.items():
+            brands_raw += dataset["brand"].to_list()
+
+        brands_raw = set(brands_raw)
+        brands_raw = set.union(brands_raw, additional_brands)
+
+        brands_solo = {self.format_merge(text) for text in brands_raw}
+
+        collabs_x = {f"{pair[0]} x {pair[1]}" for pair in permutations(brands_solo, 2)}
+        collabs = {f"{pair[0]} {pair[1]}" for pair in permutations(brands_solo, 2)}
+
+        brands = list(set.union(collabs_x, collabs, brands_solo))
+        return sorted(brands, key=len, reverse=True)
+
     def get_datasets(self):
         return {"superkicks": self.datasets["superkicks"], "sneakerbaas": self.datasets["sneakerbaas"],
                 "footshop": self.datasets["footshop"], "kickscrew": self.datasets["kickscrew"]}
@@ -39,6 +64,7 @@ class Merger:
                 "kickscrew": self.format_kickscrew(self.datasets["kickscrew"])}
 
     def format_superkicks(self, df):
+        print("Superkicks")
         df["website"] = "superkicks"
         df.columns = [x.lower() for x in df.columns]
 
@@ -51,13 +77,15 @@ class Merger:
 
         df[["title_without_color", "color"]] = df["title"].apply(lambda x: pd.Series(self.split_title_and_color(x)))
 
-        df["title_merge"] = df["title_without_color"].apply(self.format_merge_title)
+        df["title_merge"] = df.parallel_apply(lambda x: self.format_merge_title(x["title_without_color"], self.brands),
+                                              axis=1)
 
         df = df.drop("description", axis=1)
 
         return df
 
     def format_sneakerbaas(self, df):
+        print("Sneakerbaas")
         df["website"] = "sneakerbaas"
         df.columns = [x.lower() for x in df.columns]
 
@@ -76,13 +104,15 @@ class Merger:
 
         df[["title_without_color", "color"]] = df["title"].apply(lambda x: pd.Series(self.split_title_and_color(x)))
 
-        df["title_merge"] = df["title_without_color"].apply(self.format_merge_title)
+        df["title_merge"] = df.parallel_apply(lambda x: self.format_merge_title(x["title_without_color"], self.brands),
+                                              axis=1)
 
         df = df.drop("description", axis=1)
 
         return df
 
     def format_footshop(self, df):
+        print("Footshop")
         df["website"] = "footshop"
         df.columns = [x.lower() for x in df.columns]
 
@@ -99,11 +129,13 @@ class Merger:
 
         df["color"] = df["color"].apply(get_color)
 
-        df["title_merge"] = df["title"].apply(self.format_merge_title)
+        df["title_merge"] = df.parallel_apply(lambda x: self.format_merge_title(x["title_without_color"], self.brands),
+                                              axis=1)
 
         return df
 
     def format_kickscrew(self, df):
+        print("Kickscrew")
         df["website"] = "kickscrew"
         df.columns = [x.lower() for x in df.columns]
 
@@ -117,13 +149,14 @@ class Merger:
 
         df[["title_without_color", "color"]] = df["title"].apply(lambda x: pd.Series(self.split_title_and_color(x)))
 
-        df["title_merge"] = df["title_without_color"].apply(self.format_merge_title)
+        df["title_merge"] = df.parallel_apply(lambda x: self.format_merge_title(x["title_without_color"], self.brands),
+                                              axis=1)
+
         return df
 
     @classmethod
     def split_title_and_color(cls, title: str):
         title = cls.apply_replacements(title, default_replacements)
-        title = cls.remove_double_quotes(title)
         for quote in ["'", '"']:
             end_quote = title.rfind(quote)
             second_last_quote = title.rfind(quote, 0, end_quote - 1) if end_quote != -1 else -1
@@ -143,13 +176,27 @@ class Merger:
         return text
 
     @classmethod
-    def format_merge_title(cls, text):
+    def format_merge(cls, text):
         text = text.lower()
 
         text = cls.apply_replacements(text, default_replacements)
         text = cls.apply_replacements(text, whitespace_replacements)
         text = cls.remove_extra_symbols(text)
         text = cls.remove_extra_whitespaces(text)
+
+        return text.strip()
+
+    @classmethod
+    def format_merge_title(cls, text, brands):
+        text = cls.format_merge(text)
+
+        for brand in brands:
+            text = text.removeprefix(brand)
+
+        for color in color_words:
+            text = text.removesuffix(color)
+
+        text = text.removesuffix(" x ")
 
         return text.strip()
 
@@ -160,12 +207,6 @@ class Merger:
     @staticmethod
     def remove_extra_whitespaces(text):
         return " ".join(text.split())
-
-    @staticmethod
-    def remove_double_quotes(text):
-        text = text.replace('""', '"')
-        text = text.replace("''", "'")
-        return text
 
     @staticmethod
     def get_extra_symbols(df: pd.DataFrame, column="title"):

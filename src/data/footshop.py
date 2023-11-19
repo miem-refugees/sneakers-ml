@@ -6,7 +6,6 @@ from typing import Union
 from bs4 import BeautifulSoup
 
 from src.data.base_parser import AbstractParser
-from src.data.helper import add_https, remove_query, remove_params, fix_string, fix_html_text
 
 
 class FootshopParser(AbstractParser):
@@ -42,13 +41,14 @@ class FootshopParser(AbstractParser):
         pricecurrency_section = meta_section.find(name="meta", itemprop="priceCurrency")
         price_section = soup.find(name="strong", class_=re.compile("Properties_priceValue"))
 
-        # format metadata as it is used as folder names
-        metadata["brand"] = fix_string(brand_section["title"])
-        metadata["title"] = fix_string(title_section.h1.text)
-        metadata["color"] = fix_html_text(color_section.small.text)
+        metadata["brand"] = self.fix_html(brand_section["title"])
+        metadata["title"] = self.fix_html(title_section.h1.text)
+        metadata["color"] = self.fix_html(color_section.small.text)
+        metadata["slug"] = self.get_slug(metadata["title"])
+        metadata["brand_slug"] = self.get_slug(metadata["brand"])
 
-        metadata["pricecurrency"] = fix_html_text(pricecurrency_section["content"])
-        metadata["price"] = fix_html_text(price_section.text)
+        metadata["pricecurrency"] = self.fix_html(pricecurrency_section["content"])
+        metadata["price"] = self.fix_html(price_section.text)
 
         return metadata
 
@@ -63,14 +63,14 @@ class FootshopParser(AbstractParser):
         script_json = json.loads("{" + script_cut + "}}")
 
         for image in script_json["product_data"]["images"]["other"]:
-            image_url = add_https(remove_query(remove_params(image["image"])))
+            image_url = self.fix_image_url(image["image"])
             images_urls.append(image_url)
 
         return images_urls
 
 
 async def main():
-    await FootshopParser(path="data/raw", save_local=True, save_s3=True).parse_website()
+    await FootshopParser(path="data/raw", save_local=True, save_s3=False).parse_website()
 
 
 if __name__ == "__main__":

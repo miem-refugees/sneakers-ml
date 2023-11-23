@@ -1,7 +1,8 @@
 import asyncio
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Union, Tuple, Any
+from string import ascii_letters, digits
+from typing import Union
 from urllib.parse import urljoin, urlparse, urlsplit
 
 import aiohttp
@@ -14,8 +15,6 @@ from src.data.local import LocalStorage
 from src.data.s3 import S3Storage
 from src.data.storage import StorageProcessor
 
-from string import ascii_letters, digits
-
 
 class AbstractParser(ABC):
     WEBSITE_NAME: str
@@ -24,7 +23,7 @@ class AbstractParser(ABC):
     COLLECTIONS: list[str]
     INDEX_COLUMNS: list[str]
 
-    def __init__(self, path: str, save_local: bool, save_s3: bool):
+    def __init__(self, path: Path, save_local: bool, save_s3: bool):
         self.path = path
         self.save_local = save_local
         self.save_s3 = save_s3

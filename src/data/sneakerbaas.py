@@ -1,5 +1,6 @@
 import asyncio
 import re
+from pathlib import Path
 from typing import Union
 from urllib.parse import urljoin
 
@@ -61,7 +62,7 @@ class SneakerbaasParser(AbstractParser):
 
 
 async def main():
-    await SneakerbaasParser(path="data/raw", save_local=True, save_s3=False).parse_website()
+    await SneakerbaasParser(path=Path("data") / "raw", save_local=True, save_s3=False).parse_website()
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 import asyncio
 import json
 import re
+from pathlib import Path
 from typing import Union
 
 from bs4 import BeautifulSoup
@@ -70,7 +71,7 @@ class FootshopParser(AbstractParser):
 
 
 async def main():
-    await FootshopParser(path="data/raw", save_local=True, save_s3=False).parse_website()
+    await FootshopParser(path=Path("data") / "raw", save_local=True, save_s3=False).parse_website()
 
 
 if __name__ == "__main__":

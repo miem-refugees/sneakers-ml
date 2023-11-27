@@ -24,13 +24,15 @@ class AbstractParser(ABC):
     INDEX_COLUMNS: list[str]
 
     def __init__(self, path: Path, save_local: bool, save_s3: bool):
-        self.path = path
+        self.path = Path(str(path).lower())
         self.save_local = save_local
         self.save_s3 = save_s3
 
         self.headers = {"User-Agent": UserAgent().random}
-        self.images_path = str(Path(path, "images", self.WEBSITE_NAME))
-        self.metadata_path = str(Path(path, "metadata", f"{self.WEBSITE_NAME}.csv"))
+
+        self.images_path = self.path / "images" / self.WEBSITE_NAME
+        self.metadata_path = self.path / "metadata" / f"{self.WEBSITE_NAME}.csv"
+
         self.parser = "html.parser"
 
         if self.save_local:
@@ -76,9 +78,6 @@ class AbstractParser(ABC):
         return images
 
     async def parse_sneakers(self, url: str, collection_info: dict[str, Union[int, str]]) -> dict[str, str]:
-        """
-        Parses metadata and images of one pair of sneakers
-        """
         for attempt in range(5):
             try:
                 soup = await self.get_soup(url)
@@ -90,20 +89,17 @@ class AbstractParser(ABC):
                 metadata["collection_url"] = collection_info["url"]
                 metadata["url"] = url
 
-                model_path = str(Path(metadata["collection_name"], metadata["brand_slug"], metadata["slug"]))
+                model_path = Path(metadata["collection_name"], metadata["brand_slug"], metadata["slug"])
                 save_path = str(Path(self.images_path, model_path)).lower()
 
                 self.save_images(images, save_path)
                 metadata["images_path"] = save_path
 
-                # if attempt == 1 or attempt == 2:
-                #     print("RETRY: OK")
-
                 return metadata
             except Exception as e:
-                print(e, url)
+                tqdm.write(f"{e} - {url}")
 
-        print("RETRY: FAIL", url)
+        tqdm.write(f"RETRY: FAIL - {url}")
         return {}
 
     async def parse_page(self, collection_info: dict[str, Union[int, str]], page: int) -> list[dict[str, str]]:
@@ -144,17 +140,17 @@ class AbstractParser(ABC):
         print(f"Collected {len(full_metadata)} sneakers from {self.WEBSITE_NAME} website")
         return full_metadata
 
-    def save_images(self, images: list[tuple[bytes, str]], directory: str) -> None:
+    def save_images(self, images: list[tuple[bytes, str]], directory: Union[str, Path]) -> None:
         if self.save_local:
             self.local.images_to_storage(images, directory)
         if self.save_s3:
             self.s3.images_to_storage(images, directory)
 
-    def save_metadata(self, metadata: list[dict[str, str]], path: str, index_columns: list[str]) -> None:
+    def save_metadata(self, metadata: list[dict[str, str]], path: Union[str, Path], index_columns: list[str]) -> None:
         if self.save_local:
-            self.local.metadata_to_storage(metadata, path, index_columns)
+            self.local.metadata_to_storage(metadata, str(path), index_columns)
         if self.save_s3:
-            self.s3.metadata_to_storage(metadata, path, index_columns)
+            self.s3.metadata_to_storage(metadata, str(path), index_columns)
 
     @staticmethod
     def get_parent(path: str) -> str:

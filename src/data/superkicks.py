@@ -6,6 +6,7 @@ from typing import Union
 from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
+from tqdm import tqdm
 
 from src.data.base_parser import AbstractParser
 
@@ -24,7 +25,7 @@ class SuperkicksParser(AbstractParser):
             pagination = soup.find(name="nav", class_="pagination").ul.find_all(name="li")
             pagination = pagination[-2].a.text
         except Exception as e:
-            print("Pagination:", e)
+            tqdm.write(f"Pagination - {e}")
             pagination = 1
         info = {"number_of_pages": int(pagination)}
         return info

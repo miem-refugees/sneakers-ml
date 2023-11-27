@@ -8,35 +8,41 @@ from typing import Union
 import numpy as np
 import pandas as pd
 from pandarallel import pandarallel
+from tqdm.auto import tqdm
+
+from src.data.local import LocalStorage
+from src.data.storage import StorageProcessor
 
 pandarallel.initialize(progress_bar=False)
-
-color_path = "notebooks/merger/color_words.txt"
-color_words = list({word.strip().lower() for word in open(color_path, "r").readlines()})
-color_words.sort(key=len, reverse=True)
-
-allowed_symbols = ascii_letters + digits + " "
-
-default_replacements = {"ê": "e", "ä": "a", "é": "e", "ç": "c", "ô": "o", "ü": "u", "&amp;": "&", "β": "beta",
-                        "ß": "beta", "–": "-", '‘': "'", '’': "'", '”': '"', '“': '"', "\\'\\'": '"', '""': '"',
-                        "''": "'"}
-whitespace_replacements = dict.fromkeys({"-", "_", "\\", "/", "&"}, " ")
-
-additional_brands = {"andersson", "wales bonner", "crosc", "beams", "ader", "ami", "andre saraiva", "april skateboards",
-                     "asphaltgold", "auralee", "awake", "beams", "bianca chandon", "billie eilish"}
+tqdm.pandas()
 
 
 class Merger:
-    def __init__(self, metadata_path: str = "data/raw/metadata") -> None:
+    COLOR_WORDS_PATH = "notebooks/merger/color_words.txt"
+
+    ALLOWED_SYMBOLS = ascii_letters + digits + " "
+
+    DEFAULT_REPLACEMENTS = {"ê": "e", "ä": "a", "é": "e", "ç": "c", "ô": "o", "ü": "u", "&amp;": "&", "β": "beta",
+                            "ß": "beta", "–": "-", '‘': "'", '’': "'", '”': '"', '“': '"', "\\'\\'": '"', '""': '"',
+                            "''": "'"}
+    WHITESPACE_REPLACEMENTS = dict.fromkeys({"-", "_", "\\", "/", "&"}, " ")
+
+    ADDITIONAL_BRANDS = {"andersson", "wales bonner", "crosc", "beams", "ader", "ami", "andre saraiva",
+                         "april skateboards", "asphaltgold", "auralee", "awake", "beams", "bianca chandon",
+                         "billie eilish"}
+
+    def __init__(self, metadata_path=Path("data", "raw", "metadata")) -> None:
         discovered_datasets = os.listdir(metadata_path)
-        self.datasets = {Path(source).stem: pd.read_csv(str(Path(metadata_path, source))) for source in
-                         discovered_datasets}
+        self.datasets = {Path(source).stem: pd.read_csv(Path(metadata_path, source)) for source in discovered_datasets}
 
         for name in self.datasets:
             self.datasets[name]["website"] = name
             self.datasets[name].columns = [x.lower() for x in self.datasets[name].columns]
 
         self.brands = self.get_all_brands()
+        self.color_words = self.get_color_words(self.COLOR_WORDS_PATH)
+
+        self.processor = StorageProcessor(LocalStorage())
 
     def get_all_brands(self) -> list[str]:
         brands_raw = []
@@ -44,14 +50,14 @@ class Merger:
             brands_raw += dataset["brand"].to_list()
 
         brands_raw = set(brands_raw)
-        brands_raw = set.union(brands_raw, additional_brands)
+        brands_raw = set.union(brands_raw, self.ADDITIONAL_BRANDS)
 
-        brands_solo = {self.format_merge(text) for text in brands_raw}
+        brands_solo = {self.preprocess_text(text) for text in brands_raw}
 
         collabs_x = {f"{pair[0]} x {pair[1]}" for pair in permutations(brands_solo, 2)}
-        collabs = {f"{pair[0]} {pair[1]}" for pair in permutations(brands_solo, 2)}
+        collabs_whitespace = {f"{pair[0]} {pair[1]}" for pair in permutations(brands_solo, 2)}
 
-        brands = list(set.union(collabs_x, collabs, brands_solo))
+        brands = list(set.union(collabs_x, collabs_whitespace, brands_solo))
         brands.sort(key=len, reverse=True)
         return brands
 
@@ -59,13 +65,13 @@ class Merger:
         return {"superkicks": self.datasets["superkicks"], "sneakerbaas": self.datasets["sneakerbaas"],
                 "footshop": self.datasets["footshop"], "kickscrew": self.datasets["kickscrew"]}
 
-    def get_formatted(self) -> dict[str, pd.DataFrame]:
-        return {"superkicks": self.format_superkicks(self.datasets["superkicks"]),
-                "sneakerbaas": self.format_sneakerbaas(self.datasets["sneakerbaas"]),
-                "footshop": self.format_footshop(self.datasets["footshop"]),}
-                # "kickscrew": self.format_kickscrew(self.datasets["kickscrew"])}
+    def get_preprocessed_datasets(self) -> dict[str, pd.DataFrame]:
+        return {"superkicks": self.preprocess_superkicks(self.datasets["superkicks"]),
+                "sneakerbaas": self.preprocess_sneakerbaas(self.datasets["sneakerbaas"]),
+                "footshop": self.preprocess_footshop(self.datasets["footshop"]),
+                "kickscrew": self.preprocess_kickscrew(self.datasets["kickscrew"])}
 
-    def format_superkicks(self, df: pd.DataFrame) -> pd.DataFrame:
+    def preprocess_superkicks(self, df: pd.DataFrame) -> pd.DataFrame:
         df = df.drop(["product-dimensions", "collection_url", "generic-name", "weight", "imported-by", "manufacturer",
                       "unit-of-measurement", "marketed-by", "article-code", "country-of-origin", "slug", "brand_slug"],
                      axis=1)
@@ -76,10 +82,10 @@ class Merger:
 
         df[["title_without_color", "color"]] = df["title"].apply(lambda x: pd.Series(self.split_title_and_color(x)))
 
-        df["title_merge"] = df.parallel_apply(lambda x: self.format_merge_title(x["title_without_color"], self.brands),
+        df["title_merge"] = df.parallel_apply(lambda x: self.preprocess_title(x["title_without_color"], self.brands),
                                               axis=1)
 
-        df["brand_merge"] = df["brand"].apply(self.format_merge)
+        df["brand_merge"] = df["brand"].apply(self.preprocess_text)
 
         df = df.drop(["description"], axis=1)
 
@@ -87,7 +93,7 @@ class Merger:
 
         return df
 
-    def format_sneakerbaas(self, df):
+    def preprocess_sneakerbaas(self, df):
         df = df.drop(["collection_url", "slug", "brand_slug"], axis=1)
         df = df.drop_duplicates(subset=["title", "collection_name", "url"])
 
@@ -103,10 +109,10 @@ class Merger:
 
         df[["title_without_color", "color"]] = df["title"].apply(lambda x: pd.Series(self.split_title_and_color(x)))
 
-        df["title_merge"] = df.parallel_apply(lambda x: self.format_merge_title(x["title_without_color"], self.brands),
+        df["title_merge"] = df.parallel_apply(lambda x: self.preprocess_title(x["title_without_color"], self.brands),
                                               axis=1)
 
-        df["brand_merge"] = df["brand"].apply(self.format_merge)
+        df["brand_merge"] = df["brand"].apply(self.preprocess_text)
 
         df = df.drop(["description", "description_color"], axis=1)
 
@@ -114,25 +120,25 @@ class Merger:
 
         return df
 
-    def format_footshop(self, df):
+    def preprocess_footshop(self, df):
         df = df.drop(["collection_url", "slug", "brand_slug"], axis=1)
         df = df.drop_duplicates(subset=["title", "collection_name", "url"])
 
         df["price"] = df["price"].apply(lambda x: float(x.replace("€", "").replace("$", "")))
 
-        df["title_without_color"] = df["title"].apply(lambda x: self.apply_replacements(x, default_replacements))
+        df["title_without_color"] = df["title"].apply(lambda x: self.apply_replacements(x, self.DEFAULT_REPLACEMENTS))
 
-        df["color"] = df["color"].apply(self.split_color)
+        df["color"] = df["color"].apply(self.split_colors)
 
-        df["title_merge"] = df.parallel_apply(lambda x: self.format_merge_title(x["title_without_color"], self.brands),
+        df["title_merge"] = df.parallel_apply(lambda x: self.preprocess_title(x["title_without_color"], self.brands),
                                               axis=1)
 
-        df["brand_merge"] = df["brand"].apply(self.format_merge)
+        df["brand_merge"] = df["brand"].apply(self.preprocess_text)
 
         print(df["website"][0] + " columns", df.columns, "size", df.shape)
         return df
 
-    def format_kickscrew(self, df):
+    def preprocess_kickscrew(self, df):
         df["images_path"] = df.apply(
             lambda columns: [columns["right-side-img"], columns["left-side-img"], columns["front-both-img"]], axis=1)
         df = df.drop(["right-side-img", "left-side-img", "front-both-img", "slug"], axis=1)
@@ -141,30 +147,31 @@ class Merger:
 
         df[["title_without_color", "color"]] = df["title"].apply(lambda x: pd.Series(self.split_title_and_color(x)))
 
-        df["title_merge"] = df.parallel_apply(lambda x: self.format_merge_title(x["title_without_color"], self.brands),
+        df["title_merge"] = df.parallel_apply(lambda x: self.preprocess_title(x["title_without_color"], self.brands),
                                               axis=1)
 
-        df["brand_merge"] = df["brand"].apply(self.format_merge)
+        df["brand_merge"] = df["brand"].apply(self.preprocess_text)
 
         print(df["website"][0] + " columns", df.columns, "size", df.shape)
 
         return df
 
-    def get_merged_dataset(self, path=None):
-        formatted_datasets = self.get_formatted()
+    def get_merged_dataset(self, path: Union[str, Path] = None) -> tuple[pd.DataFrame, pd.DataFrame]:
+        formatted_datasets = self.get_preprocessed_datasets()
 
         self.check_extra_symbols(formatted_datasets, ["title", "brand"])
 
         concat_dataset = pd.concat(list(formatted_datasets.values()), ignore_index=True)
 
-        merged_dataset = concat_dataset.groupby("title_merge").agg(
-            {"brand_merge": lambda x: x.value_counts().index[0], "images_path": list, "title": list,
-             "title_without_color": list, "brand": list, "collection_name": list, "color": list, "price": list,
-             "pricecurrency": list, "url": list, "website": list}).reset_index().sort_values(by="title_merge")
+        aggregations = {"brand_merge": lambda x: x.value_counts().index[0], "images_path": list, "title": list,
+                        "title_without_color": list, "brand": list, "collection_name": list, "color": list,
+                        "price": list, "pricecurrency": list, "url": list, "website": list}
+
+        merged_dataset = concat_dataset.groupby("title_merge").agg(aggregations).reset_index().sort_values(
+            by="title_merge")
 
         merged_dataset["images_path_unclean"] = merged_dataset["images_path"]
-        merged_dataset["images_path"] = merged_dataset["images_path"].apply(
-            lambda x: set([item for item in np.hstack(x) if not pd.isnull(item)]))
+        merged_dataset["images_path"] = merged_dataset["images_path"].apply(self.flatten_images_list)
 
         print(f"{concat_dataset.shape[0]} -> {merged_dataset.shape[0]}")
 
@@ -180,8 +187,23 @@ class Merger:
 
         return essentials, merged_dataset
 
+    def merge_images(self, essentials: pd.DataFrame, path) -> None:
+
+        essentials.groupby("brand_merge").agg({"images_path": Merger.flatten_images_list}).reset_index().progress_apply(
+            lambda x: self.processor.images_to_destination(x["images_path"], path / "by-brands" / x["brand_merge"]),
+            axis=1)
+
+        essentials.progress_apply(
+            lambda x: self.processor.images_to_destination(x["images_path"], path / "by-models" / x["title_merge"]),
+            axis=1)
+
+    def merge(self, path=Path("data", "merged", "metadata")) -> tuple[pd.DataFrame, pd.DataFrame]:
+        essentials, merged_dataset = self.get_merged_dataset(path)
+        self.merge_images(essentials, Path("data") / "merged" / "images")
+        return essentials, merged_dataset
+
     @staticmethod
-    def split_color(text):
+    def split_colors(text: str) -> list[str]:
         color_replacements = {"&": "/", " / ": "/", "/ ": "/", " /": "/"}
         for key, value in color_replacements.items():
             text = text.replace(key, value)
@@ -189,8 +211,8 @@ class Merger:
         return colors
 
     @classmethod
-    def split_title_and_color(cls, title: str):
-        title = cls.apply_replacements(title, default_replacements)
+    def split_title_and_color(cls, title: str) -> tuple[str, str]:
+        title = cls.apply_replacements(title, cls.DEFAULT_REPLACEMENTS)
         for quote in ["'", '"']:
             end_quote = title.rfind(quote)
             second_last_quote = title.rfind(quote, 0, end_quote - 1) if end_quote != -1 else -1
@@ -203,52 +225,51 @@ class Merger:
         return title, ""
 
     @staticmethod
-    def apply_replacements(text, replacements):
+    def apply_replacements(text: str, replacements: dict[str, str]) -> str:
         for key, value in replacements.items():
             text = text.replace(key.lower(), value.lower())
             text = text.replace(key.upper(), value.upper())
         return text
 
     @classmethod
-    def format_merge(cls, text):
+    def preprocess_text(cls, text: str) -> str:
         text = text.lower()
 
-        text = cls.apply_replacements(text, default_replacements)
-        text = cls.apply_replacements(text, whitespace_replacements)
+        text = cls.apply_replacements(text, cls.DEFAULT_REPLACEMENTS)
+        text = cls.apply_replacements(text, cls.WHITESPACE_REPLACEMENTS)
         text = cls.remove_extra_symbols(text)
         text = cls.remove_extra_whitespaces(text)
 
         return text.strip()
 
-    @classmethod
-    def format_merge_title(cls, text, brands):
-        text = cls.format_merge(text)
+    def preprocess_title(self, text: str, brands: list) -> str:
+        text = self.preprocess_text(text)
 
         for brand in brands:
             text = text.removeprefix(brand)
 
-        for color in color_words:
+        for color in self.color_words:
             text = text.removesuffix(color)
 
-        text = text.removeprefix(" x ")  # some collabs are only half-removed
+        text = text.removeprefix(" x ")  # some collabs are only half-resolved
 
         return text.strip()
 
-    @staticmethod
-    def remove_extra_symbols(input_string: str) -> str:
-        return ''.join(char for char in input_string if char in allowed_symbols).strip()
+    @classmethod
+    def remove_extra_symbols(cls, input_string: str) -> str:
+        return ''.join(char for char in input_string if char in cls.ALLOWED_SYMBOLS).strip()
 
     @staticmethod
-    def remove_extra_whitespaces(text):
+    def remove_extra_whitespaces(text: str) -> str:
         return " ".join(text.split())
 
-    @staticmethod
-    def get_extra_symbols(df: pd.DataFrame, column="title"):
+    @classmethod
+    def get_extra_symbols(cls, df: pd.DataFrame, column="title"):
         out = dict()
         for text in df[column].tolist():
             for symbol in text:
-                if not any(
-                        symbol.lower() in d for d in (allowed_symbols, default_replacements, whitespace_replacements)):
+                if not any(symbol.lower() in d for d in
+                           (cls.ALLOWED_SYMBOLS, cls.DEFAULT_REPLACEMENTS, cls.WHITESPACE_REPLACEMENTS)):
                     if symbol not in out:
                         out[symbol] = []
                     out[symbol].append(text)
@@ -256,10 +277,25 @@ class Merger:
         return out
 
     @classmethod
-    def check_extra_symbols(cls, datasets: dict, columns):
+    def check_extra_symbols(cls, datasets: dict[str, pd.DataFrame], columns: list[str]):
         extra_symbols = {dataset_name: [] for dataset_name in datasets}
         for dataset_name, dataset in datasets.items():
             for column in columns:
                 extra_symbols[dataset_name] += list(cls.get_extra_symbols(dataset, column).keys())
 
         print(extra_symbols)
+
+    @staticmethod
+    def flatten_images_list(images_list: list) -> list[str]:
+        return list(set([item for item in np.hstack(images_list) if not pd.isnull(item)]))
+
+    @staticmethod
+    def get_color_words(path: str) -> list[str]:
+        color_words = list({word.strip().lower() for word in open(path, "r").readlines()})
+        color_words.sort(key=len, reverse=True)
+        open(path, "w").write("\n".join(color_words))
+        return color_words
+
+
+if __name__ == "__main__":
+    Merger().merge()

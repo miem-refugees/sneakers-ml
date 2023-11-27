@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Union
 
 from bs4 import BeautifulSoup
+from tqdm import tqdm
 
 from src.data.base_parser import AbstractParser
 
@@ -20,7 +21,7 @@ class FootshopParser(AbstractParser):
         try:
             pagination = soup.findAll(class_=re.compile("PaginationLink_item"))[-2].text
         except Exception as e:
-            print("Pagination:", e)
+            tqdm.write(f"Pagination - {e}")
             pagination = 1
         info = {"number_of_pages": int(pagination)}
         return info

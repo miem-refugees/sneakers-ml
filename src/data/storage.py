@@ -1,18 +1,13 @@
 import io
 from pathlib import Path
+from typing import Union
 
 import pandas as pd
 
 from src.data.base import AbstractStorage
 from src.data.local import LocalStorage
+from src.data.s3 import S3Storage
 
-
-# def form_s3_url(path: str) -> str:
-#     """
-#     Returns s3 path in "s3://bucket/path" format.
-#     """
-#     s3_url = urlparse("")._replace(scheme="s3", netloc=BUCKET, path=get_parent(path))
-#     return s3_url.geturl()
 
 class StorageProcessor:
 
@@ -40,26 +35,52 @@ class StorageProcessor:
         else:
             return -1
 
-    # def exact_binary_exists(self, binary: bytes, directory: str) -> bool:
-    #     binaries = self.download_all_files_binary(directory)
-    #     for binary_ in binaries:
-    #         if binary_ == binary:
-    #             return True
-    #     return False
+    def exact_binary_exists(self, binary: bytes, directory: str) -> bool:
+        binaries = self.download_all_files_binary(directory)
+        for binary_ in binaries:
+            if binary_ == binary:
+                return True
+        return False
 
-    def images_to_storage(self, images: list[tuple[bytes, str]], directory: str):
+    def images_to_destination(self, source_list: list[str], destination: Union[str, Path]) -> None:
+        if isinstance(self.storage, S3Storage):
+            raise NotImplementedError
+
+        if len(source_list) == 0:
+            return
+
+        images = []
+
+        for source_path in source_list:
+            source_path = Path(source_path)
+
+            if source_path.is_dir():
+                for source_file in source_path.glob('*'):
+                    image_binary = self.storage.download_binary(str(source_file))
+                    image_extension = source_file.suffix
+                    images.append((image_binary, image_extension))
+
+            elif source_path.is_file():
+                image_binary = self.storage.download_binary(str(source_path))
+                image_extension = source_path.suffix
+                images.append((image_binary, image_extension))
+
+        self.images_to_storage(images, destination)
+
+    def images_to_storage(self, images: list[tuple[bytes, str]], directory: Union[Path, str]):
         if isinstance(self.storage, LocalStorage):
             Path(directory).mkdir(parents=True, exist_ok=True)
         current_max_file_name = self.get_max_filename(directory)
         # checking for existing images slows down process by a lot
-        # existing_images = self.download_all_files_binary(directory)
+        existing_images = set(self.download_all_files_binary(directory))
         for image_binary, image_ext in images:
-            # if image_binary not in existing_images:
-            current_max_file_name += 1
-            image_path = str(Path(directory, str(current_max_file_name) + image_ext))
-            self.storage.upload_binary(image_binary, image_path)
+            if image_binary not in existing_images:
+                current_max_file_name += 1
+                image_path = str(Path(directory, str(current_max_file_name) + image_ext))
+                self.storage.upload_binary(image_binary, image_path)
+                existing_images.add(image_binary)
 
-    def metadata_to_storage(self, metadata: list[dict[str, str]], path: str, index_columns: list[str]):
+    def metadata_to_storage(self, metadata: list[dict[str, str]], path: str, index_columns: list[str]) -> None:
         df = pd.DataFrame(metadata)
 
         directory, filename, ext = self.split_dir_filename_ext(path)

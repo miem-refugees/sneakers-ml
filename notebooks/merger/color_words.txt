@@ -1,223 +1,138 @@
-Red
-Orange
-Yellow
-Blue
-Purple
-Pink
-Brown
-Green
-Black
-White
-Gray
-Lavender
-Maroon
-Olive
-Aqua
-Beige
-Crimson
-Jade
-Indigo
-Khaki
-Magenta
-Navy
-Peach
-Periwinkle
-Raspberry
-Scarlet
-Teal
-Turquoise
-Violet
-Gold
-Silver
-Bronze
-Copper
-Tan
-Cyan
-Mustard
-Sage
-Coral
-Sky blue
-Forest green
-Burgundy
-Rust
-Powder blue
-Seafoam green
-Chartreuse
-Lilac
-Royal blue
-Sunflower yellow
-Salmon
-Tangerine
-amber
-amethyst
-apricot
-aqua
+white university red white black
+sunflower yellow
+complementary
+seafoam green
+forest green
+jungle green
+powder blue
+silver gray
+kelly green
+ultramarine
+burnt umber
+desert sand
+blue atoll
+steel blue
+camouflage
+royal blue
+multicolor
+terracotta
 aquamarine
+periwinkle
+chartreuse
+tangerine
+chocolate
+turquoise
+raspberry
+off white
+navy blue
+secondary
+vermilion
+persimmon
+sea green
+goldenrod
+metallic
+cinnamon
+spectrum
+amethyst
+sky blue
+viridian
+cardinal
+eggplant
+charcoal
+cerulean
+wisteria
+burgundy
+mahogany
+sapphire
+shamrock
+hot pink
+lavender
+pumpkin
+thistle
+primary
+magenta
+crimson
+emerald
+scarlet
+apricot
+fuchsia
+rainbow
+celadon
+mustard
+carmine
+saffron
+copper
+sienna
+pewter
+violet
+tomato
+orchid
+russet
+silver
+indigo
+pastel
+bronze
+maroon
+yellow
+orange
+salmon
+cerise
 auburn
-azure
+purple
+ebony
+cream
+shade
+denim
 beige
 black
-blue
-bronze
-brown
-buff
-burnt umber
-cardinal
-carmine
-celadon
-cerise
-cerulean
-charcoal
-chartreuse
-chocolate
-cinnamon
-color
-complementary
-copper
-coral
-cream
-crimson
-cyan
-dark
-denim
-desert sand
-ebony
-ecru
-eggplant
-emerald
-forest green
-fuchsia
-gold
-goldenrod
-gray
-green
-grey
-hot pink
-hue
-indigo
-ivory
-jade
-jet
-jungle green
-kelly green
-khaki
-lavender
-lemon
+taupe
 light
 lilac
-lime
-magenta
-mahogany
-maroon
-mauve
-mustard
-navy blue
+brown
+amber
 ocher
-olive
-orange
-orchid
-pale
-pastel
-peach
-periwinkle
-persimmon
-pewter
-pink
-primary
-puce
-pumpkin
-purple
-rainbow
-red
-rose
-ruby
-russet
-rust
-saffron
-salmon
-sapphire
-scarlet
-sea green
-secondary
-sepia
-shade
-shamrock
-sienna
-silver
-slate
-spectrum
-steel blue
-tan
-tangerine
-taupe
-teal
-terracotta
-thistle
-tint
-tomato
-topaz
-turquoise
-ultramarine
-umber
-vermilion
-violet
-viridian
+coral
+mauve
 wheat
+ivory
+olive
+topaz
 white
-wisteria
-yellow
+azure
+umber
+lemon
+peach
+slate
+color
+sepia
+green
+khaki
+gray
+sage
+blue
+pink
+rose
+jade
+mint
+pale
+cyan
+dark
+puce
+rust
+lime
+sand
 foam
-White
-Black
-Gray
-Red
-Blue
-Green
-Yellow
-Pink
-Purple
-Orange
-Brown
-Beige
-Navy
-Teal
-Maroon
-Olive
-Burgundy
-Neon
-Metallic
-Pastel
-Camouflage
-Multicolor
-Rainbow
-Neon
-Turquoise
-Lavender
-Mint
-Charcoal
-Indigo
-Coral
-Mustard
-Slate
-Mauve
-Khaki
-Peach
-Royal Blue
-Forest Green
-Sand
-Periwinkle
-Magenta
-Aqua
-Charcoal
-Lavender
-Tan
-Fuchsia
-Sky Blue
-Cream
-Orchid
-Chocolate
-Ruby
-Silver Gray
-blue atoll
-white university red white black
-off white
+tint
+ecru
+teal
+grey
+gold
+neon
+aqua
+ruby
+buff
+navy
+tan
+red
+hue
+jet

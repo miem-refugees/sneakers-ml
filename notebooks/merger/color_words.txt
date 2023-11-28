@@ -1,138 +1,138 @@
 white university red white black
 sunflower yellow
-complementary
 seafoam green
-forest green
+complementary
 jungle green
-powder blue
-silver gray
-kelly green
+forest green
 ultramarine
-burnt umber
+silver gray
+powder blue
+kelly green
 desert sand
-blue atoll
-steel blue
-camouflage
-royal blue
-multicolor
+burnt umber
 terracotta
-aquamarine
+steel blue
+royal blue
 periwinkle
+multicolor
 chartreuse
-tangerine
-chocolate
+camouflage
+blue atoll
+aquamarine
+vermilion
 turquoise
+tangerine
+secondary
+sea green
 raspberry
+persimmon
 off white
 navy blue
-secondary
-vermilion
-persimmon
-sea green
 goldenrod
-metallic
-cinnamon
-spectrum
-amethyst
-sky blue
+chocolate
+wisteria
 viridian
-cardinal
+spectrum
+sky blue
+shamrock
+sapphire
+metallic
+mahogany
+lavender
+hot pink
 eggplant
+cinnamon
 charcoal
 cerulean
-wisteria
+cardinal
 burgundy
-mahogany
-sapphire
-shamrock
-hot pink
-lavender
-pumpkin
+amethyst
 thistle
-primary
-magenta
-crimson
-emerald
 scarlet
-apricot
-fuchsia
-rainbow
-celadon
-mustard
-carmine
 saffron
-copper
-sienna
-pewter
+rainbow
+pumpkin
+primary
+mustard
+magenta
+fuchsia
+emerald
+crimson
+celadon
+carmine
+apricot
+yellow
 violet
 tomato
-orchid
-russet
 silver
-indigo
-pastel
-bronze
-maroon
-yellow
-orange
+sienna
 salmon
-cerise
-auburn
+russet
 purple
-ebony
-cream
-shade
-denim
-beige
-black
-taupe
-light
-lilac
-brown
-amber
-ocher
-coral
-mauve
-wheat
-ivory
-olive
-topaz
+pewter
+pastel
+orchid
+orange
+maroon
+indigo
+copper
+cerise
+bronze
+auburn
 white
-azure
+wheat
 umber
-lemon
-peach
+topaz
+taupe
 slate
-color
+shade
 sepia
-green
+peach
+olive
+ocher
+mauve
+lilac
+light
+lemon
 khaki
-gray
-sage
-blue
-pink
-rose
-jade
-mint
-pale
-cyan
-dark
-puce
-rust
-lime
-sand
-foam
+ivory
+green
+ebony
+denim
+cream
+coral
+color
+brown
+black
+beige
+azure
+amber
 tint
-ecru
 teal
-grey
-gold
-neon
-aqua
+sand
+sage
+rust
 ruby
-buff
+rose
+puce
+pink
+pale
+neon
 navy
+mint
+lime
+jade
+grey
+gray
+gold
+foam
+ecru
+dark
+cyan
+buff
+blue
+aqua
 tan
 red
-hue
 jet
+hue

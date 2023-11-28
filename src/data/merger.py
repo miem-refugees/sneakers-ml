@@ -40,7 +40,7 @@ class Merger:
             self.datasets[name].columns = [x.lower() for x in self.datasets[name].columns]
 
         self.brands = self.get_all_brands()
-        self.color_words = self.get_color_words(self.COLOR_WORDS_PATH)
+        self.colors = self.get_colors(self.COLOR_WORDS_PATH)
 
         self.processor = StorageProcessor(LocalStorage())
 
@@ -58,7 +58,7 @@ class Merger:
         collabs_whitespace = {f"{pair[0]} {pair[1]}" for pair in permutations(brands_solo, 2)}
 
         brands = list(set.union(collabs_x, collabs_whitespace, brands_solo))
-        brands.sort(key=len, reverse=True)
+        brands.sort(key=lambda x: (len(x), x), reverse=True)
         return brands
 
     def get_datasets(self) -> dict[str, pd.DataFrame]:
@@ -81,11 +81,7 @@ class Merger:
         df["price"] = df["price"].apply(lambda x: float(x.replace("₹", "").replace(",", "")))
 
         df[["title_without_color", "color"]] = df["title"].apply(lambda x: pd.Series(self.split_title_and_color(x)))
-
-        df["title_merge"] = df.parallel_apply(lambda x: self.preprocess_title(x["title_without_color"], self.brands),
-                                              axis=1)
-
-        df["brand_merge"] = df["brand"].apply(self.preprocess_text)
+        df = self.create_merge_columns(df)
 
         df = df.drop(["description"], axis=1)
 
@@ -93,7 +89,7 @@ class Merger:
 
         return df
 
-    def preprocess_sneakerbaas(self, df):
+    def preprocess_sneakerbaas(self, df: pd.DataFrame) -> pd.DataFrame:
         df = df.drop(["collection_url", "slug", "brand_slug"], axis=1)
         df = df.drop_duplicates(subset=["title", "collection_name", "url"])
 
@@ -108,11 +104,7 @@ class Merger:
         df["description_color"] = df["description"].apply(get_color)
 
         df[["title_without_color", "color"]] = df["title"].apply(lambda x: pd.Series(self.split_title_and_color(x)))
-
-        df["title_merge"] = df.parallel_apply(lambda x: self.preprocess_title(x["title_without_color"], self.brands),
-                                              axis=1)
-
-        df["brand_merge"] = df["brand"].apply(self.preprocess_text)
+        df = self.create_merge_columns(df)
 
         df = df.drop(["description", "description_color"], axis=1)
 
@@ -120,7 +112,7 @@ class Merger:
 
         return df
 
-    def preprocess_footshop(self, df):
+    def preprocess_footshop(self, df: pd.DataFrame) -> pd.DataFrame:
         df = df.drop(["collection_url", "slug", "brand_slug"], axis=1)
         df = df.drop_duplicates(subset=["title", "collection_name", "url"])
 
@@ -130,30 +122,31 @@ class Merger:
 
         df["color"] = df["color"].apply(self.split_colors)
 
-        df["title_merge"] = df.parallel_apply(lambda x: self.preprocess_title(x["title_without_color"], self.brands),
-                                              axis=1)
-
-        df["brand_merge"] = df["brand"].apply(self.preprocess_text)
+        df = self.create_merge_columns(df)
 
         print(df["website"][0] + " columns", df.columns, "size", df.shape)
         return df
 
-    def preprocess_kickscrew(self, df):
-        df["images_path"] = df.apply(
-            lambda columns: [columns["right-side-img"], columns["left-side-img"], columns["front-both-img"]], axis=1)
-        df = df.drop(["right-side-img", "left-side-img", "front-both-img", "slug"], axis=1)
+    def preprocess_kickscrew(self, df: pd.DataFrame) -> pd.DataFrame:
+        images_columns = ["right-side-img", "left-side-img", "front-both-img"]
+
+        df["images_path"] = df.apply(lambda x: self.merge_images_columns(x, images_columns), axis=1)
+        df = df.drop(images_columns + ["slug"], axis=1)
 
         df = df.drop_duplicates(subset=["title", "brand", "url"])
 
         df[["title_without_color", "color"]] = df["title"].apply(lambda x: pd.Series(self.split_title_and_color(x)))
-
-        df["title_merge"] = df.parallel_apply(lambda x: self.preprocess_title(x["title_without_color"], self.brands),
-                                              axis=1)
-
-        df["brand_merge"] = df["brand"].apply(self.preprocess_text)
+        df = self.create_merge_columns(df)
 
         print(df["website"][0] + " columns", df.columns, "size", df.shape)
 
+        return df
+
+    def create_merge_columns(self, df):
+        df["title_merge"] = df.parallel_apply(
+            lambda x: self.preprocess_title(x["title_without_color"], self.brands, self.colors), axis=1)
+
+        df["brand_merge"] = df["brand"].apply(self.preprocess_text)
         return df
 
     def get_merged_dataset(self, path: Union[str, Path] = None) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -187,14 +180,14 @@ class Merger:
 
         return essentials, merged_dataset
 
-    def merge_images(self, essentials: pd.DataFrame, path) -> None:
+    def merge_images(self, essentials: pd.DataFrame, path: Path) -> None:
 
-        essentials.groupby("brand_merge").agg({"images_path": Merger.flatten_images_list}).reset_index().progress_apply(
-            lambda x: self.processor.images_to_destination(x["images_path"], path / "by-brands" / x["brand_merge"]),
+        essentials.groupby("brand_merge").agg({"images_path": self.flatten_images_list}).reset_index().progress_apply(
+            lambda x: self.processor.images_to_directory(x["images_path"], path / "by-brands" / x["brand_merge"]),
             axis=1)
 
         essentials.progress_apply(
-            lambda x: self.processor.images_to_destination(x["images_path"], path / "by-models" / x["title_merge"]),
+            lambda x: self.processor.images_to_directory(x["images_path"], path / "by-models" / x["title_merge"]),
             axis=1)
 
     def merge(self, path=Path("data", "merged", "metadata")) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -242,18 +235,19 @@ class Merger:
 
         return text.strip()
 
-    def preprocess_title(self, text: str, brands: list) -> str:
-        text = self.preprocess_text(text)
+    @classmethod
+    def preprocess_title(cls, title: str, brands: list, colors: list) -> str:
+        title = cls.preprocess_text(title)
 
         for brand in brands:
-            text = text.removeprefix(brand)
+            title = title.removeprefix(brand)
 
-        for color in self.color_words:
-            text = text.removesuffix(color)
+        for color in colors:
+            title = title.removesuffix(color)
 
-        text = text.removeprefix(" x ")  # some collabs are only half-resolved
+        title = title.removeprefix(" x ")  # some collabs are only half-resolved
 
-        return text.strip()
+        return title.strip()
 
     @classmethod
     def remove_extra_symbols(cls, input_string: str) -> str:
@@ -287,14 +281,18 @@ class Merger:
 
     @staticmethod
     def flatten_images_list(images_list: list) -> list[str]:
-        return list(set([item for item in np.hstack(images_list) if not pd.isnull(item)]))
+        return np.unique([item for item in np.hstack(images_list) if not pd.isnull(item)]).tolist()
 
     @staticmethod
-    def get_color_words(path: str) -> list[str]:
-        color_words = list({word.strip().lower() for word in open(path, "r").readlines()})
-        color_words.sort(key=len, reverse=True)
-        open(path, "w").write("\n".join(color_words))
-        return color_words
+    def get_colors(path: str) -> list[str]:
+        colors = list({word.strip().lower() for word in open(path, "r").readlines()})
+        colors.sort(key=lambda x: (len(x), x), reverse=True)
+        open(path, "w").write("\n".join(colors))
+        return colors
+
+    @staticmethod
+    def merge_images_columns(columns: dict, images_columns: list[str]) -> list[str]:
+        return [columns[images_column] for images_column in images_columns]
 
 
 if __name__ == "__main__":

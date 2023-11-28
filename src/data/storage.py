@@ -36,13 +36,10 @@ class StorageProcessor:
             return -1
 
     def exact_binary_exists(self, binary: bytes, directory: str) -> bool:
-        binaries = self.download_all_files_binary(directory)
-        for binary_ in binaries:
-            if binary_ == binary:
-                return True
-        return False
+        binaries = set(self.download_all_files_binary(directory))
+        return binary in binaries
 
-    def images_to_destination(self, source_list: list[str], destination: Union[str, Path]) -> None:
+    def images_to_directory(self, source_list: list[str], directory: Union[str, Path]) -> None:
         if isinstance(self.storage, S3Storage):
             raise NotImplementedError
 
@@ -59,19 +56,19 @@ class StorageProcessor:
                     image_binary = self.storage.download_binary(str(source_file))
                     image_extension = source_file.suffix
                     images.append((image_binary, image_extension))
-
             elif source_path.is_file():
                 image_binary = self.storage.download_binary(str(source_path))
                 image_extension = source_path.suffix
                 images.append((image_binary, image_extension))
 
-        self.images_to_storage(images, destination)
+        self.images_to_storage(images, directory)
 
-    def images_to_storage(self, images: list[tuple[bytes, str]], directory: Union[Path, str]):
+    def images_to_storage(self, images: list[tuple[bytes, str]], directory: Union[Path, str]) -> None:
         if isinstance(self.storage, LocalStorage):
             Path(directory).mkdir(parents=True, exist_ok=True)
+
         current_max_file_name = self.get_max_filename(directory)
-        # checking for existing images slows down process by a lot
+
         existing_images = set(self.download_all_files_binary(directory))
         for image_binary, image_ext in images:
             if image_binary not in existing_images:
@@ -83,8 +80,7 @@ class StorageProcessor:
     def metadata_to_storage(self, metadata: list[dict[str, str]], path: str, index_columns: list[str]) -> None:
         df = pd.DataFrame(metadata)
 
-        directory, filename, ext = self.split_dir_filename_ext(path)
-        name = filename + ext
+        directory, name = self.split_dir_name(path)
 
         if isinstance(self.storage, LocalStorage):
             Path(directory).mkdir(parents=True, exist_ok=True)
@@ -100,9 +96,16 @@ class StorageProcessor:
         self.storage.upload_binary(binary_io.getvalue(), path)
 
     @staticmethod
-    def split_dir_filename_ext(path):
+    def split_dir_filename_ext(path: Union[str, Path]) -> tuple[str, str, str]:
         path_obj = Path(path)
         directory = path_obj.parent
         filename = path_obj.stem
         file_extension = path_obj.suffix
-        return str(directory), str(filename), str(file_extension)
+        return str(directory), filename, file_extension
+
+    @staticmethod
+    def split_dir_name(path: Union[str, Path]) -> tuple[str, str]:
+        path_obj = Path(path)
+        directory = path_obj.parent
+        name = path_obj.name
+        return str(directory), name

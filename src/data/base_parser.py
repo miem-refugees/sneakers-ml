@@ -153,10 +153,6 @@ class AbstractParser(ABC):
             self.s3.metadata_to_storage(metadata, str(path), index_columns)
 
     @staticmethod
-    def get_parent(path: str) -> str:
-        return str(Path(path).parent)
-
-    @staticmethod
     def get_hostname_url(url: str) -> str:
         parsed_url = urlsplit(url)
         return f"{parsed_url.scheme}://{parsed_url.netloc}"

@@ -39,12 +39,12 @@ class StorageProcessor:
         binaries = set(self.download_all_files_binary(directory))
         return binary in binaries
 
-    def images_to_directory(self, source_list: list[str], directory: Union[str, Path]) -> None:
+    def images_to_directory(self, source_list: list[str], directory: Union[str, Path]) -> int:
         if isinstance(self.storage, S3Storage):
             raise NotImplementedError
 
         if len(source_list) == 0:
-            return
+            return 0
 
         images = []
 
@@ -61,9 +61,9 @@ class StorageProcessor:
                 image_extension = source_path.suffix
                 images.append((image_binary, image_extension))
 
-        self.images_to_storage(images, directory)
+        return self.images_to_storage(images, directory)
 
-    def images_to_storage(self, images: list[tuple[bytes, str]], directory: Union[Path, str]) -> None:
+    def images_to_storage(self, images: list[tuple[bytes, str]], directory: Union[Path, str]) -> int:
         if isinstance(self.storage, LocalStorage):
             Path(directory).mkdir(parents=True, exist_ok=True)
 
@@ -76,6 +76,7 @@ class StorageProcessor:
                 image_path = str(Path(directory, str(current_max_file_name) + image_ext))
                 self.storage.upload_binary(image_binary, image_path)
                 existing_images.add(image_binary)
+        return len(existing_images)
 
     def metadata_to_storage(self, metadata: list[dict[str, str]], path: str, index_columns: list[str]) -> None:
         df = pd.DataFrame(metadata)

@@ -18,7 +18,7 @@ tqdm.pandas()
 
 
 class Merger:
-    COLOR_WORDS_PATH = "notebooks/merger/color_words.txt"
+    COLOR_WORDS_PATH = "data/merged/metadata/color_words.txt"
 
     ALLOWED_SYMBOLS = ascii_letters + digits + " "
 
@@ -30,6 +30,10 @@ class Merger:
     ADDITIONAL_BRANDS = {"andersson", "wales bonner", "crosc", "beams", "ader", "ami", "andre saraiva",
                          "april skateboards", "asphaltgold", "auralee", "awake", "beams", "bianca chandon",
                          "billie eilish"}
+
+    BRANDS_MAPPING = {"vans vault": "vans", "saucony originals": "saucony", "salomon advanced": "salomon",
+                      "reebok classics": "reebok", "puma sportstyle": "puma", "nike skateboarding": "nike",
+                      "clarks originals": "clarks", "adidas performance": "adidas", "adidas originals": "adidas"}
 
     def __init__(self, metadata_path=Path("data", "raw", "metadata")) -> None:
         discovered_datasets = os.listdir(metadata_path)
@@ -156,39 +160,61 @@ class Merger:
 
         concat_dataset = pd.concat(list(formatted_datasets.values()), ignore_index=True)
 
-        aggregations = {"brand_merge": lambda x: x.value_counts().index[0], "images_path": list, "title": list,
-                        "title_without_color": list, "brand": list, "collection_name": list, "color": list,
-                        "price": list, "pricecurrency": list, "url": list, "website": list}
+        full_aggregations = {"brand_merge": list, "images_path": list, "title": list, "title_without_color": list,
+                             "brand": list, "collection_name": list, "color": list, "price": list,
+                             "pricecurrency": list, "url": list, "website": list}
 
-        merged_dataset = concat_dataset.groupby("title_merge").agg(aggregations).reset_index().sort_values(
+        full_merged_dataset = concat_dataset.groupby("title_merge").agg(full_aggregations).reset_index().sort_values(
             by="title_merge")
 
-        merged_dataset["images_path_unclean"] = merged_dataset["images_path"]
-        merged_dataset["images_path"] = merged_dataset["images_path"].apply(self.flatten_images_list)
+        essential_aggregations = {"brand_merge": lambda x: x.value_counts().index[0],
+                                  "images_path": self.flatten_images_list}
 
-        print(f"{concat_dataset.shape[0]} -> {merged_dataset.shape[0]}")
+        essential_merged_dataset = concat_dataset.groupby("title_merge").agg(
+            essential_aggregations).reset_index().sort_values(by="title_merge")
 
-        essentials = merged_dataset[["title_merge", "brand_merge", "images_path"]]
+        essential_merged_dataset["brand_merge"] = essential_merged_dataset["brand_merge"].apply(
+            lambda x: self.BRANDS_MAPPING[x] if x in self.BRANDS_MAPPING else x)
+
+        danya_aggregations = {"brand": "first", "collection_name": list, "color": "first", "images_path": list,
+                              "price": "first", "pricecurrency": "first", "url": list, "website": list}
+
+        danya_dataset = concat_dataset.groupby("title_merge").agg(danya_aggregations).reset_index().sort_values(
+            by="title_merge")
+
+        print(f"{concat_dataset.shape[0]} -> {full_merged_dataset.shape[0]}")
 
         if path:
             path = Path(path)
             path.mkdir(parents=True, exist_ok=True)
-            essentials_path = path / "dataset_essential.csv"
-            merged_dataset_path = path / "dataset.csv"
-            essentials.to_csv(essentials_path, index=False)
-            merged_dataset.to_csv(merged_dataset_path, index=False)
+            essential_path = path / "dataset_essential.csv"
+            full_merged_path = path / "dataset.csv"
+            danya_path = path / "danya_eda.csv"
+            danya_dataset.to_csv(danya_path, index=False)
+            essential_merged_dataset.to_csv(essential_path, index=False)
+            full_merged_dataset.to_csv(full_merged_path, index=False)
 
-        return essentials, merged_dataset
+        return essential_merged_dataset, full_merged_dataset
 
     def merge_images(self, essentials: pd.DataFrame, path: Path) -> None:
 
-        essentials.groupby("brand_merge").agg({"images_path": self.flatten_images_list}).reset_index().progress_apply(
+        save_path = Path("data", "merged", "metadata")
+
+        essentials_brands_dataset = essentials.groupby("brand_merge").agg(
+            {"images_path": self.flatten_images_list}).reset_index()
+
+        essentials_brands_dataset["unique_images_count"] = essentials_brands_dataset.progress_apply(
             lambda x: self.processor.images_to_directory(x["images_path"], path / "by-brands" / x["brand_merge"]),
             axis=1)
 
-        essentials.progress_apply(
+        essentials_models_dataset = essentials.copy()
+
+        essentials_models_dataset["unique_images_count"] = essentials_models_dataset.progress_apply(
             lambda x: self.processor.images_to_directory(x["images_path"], path / "by-models" / x["title_merge"]),
             axis=1)
+
+        essentials_brands_dataset.to_csv(save_path / "essential_brands.csv", index=False)
+        essentials_models_dataset.to_csv(save_path / "essential_models.csv", index=False)
 
     def merge(self, path=Path("data", "merged", "metadata")) -> tuple[pd.DataFrame, pd.DataFrame]:
         essentials, merged_dataset = self.get_merged_dataset(path)

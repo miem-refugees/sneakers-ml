@@ -203,15 +203,17 @@ class Merger:
         essentials_brands_dataset = essentials.groupby("brand_merge").agg(
             {"images_path": self.flatten_images_list}).reset_index()
 
-        essentials_brands_dataset["unique_images_count"] = essentials_brands_dataset.progress_apply(
-            lambda x: self.processor.images_to_directory(x["images_path"], path / "by-brands" / x["brand_merge"]),
-            axis=1)
+        essentials_brands_dataset[["unique_images_count", "new_directory"]] = essentials_brands_dataset.progress_apply(
+            lambda x: pd.Series(
+                [self.processor.images_to_directory(x["images_path"], path / "by-brands" / x["brand_merge"]),
+                    str(path / "by-brands" / x["brand_merge"])]), axis=1)
 
         essentials_models_dataset = essentials.copy()
 
-        essentials_models_dataset["unique_images_count"] = essentials_models_dataset.progress_apply(
-            lambda x: self.processor.images_to_directory(x["images_path"], path / "by-models" / x["title_merge"]),
-            axis=1)
+        essentials_models_dataset[["unique_images_count", "new_directory"]] = essentials_models_dataset.progress_apply(
+            lambda x: pd.Series(
+                [self.processor.images_to_directory(x["images_path"], path / "by-models" / x["title_merge"]),
+                    str(path / "by-models" / x["title_merge"])]), axis=1)
 
         essentials_brands_dataset.to_csv(save_path / "essential_brands.csv", index=False)
         essentials_models_dataset.to_csv(save_path / "essential_models.csv", index=False)

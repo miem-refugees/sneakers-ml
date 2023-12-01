@@ -11,3 +11,4 @@ tqdm>=4.65.0
 pandarallel~=1.6.5
 bs4~=0.0.1
 numpy~=1.25.2
+loguru~=0.7.2

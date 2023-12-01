@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Union
 
 import pandas as pd
+from PIL import Image
 
 from src.data.base import AbstractStorage
 from src.data.local import LocalStorage
@@ -54,11 +55,11 @@ class StorageProcessor:
             if source_path.is_dir():
                 for source_file in source_path.glob('*'):
                     image_binary = self.storage.download_binary(str(source_file))
-                    image_extension = source_file.suffix
+                    image_extension = self.fix_image_extension(image_binary, source_file.suffix)
                     images.append((image_binary, image_extension))
             elif source_path.is_file():
                 image_binary = self.storage.download_binary(str(source_path))
-                image_extension = source_path.suffix
+                image_extension = self.fix_image_extension(image_binary, source_path.suffix)
                 images.append((image_binary, image_extension))
 
         return self.images_to_storage(images, directory)
@@ -95,6 +96,22 @@ class StorageProcessor:
         binary_io = io.BytesIO()
         df.to_csv(binary_io, index=False)
         self.storage.upload_binary(binary_io.getvalue(), path)
+
+    @staticmethod
+    def fix_image_extension(image_binary: bytes, image_suffix: str) -> str:
+        if image_suffix not in {".jpg", ".jpeg", ".png", ".webp"}:
+            new_suffix = Image.open(io.BytesIO(image_binary)).format
+            image_suffix = f".{new_suffix}".lower()
+        return image_suffix
+
+    @staticmethod
+    def get_images_count_and_extensions(directory: Union[str, Path]) -> tuple[int, list[str]]:
+        extensions = []
+        directory = Path(directory)
+        for brand in directory.iterdir():
+            for photo in brand.iterdir():
+                extensions.append(photo.suffix)
+        return len(extensions), extensions
 
     @staticmethod
     def split_dir_filename_ext(path: Union[str, Path]) -> tuple[str, str, str]:

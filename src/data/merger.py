@@ -7,6 +7,7 @@ from typing import Union
 
 import numpy as np
 import pandas as pd
+from loguru import logger
 from pandarallel import pandarallel
 from tqdm.auto import tqdm
 
@@ -38,13 +39,16 @@ class Merger:
     def __init__(self, metadata_path=Path("data", "raw", "metadata")) -> None:
         discovered_datasets = os.listdir(metadata_path)
         self.datasets = {Path(source).stem: pd.read_csv(Path(metadata_path, source)) for source in discovered_datasets}
+        logger.info(f"Read {len(self.datasets)} datasets {list(self.datasets.keys())}")
 
         for name in self.datasets:
             self.datasets[name]["website"] = name
             self.datasets[name].columns = [x.lower() for x in self.datasets[name].columns]
 
         self.brands = self.get_all_brands()
+        logger.info(f"Generated {len(self.brands)} brands")
         self.colors = self.get_colors(self.COLOR_WORDS_PATH)
+        logger.info(f"Read {len(self.colors)} colors")
 
         self.processor = StorageProcessor(LocalStorage())
 
@@ -89,7 +93,8 @@ class Merger:
 
         df = df.drop(["description"], axis=1)
 
-        print(df["website"][0] + " columns", df.columns, "size", df.shape)
+        logger.info(f"{df['website'][0]} columns: {df.columns.values}")
+        logger.info(f"{df['website'][0]} shape: {df.shape}")
 
         return df
 
@@ -112,7 +117,8 @@ class Merger:
 
         df = df.drop(["description", "description_color"], axis=1)
 
-        print(df["website"][0] + " columns", df.columns, "size", df.shape)
+        logger.info(f"{df['website'][0]} columns: {df.columns.values}")
+        logger.info(f"{df['website'][0]} shape: {df.shape}")
 
         return df
 
@@ -128,7 +134,9 @@ class Merger:
 
         df = self.create_merge_columns(df)
 
-        print(df["website"][0] + " columns", df.columns, "size", df.shape)
+        logger.info(f"{df['website'][0]} columns: {df.columns.values}")
+        logger.info(f"{df['website'][0]} shape: {df.shape}")
+
         return df
 
     def preprocess_kickscrew(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -142,7 +150,8 @@ class Merger:
         df[["title_without_color", "color"]] = df["title"].apply(lambda x: pd.Series(self.split_title_and_color(x)))
         df = self.create_merge_columns(df)
 
-        print(df["website"][0] + " columns", df.columns, "size", df.shape)
+        logger.info(f"{df['website'][0]} columns: {df.columns.values}")
+        logger.info(f"{df['website'][0]} shape: {df.shape}")
 
         return df
 
@@ -153,75 +162,119 @@ class Merger:
         df["brand_merge"] = df["brand"].apply(self.preprocess_text)
         return df
 
-    def get_merged_dataset(self, path: Union[str, Path] = None) -> tuple[pd.DataFrame, pd.DataFrame]:
-        formatted_datasets = self.get_preprocessed_datasets()
-
-        self.check_extra_symbols(formatted_datasets, ["title", "brand"])
-
-        concat_dataset = pd.concat(list(formatted_datasets.values()), ignore_index=True)
-
+    def get_full_merged_dataset(self, concatted_datasets: pd.DataFrame) -> pd.DataFrame:
         full_aggregations = {"brand_merge": list, "images_path": list, "title": list, "title_without_color": list,
                              "brand": list, "collection_name": list, "color": list, "price": list,
                              "pricecurrency": list, "url": list, "website": list}
 
-        full_merged_dataset = concat_dataset.groupby("title_merge").agg(full_aggregations).reset_index().sort_values(
-            by="title_merge")
+        full_merged_dataset = concatted_datasets.groupby("title_merge").agg(
+            full_aggregations).reset_index().sort_values(by="title_merge")
 
-        essential_aggregations = {"brand_merge": lambda x: x.value_counts().index[0],
-                                  "images_path": self.flatten_images_list}
+        full_merged_dataset["images_flattened"] = full_merged_dataset["images_path"].apply(self.flatten_images_list)
 
-        essential_merged_dataset = concat_dataset.groupby("title_merge").agg(
-            essential_aggregations).reset_index().sort_values(by="title_merge")
+        logger.info(f"Full merged dataset columns: {full_merged_dataset.columns.values}")
+        logger.info(f"Full merged dataset shape: {full_merged_dataset.shape}")
+        return full_merged_dataset
 
-        essential_merged_dataset["brand_merge"] = essential_merged_dataset["brand_merge"].apply(
+    def get_main_merged_dataset(self, concatted_datasets: pd.DataFrame) -> pd.DataFrame:
+
+        main_aggregations = {"brand_merge": lambda x: x.value_counts().index[0],
+                             "images_path": self.flatten_images_list}
+
+        main_merged_dataset = concatted_datasets.groupby("title_merge").agg(
+            main_aggregations).reset_index().sort_values(by="title_merge")
+
+        main_merged_dataset["brand_merge"] = main_merged_dataset["brand_merge"].apply(
             lambda x: self.BRANDS_MAPPING[x] if x in self.BRANDS_MAPPING else x)
+
+        logger.info(f"Main dataset columns: {main_merged_dataset.columns.values}")
+        logger.info(f"Main dataset shape: {main_merged_dataset.shape}")
+
+        return main_merged_dataset
+
+    def get_merged_datasets(self, save_path: Union[str, Path] = None,
+                            extra_symbols_columns: tuple[str] = ("title", "brand")) -> tuple[
+        pd.DataFrame, pd.DataFrame]:
+
+        formatted_datasets = self.get_preprocessed_datasets()
+
+        logger.info(f"Extra symbols columns {extra_symbols_columns}")
+        for dataset_name, symbols in self.check_extra_symbols(formatted_datasets, extra_symbols_columns).items():
+            logger.info(f"{dataset_name}: {symbols}")
+
+        concatted_datasets = pd.concat(list(formatted_datasets.values()), ignore_index=True)
+
+        full_dataset = self.get_full_merged_dataset(concatted_datasets)
+        main_dataset = self.get_main_merged_dataset(concatted_datasets)
 
         danya_aggregations = {"brand": "first", "collection_name": list, "color": "first", "images_path": list,
                               "price": "first", "pricecurrency": "first", "url": list, "website": list}
 
-        danya_dataset = concat_dataset.groupby("title_merge").agg(danya_aggregations).reset_index().sort_values(
+        danya_dataset = concatted_datasets.groupby("title_merge").agg(danya_aggregations).reset_index().sort_values(
             by="title_merge")
 
-        print(f"{concat_dataset.shape[0]} -> {full_merged_dataset.shape[0]}")
+        logger.info(f"{concatted_datasets.shape[0]} -> {full_dataset.shape[0]}")
 
-        if path:
-            path = Path(path)
+        if save_path:
+            path = Path(save_path)
             path.mkdir(parents=True, exist_ok=True)
-            essential_path = path / "dataset_essential.csv"
-            full_merged_path = path / "dataset.csv"
-            danya_path = path / "danya_eda.csv"
+
+            full_path = save_path / "full_dataset.csv"
+            main_path = save_path / "main_dataset.csv"
+
+            full_dataset.to_csv(full_path, index=False)
+            main_dataset.to_csv(main_path, index=False)
+
+            danya_path = save_path / "danya_eda.csv"
             danya_dataset.to_csv(danya_path, index=False)
-            essential_merged_dataset.to_csv(essential_path, index=False)
-            full_merged_dataset.to_csv(full_merged_path, index=False)
 
-        return essential_merged_dataset, full_merged_dataset
+        return main_dataset, full_dataset
 
-    def merge_images(self, essentials: pd.DataFrame, path: Path) -> None:
+    def _apply_images_merge(self, x: dict, path: Union[str, Path], merge_column_name: str,
+                            images_column_name: str) -> pd.Series:
+        path = Path(path) / x[merge_column_name]
+        return pd.Series([self.processor.images_to_directory(x[images_column_name], path), str(path)])
 
-        save_path = Path("data", "merged", "metadata")
+    def _get_merged_images_dataset(self, df: pd.DataFrame, merge_column_name: str, path: Union[str, Path]):
+        path = Path(path)
+        df[["unique_images_count", "images"]] = df.progress_apply(
+            lambda x: self._apply_images_merge(x, path, merge_column_name, "images_path"), axis=1)
+        df = df.drop("images_path", axis=1)
 
-        essentials_brands_dataset = essentials.groupby("brand_merge").agg(
+        images_count, extensions = self.processor.get_images_count_and_extensions(path)
+
+        logger.info(f"{merge_column_name} dataset columns: {df.columns.values}")
+        logger.info(f"{merge_column_name} dataset shape: {df.shape}")
+        logger.info(f"{merge_column_name} dataset images count: {images_count}")
+        logger.info(f"{merge_column_name} dataset images extensions: {set(extensions)}")
+
+        return df
+
+    def merge_images(self, main_dataset: pd.DataFrame, save_path: Union[str, Path]) -> tuple[
+        pd.DataFrame, pd.DataFrame]:
+        save_path = Path(save_path)
+
+        brands_dataset = main_dataset.groupby("brand_merge").agg(
             {"images_path": self.flatten_images_list}).reset_index()
+        brands_path = save_path / "images" / "by-brands"
+        brands_dataset = self._get_merged_images_dataset(brands_dataset, "brand_merge", brands_path)
 
-        essentials_brands_dataset[["unique_images_count", "new_directory"]] = essentials_brands_dataset.progress_apply(
-            lambda x: pd.Series(
-                [self.processor.images_to_directory(x["images_path"], path / "by-brands" / x["brand_merge"]),
-                    str(path / "by-brands" / x["brand_merge"])]), axis=1)
+        models_dataset = main_dataset.copy()
+        models_path = save_path / "images" / "by-models"
+        models_dataset = self._get_merged_images_dataset(models_dataset, "title_merge", models_path)
 
-        essentials_models_dataset = essentials.copy()
+        brands_dataset.to_csv(save_path / "metadata" / "models_dataset.csv", index=False)
+        models_dataset.to_csv(save_path / "metadata" / "brands_dataset.csv", index=False)
 
-        essentials_models_dataset[["unique_images_count", "new_directory"]] = essentials_models_dataset.progress_apply(
-            lambda x: pd.Series(
-                [self.processor.images_to_directory(x["images_path"], path / "by-models" / x["title_merge"]),
-                    str(path / "by-models" / x["title_merge"])]), axis=1)
+        return brands_dataset, models_dataset
 
-        essentials_brands_dataset.to_csv(save_path / "essential_brands.csv", index=False)
-        essentials_models_dataset.to_csv(save_path / "essential_models.csv", index=False)
-
-    def merge(self, path=Path("data", "merged", "metadata")) -> tuple[pd.DataFrame, pd.DataFrame]:
-        essentials, merged_dataset = self.get_merged_dataset(path)
-        self.merge_images(essentials, Path("data") / "merged" / "images")
-        return essentials, merged_dataset
+    def merge(self, path: Union[str, Path] = Path("data", "merged")) -> dict[str, pd.DataFrame]:
+        path = Path(path)
+        main_dataset, full_dataset = self.get_merged_datasets(save_path=path / "metadata")
+        brands_dataset, models_dataset = self.merge_images(main_dataset, path)
+        logger.info(f"ALL MERGED")
+        return {"main_dataset": main_dataset, "full_dataset": full_dataset, "brands_dataset": brands_dataset,
+                "models_dataset": models_dataset}
 
     @staticmethod
     def split_colors(text: str) -> list[str]:
@@ -286,8 +339,8 @@ class Merger:
         return " ".join(text.split())
 
     @classmethod
-    def get_extra_symbols(cls, df: pd.DataFrame, column="title"):
-        out = dict()
+    def get_extra_symbols(cls, df: pd.DataFrame, column="title") -> dict[str, list[str]]:
+        out = {}
         for text in df[column].tolist():
             for symbol in text:
                 if not any(symbol.lower() in d for d in
@@ -299,13 +352,14 @@ class Merger:
         return out
 
     @classmethod
-    def check_extra_symbols(cls, datasets: dict[str, pd.DataFrame], columns: list[str]):
-        extra_symbols = {dataset_name: [] for dataset_name in datasets}
+    def check_extra_symbols(cls, datasets: dict[str, pd.DataFrame], columns: Union[list[str], tuple[str]]) -> dict[
+        str, set[str]]:
+        extra_symbols = {dataset_name: set() for dataset_name in datasets}
         for dataset_name, dataset in datasets.items():
             for column in columns:
-                extra_symbols[dataset_name] += list(cls.get_extra_symbols(dataset, column).keys())
+                extra_symbols[dataset_name] |= set(cls.get_extra_symbols(dataset, column).keys())
 
-        print(extra_symbols)
+        return extra_symbols
 
     @staticmethod
     def flatten_images_list(images_list: list) -> list[str]:

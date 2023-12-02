@@ -11,6 +11,7 @@ from loguru import logger
 from pandarallel import pandarallel
 from tqdm.auto import tqdm
 
+from src.data.image import get_images_count, get_images_formats, get_images_suffixes
 from src.data.local import LocalStorage
 from src.data.storage import StorageProcessor
 
@@ -241,12 +242,15 @@ class Merger:
             lambda x: self._apply_images_merge(x, path, merge_column_name, "images_path"), axis=1)
         df = df.drop("images_path", axis=1)
 
-        images_count, extensions = self.processor.get_images_count_and_extensions(path)
+        images_count = get_images_count(path)
+        images_suffixes = get_images_suffixes(path)
+        images_formats = get_images_formats(path)
 
         logger.info(f"{merge_column_name} dataset columns: {df.columns.values}")
         logger.info(f"{merge_column_name} dataset shape: {df.shape}")
         logger.info(f"{merge_column_name} dataset images count: {images_count}")
-        logger.info(f"{merge_column_name} dataset images extensions: {set(extensions)}")
+        logger.info(f"{merge_column_name} dataset images suffixes: {set(images_suffixes)}")
+        logger.info(f"{merge_column_name} dataset images formats: {set(images_formats)}")
 
         return df
 
@@ -263,8 +267,8 @@ class Merger:
         models_path = save_path / "images" / "by-models"
         models_dataset = self._get_merged_images_dataset(models_dataset, "title_merge", models_path)
 
-        brands_dataset.to_csv(save_path / "metadata" / "models_dataset.csv", index=False)
-        models_dataset.to_csv(save_path / "metadata" / "brands_dataset.csv", index=False)
+        brands_dataset.to_csv(save_path / "metadata" / "brands_dataset.csv", index=False)
+        models_dataset.to_csv(save_path / "metadata" / "models_dataset.csv", index=False)
 
         return brands_dataset, models_dataset
 

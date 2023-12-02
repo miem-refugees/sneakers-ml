@@ -105,15 +105,6 @@ class StorageProcessor:
         return image_suffix
 
     @staticmethod
-    def get_images_count_and_extensions(directory: Union[str, Path]) -> tuple[int, list[str]]:
-        extensions = []
-        directory = Path(directory)
-        for brand in directory.iterdir():
-            for photo in brand.iterdir():
-                extensions.append(photo.suffix)
-        return len(extensions), extensions
-
-    @staticmethod
     def split_dir_filename_ext(path: Union[str, Path]) -> tuple[str, str, str]:
         path_obj = Path(path)
         directory = path_obj.parent

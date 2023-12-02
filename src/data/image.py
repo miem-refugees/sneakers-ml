@@ -4,10 +4,14 @@ from typing import Union
 from PIL import Image
 
 
-def get_images_count(directory: Union[str, Path]) -> int:
+def get_all_images(directory: Union[str, Path]) -> list[str]:
     directory = Path(directory)
-    files = [file for file in directory.rglob('*') if file.is_file()]
-    return len(files)
+    files = [str(file) for file in directory.rglob('*') if file.is_file()]
+    return files
+
+
+def get_images_count(directory: Union[str, Path]) -> int:
+    return len(get_all_images(directory))
 
 
 def get_images_suffixes(directory: Union[str, Path]) -> list[str]:

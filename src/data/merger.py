@@ -171,7 +171,7 @@ class Merger:
         full_merged_dataset = concatted_datasets.groupby("title_merge").agg(
             full_aggregations).reset_index().sort_values(by="title_merge")
 
-        full_merged_dataset["images_flattened"] = full_merged_dataset["images_path"].apply(self.flatten_images_list)
+        full_merged_dataset["images_flattened"] = full_merged_dataset["images_path"].apply(self.flatten_list)
 
         logger.info(f"Full merged dataset columns: {full_merged_dataset.columns.values}")
         logger.info(f"Full merged dataset shape: {full_merged_dataset.shape}")
@@ -179,9 +179,8 @@ class Merger:
 
     def get_main_merged_dataset(self, concatted_datasets: pd.DataFrame) -> pd.DataFrame:
 
-        main_aggregations = {"brand_merge": lambda x: x.value_counts().index[0],
-                             "images_path": self.flatten_images_list, "price": "first", "pricecurrency": "first",
-                             "color": self.flatten_images_list, "website": list}
+        main_aggregations = {"brand_merge": lambda x: x.value_counts().index[0], "images_path": self.flatten_list,
+                             "price": "first", "pricecurrency": "first", "color": self.flatten_list, "website": list}
 
         main_merged_dataset = concatted_datasets.groupby("title_merge").agg(
             main_aggregations).reset_index().sort_values(by="title_merge")
@@ -250,10 +249,9 @@ class Merger:
         pd.DataFrame, pd.DataFrame]:
         save_path = Path(save_path)
 
-        main_dataset = main_dataset.drop(["price", "pricecurrency", "color"], axis=1)
+        main_dataset = main_dataset.drop(["price", "pricecurrency", "color", "website"], axis=1)
 
-        brands_dataset = main_dataset.groupby("brand_merge").agg(
-            {"images_path": self.flatten_images_list}).reset_index()
+        brands_dataset = main_dataset.groupby("brand_merge").agg({"images_path": self.flatten_list}).reset_index()
         brands_path = save_path / "images" / "by-brands"
         brands_dataset = self._get_merged_images_dataset(brands_dataset, "brand_merge", brands_path)
 
@@ -270,7 +268,7 @@ class Merger:
         path = Path(path)
         main_dataset, full_dataset = self.get_merged_datasets(save_path=path / "metadata")
         brands_dataset, models_dataset = self.merge_images(main_dataset, path)
-        logger.info(f"ALL MERGED")
+        logger.info("ALL MERGED")
         return {"main_dataset": main_dataset, "full_dataset": full_dataset, "brands_dataset": brands_dataset,
                 "models_dataset": models_dataset}
 
@@ -360,7 +358,7 @@ class Merger:
         return extra_symbols
 
     @staticmethod
-    def flatten_images_list(images_list: list) -> list[str]:
+    def flatten_list(images_list: list) -> list[str]:
         return np.unique([item for item in np.hstack(images_list) if not pd.isnull(item)]).tolist()
 
     @staticmethod

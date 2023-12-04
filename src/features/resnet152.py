@@ -1,10 +1,13 @@
+import pickle
+from pathlib import Path
+
 import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
 from torchvision.models import resnet152, ResNet152_Weights
-from tqdm.notebook import tqdm
+from tqdm.autonotebook import tqdm
 
 
 class Identity(nn.Module):
@@ -40,4 +43,12 @@ def get_resnet152_features(folder: str, save=False):
     numpy_features = full_images_features.numpy()
     classes = np.array(dataset.imgs)
 
-    return numpy_features, classes
+    if save:
+        with open(Path("data", "features", "resnet152.pickle"), "wb") as f:
+            pickle.dump((numpy_features, classes, dataset.class_to_idx), f)
+
+    return numpy_features, classes, dataset.class_to_idx
+
+
+if __name__ == "__main__":
+    get_resnet152_features(str(Path("data", "merged", "images", "by-brands")), save=True)

@@ -20,7 +20,7 @@ tqdm.pandas()
 
 
 class Merger:
-    COLOR_WORDS_PATH = "data/merged/metadata/color_words.txt"
+    COLOR_WORDS_PATH = "data/merged/metadata/other/color_words.txt"
 
     ALLOWED_SYMBOLS = ascii_letters + digits + " "
 
@@ -76,9 +76,9 @@ class Merger:
 
     def get_preprocessed_datasets(self) -> dict[str, pd.DataFrame]:
         return {"superkicks": self.preprocess_superkicks(self.datasets["superkicks"]),
-                "sneakerbaas": self.preprocess_sneakerbaas(self.datasets["sneakerbaas"]),
-                "footshop": self.preprocess_footshop(self.datasets["footshop"]),
-                "kickscrew": self.preprocess_kickscrew(self.datasets["kickscrew"])}
+                "sneakerbaas": self.preprocess_sneakerbaas(self.datasets["sneakerbaas"])}
+
+        # "footshop": self.preprocess_footshop(self.datasets["footshop"]),  # "kickscrew": self.preprocess_kickscrew(self.datasets["kickscrew"])}
 
     def preprocess_superkicks(self, df: pd.DataFrame) -> pd.DataFrame:
         df = df.drop(["product-dimensions", "collection_url", "generic-name", "weight", "imported-by", "manufacturer",
@@ -180,7 +180,8 @@ class Merger:
     def get_main_merged_dataset(self, concatted_datasets: pd.DataFrame) -> pd.DataFrame:
 
         main_aggregations = {"brand_merge": lambda x: x.value_counts().index[0],
-                             "images_path": self.flatten_images_list}
+                             "images_path": self.flatten_images_list, "price": "first", "pricecurrency": "first",
+                             "color": self.flatten_images_list, "website": list}
 
         main_merged_dataset = concatted_datasets.groupby("title_merge").agg(
             main_aggregations).reset_index().sort_values(by="title_merge")
@@ -208,12 +209,6 @@ class Merger:
         full_dataset = self.get_full_merged_dataset(concatted_datasets)
         main_dataset = self.get_main_merged_dataset(concatted_datasets)
 
-        danya_aggregations = {"brand": "first", "collection_name": list, "color": "first", "images_path": list,
-                              "price": "first", "pricecurrency": "first", "url": list, "website": list}
-
-        danya_dataset = concatted_datasets.groupby("title_merge").agg(danya_aggregations).reset_index().sort_values(
-            by="title_merge")
-
         logger.info(f"{concatted_datasets.shape[0]} -> {full_dataset.shape[0]}")
 
         if save_path:
@@ -225,9 +220,6 @@ class Merger:
 
             full_dataset.to_csv(full_path, index=False)
             main_dataset.to_csv(main_path, index=False)
-
-            danya_path = save_path / "danya_eda.csv"
-            danya_dataset.to_csv(danya_path, index=False)
 
         return main_dataset, full_dataset
 
@@ -257,6 +249,8 @@ class Merger:
     def merge_images(self, main_dataset: pd.DataFrame, save_path: Union[str, Path]) -> tuple[
         pd.DataFrame, pd.DataFrame]:
         save_path = Path(save_path)
+
+        main_dataset = main_dataset.drop(["price", "pricecurrency", "color"], axis=1)
 
         brands_dataset = main_dataset.groupby("brand_merge").agg(
             {"images_path": self.flatten_images_list}).reset_index()

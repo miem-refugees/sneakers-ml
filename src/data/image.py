@@ -30,6 +30,16 @@ def get_images_formats(directory: Union[str, Path]) -> list[str]:
     return formats
 
 
+def get_images_modes(directory: Union[str, Path]) -> list[str]:
+    directory = Path(directory)
+    modes = []
+    for file in directory.rglob('*'):
+        if file.is_file():
+            image = Image.open(file)
+            modes.append(image.mode)
+    return modes
+
+
 def get_images_sizes(directory: Union[str, Path]) -> list[tuple[int, int]]:
     directory = Path(directory)
     sizes = []

@@ -55,12 +55,14 @@ class StorageProcessor:
             if source_path.is_dir():
                 for source_file in source_path.glob('*'):
                     image_binary = self.storage.download_binary(str(source_file))
-                    image_extension = self.fix_image_extension(image_binary, source_file.suffix)
-                    images.append((image_binary, image_extension))
+                    image_binary, image_extension = self.fix_image(image_binary, source_file.suffix)
+                    if image_binary:
+                        images.append((image_binary, image_extension))
             elif source_path.is_file():
                 image_binary = self.storage.download_binary(str(source_path))
-                image_extension = self.fix_image_extension(image_binary, source_path.suffix)
-                images.append((image_binary, image_extension))
+                image_binary, image_extension = self.fix_image(image_binary, source_path.suffix)
+                if image_binary:
+                    images.append((image_binary, image_extension))
 
         return self.images_to_storage(images, directory)
 
@@ -98,11 +100,20 @@ class StorageProcessor:
         self.storage.upload_binary(binary_io.getvalue(), path)
 
     @staticmethod
-    def fix_image_extension(image_binary: bytes, image_suffix: str) -> str:
-        if image_suffix not in {".jpg", ".jpeg", ".png", ".webp"}:
-            new_suffix = Image.open(io.BytesIO(image_binary)).format
-            image_suffix = f".{new_suffix}".lower()
-        return image_suffix
+    def fix_image(image_binary: bytes, image_suffix: str) -> tuple[bytes, str]:
+        image = Image.open(io.BytesIO(image_binary))
+
+        if image.mode == "P":  # remove gif images
+            return None, None
+
+        if image.mode != "RGB":
+            image = image.convert("RGB")
+
+        # image_suffix = image.format.lower()
+        output_buffer = io.BytesIO()
+        image.save(output_buffer, format="JPEG")
+        image_binary = output_buffer.getvalue()
+        return image_binary, ".jpeg"
 
     @staticmethod
     def split_dir_filename_ext(path: Union[str, Path]) -> tuple[str, str, str]:

@@ -70,7 +70,7 @@
 > 
 > Наблюдается большой дисбаланс по количеству картинок в разных брендах
 
-![img_1.png](img_1.png)
+![image](https://github.com/miem-refugees/sneakers-ml/assets/57370975/4afdad96-b861-4723-88b9-6ccfaa796e96)
 
 ### Model merge
 
@@ -82,7 +82,7 @@
   - **unique_images_count** - количество картинок для модели
   - **images** - путь к папке со смердженными картинками
 
-![img_2.png](img_2.png)
+![image](https://github.com/miem-refugees/sneakers-ml/assets/57370975/351c8d21-1fca-4f49-9d01-4acb94f460e2)
 
 ## EDA
 
@@ -94,10 +94,12 @@
   - Посмотрели размеры картинок - они различные, от 400х400 до 2000х2000.
 - Пока работаем с датасетом с брендами. Взяли эмбеддинги [`resnet-embedding-eda.ipynb`](/notebooks/eda/resnet-embedding-eda.ipynb) 
 всех картинок c помощью [`resnet152`](/src/data/features/resnet152.py) и использовали SVD, PCA, TSNE. Посмотрели как картинки лежат в пространстве.
+- Самым показательным оказался TSNE, в нём видны кластеры, но они скорее всего соответствуют не брендам, а **ракурсам** изображений.
+![image](https://github.com/miem-refugees/sneakers-ml/assets/57370975/cbf23bf5-956a-4a1c-b144-f0179e1d1c4d)
 - Также попробовали считать косинусную близость между картинками, чтобы найти дубликаты и удалить. Сработало не очень. Даже при большом
 пороге картинки отличаются.
-- Например, порог 0.99:
+- Например, **порог 0.99**:
 
 | Image 1 | Image 2 | Image 3 |
 |---------|---------|---------|
-| ![img_3.png](img_3.png) | ![img_4.png](img_4.png) | ![img_5.png](img_5.png) |
+| ![image](https://github.com/miem-refugees/sneakers-ml/assets/57370975/729fff40-880f-4538-a889-4d3ff8e0566a) | ![image](https://github.com/miem-refugees/sneakers-ml/assets/57370975/291574af-a2e0-4b1b-8f53-ee4c79a9e44c) | ![image](https://github.com/miem-refugees/sneakers-ml/assets/57370975/ca52d8c6-dbcb-4206-9c92-9064da07644f) |

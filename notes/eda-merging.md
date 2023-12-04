@@ -44,7 +44,7 @@
 
 > По итогу 2067 моделей кроссовок смерджились в 877
 
-![img.png](img.png)
+![image](https://github.com/miem-refugees/sneakers-ml/assets/57370975/215fd546-21b1-492a-8bb9-6f759c466b69)
 
 ## Images merge
 

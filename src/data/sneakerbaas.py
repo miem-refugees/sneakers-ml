@@ -1,9 +1,11 @@
 import asyncio
 import re
+from pathlib import Path
 from typing import Union
 from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
+from tqdm import tqdm
 
 from src.data.base_parser import AbstractParser
 
@@ -20,7 +22,7 @@ class SneakerbaasParser(AbstractParser):
             pagination_section = soup.find(class_=re.compile("(?<!\S)pagination(?!\S)"))
             pagination = pagination_section.find_all("span")[-2].a.text
         except Exception as e:
-            print("Pagination:", e)
+            tqdm.write(f"Pagination - {e}")
             pagination = 1
         info = {"number_of_pages": int(pagination)}
         return info
@@ -61,7 +63,7 @@ class SneakerbaasParser(AbstractParser):
 
 
 async def main():
-    await SneakerbaasParser(path="data/raw", save_local=True, save_s3=False).parse_website()
+    await SneakerbaasParser(path=Path("data") / "raw", save_local=True, save_s3=False).parse_website()
 
 
 if __name__ == "__main__":

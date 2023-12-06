@@ -7,7 +7,6 @@ Pillow==10.1.0
 Requests>=2.31.0
 seaborn~=0.13.0
 tqdm>=4.65.0
-
 pandarallel~=1.6.5
 bs4~=0.0.1
 numpy~=1.25.2

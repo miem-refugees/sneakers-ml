@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 
-
 # no side-imports in base (!)
 
 

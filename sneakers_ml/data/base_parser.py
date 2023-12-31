@@ -8,12 +8,12 @@ from urllib.parse import urljoin, urlparse, urlsplit
 import aiohttp
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
-from tqdm import trange, tqdm
+from tqdm import tqdm, trange
 from tqdm.asyncio import tqdm as tqdm_async
 
-from src.data.local import LocalStorage
-from src.data.s3 import S3Storage
-from src.data.storage import StorageProcessor
+from sneakers_ml.data.local import LocalStorage
+from sneakers_ml.data.s3 import S3Storage
+from sneakers_ml.data.storage import StorageProcessor
 
 
 class AbstractParser(ABC):
@@ -68,17 +68,23 @@ class AbstractParser(ABC):
     def get_sneakers_images_urls(self, soup: BeautifulSoup) -> list[str]:
         raise NotImplementedError
 
-    async def get_sneakers_images(self, images_urls: list[str]) -> list[tuple[bytes, str]]:
+    async def get_sneakers_images(
+        self, images_urls: list[str]
+    ) -> list[tuple[bytes, str]]:
         async def download_image(image_url: str) -> tuple[bytes, str]:
             image_binary = await self.get_image(image_url)
             image_ext = self.get_image_extension(image_url)
             return image_binary, image_ext
 
-        images = await asyncio.gather(*[download_image(image_url) for image_url in images_urls])
+        images = await asyncio.gather(
+            *[download_image(image_url) for image_url in images_urls]
+        )
         return images
 
-    async def parse_sneakers(self, url: str, collection_info: dict[str, Union[int, str]]) -> dict[str, str]:
-        for attempt in range(5):
+    async def parse_sneakers(
+        self, url: str, collection_info: dict[str, Union[int, str]]
+    ) -> dict[str, str]:
+        for _ in range(5):
             try:
                 soup = await self.get_soup(url)
                 metadata = self.get_sneakers_metadata(soup)
@@ -89,7 +95,11 @@ class AbstractParser(ABC):
                 metadata["collection_url"] = collection_info["url"]
                 metadata["url"] = url
 
-                model_path = Path(metadata["collection_name"], metadata["brand_slug"], metadata["slug"])
+                model_path = Path(
+                    metadata["collection_name"],
+                    metadata["brand_slug"],
+                    metadata["slug"],
+                )
                 save_path = str(Path(self.images_path, model_path)).lower()
 
                 self.save_images(images, save_path)
@@ -102,13 +112,20 @@ class AbstractParser(ABC):
         tqdm.write(f"RETRY: FAIL - {url}")
         return {}
 
-    async def parse_page(self, collection_info: dict[str, Union[int, str]], page: int) -> list[dict[str, str]]:
+    async def parse_page(
+        self, collection_info: dict[str, Union[int, str]], page: int
+    ) -> list[dict[str, str]]:
         page_url = self.add_page(collection_info["url"], page)
         soup = await self.get_soup(page_url)
         sneakers_urls = self.get_sneakers_urls(soup)
 
         metadata_page = await tqdm_async.gather(
-            *[self.parse_sneakers(sneakers_url, collection_info) for sneakers_url in sneakers_urls], leave=False)
+            *[
+                self.parse_sneakers(sneakers_url, collection_info)
+                for sneakers_url in sneakers_urls
+            ],
+            leave=False,
+        )
         return list(filter(None, metadata_page))
 
     async def parse_collection(self, collection: str) -> list[dict[str, str]]:
@@ -137,16 +154,25 @@ class AbstractParser(ABC):
             full_metadata += await self.parse_collection(collection)
 
         self.save_metadata(full_metadata, self.metadata_path, self.INDEX_COLUMNS)
-        print(f"Collected {len(full_metadata)} sneakers from {self.WEBSITE_NAME} website")
+        print(
+            f"Collected {len(full_metadata)} sneakers from {self.WEBSITE_NAME} website"
+        )
         return full_metadata
 
-    def save_images(self, images: list[tuple[bytes, str]], directory: Union[str, Path]) -> None:
+    def save_images(
+        self, images: list[tuple[bytes, str]], directory: Union[str, Path]
+    ) -> None:
         if self.save_local:
             self.local.images_to_storage(images, directory)
         if self.save_s3:
             self.s3.images_to_storage(images, directory)
 
-    def save_metadata(self, metadata: list[dict[str, str]], path: Union[str, Path], index_columns: list[str]) -> None:
+    def save_metadata(
+        self,
+        metadata: list[dict[str, str]],
+        path: Union[str, Path],
+        index_columns: list[str],
+    ) -> None:
         if self.save_local:
             self.local.metadata_to_storage(metadata, str(path), index_columns)
         if self.save_s3:
@@ -181,7 +207,9 @@ class AbstractParser(ABC):
     def get_slug(input_string: str) -> str:
         allowed_symbols = ascii_letters + digits + " "
         input_string = input_string.lower()
-        input_string = ''.join(char for char in input_string if char in allowed_symbols).strip()
+        input_string = "".join(
+            char for char in input_string if char in allowed_symbols
+        ).strip()
         input_string = input_string.replace(" ", "-")
         return input_string
 

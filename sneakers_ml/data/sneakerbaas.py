@@ -7,7 +7,7 @@ from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
-from src.data.base_parser import AbstractParser
+from sneakers_ml.data.base_parser import AbstractParser
 
 
 class SneakerbaasParser(AbstractParser):
@@ -19,7 +19,9 @@ class SneakerbaasParser(AbstractParser):
 
     def get_collection_info(self, soup: BeautifulSoup) -> dict[str, Union[str, int]]:
         try:
-            pagination_section = soup.find(class_=re.compile("(?<!\S)pagination(?!\S)"))
+            pagination_section = soup.find(
+                class_=re.compile(r"(?<!\S)pagination(?!\S)")
+            )
             pagination = pagination_section.find_all("span")[-2].a.text
         except Exception as e:
             tqdm.write(f"Pagination - {e}")
@@ -28,8 +30,12 @@ class SneakerbaasParser(AbstractParser):
         return info
 
     def get_sneakers_urls(self, soup: BeautifulSoup) -> set[str]:
-        products_section = soup.find_all(href=re.compile("/collections/sneakers/products"))
-        sneakers_urls = [urljoin(self.HOSTNAME_URL, item["href"]) for item in products_section]
+        products_section = soup.find_all(
+            href=re.compile("/collections/sneakers/products")
+        )
+        sneakers_urls = [
+            urljoin(self.HOSTNAME_URL, item["href"]) for item in products_section
+        ]
         return set(sneakers_urls)
 
     def get_sneakers_metadata(self, soup: BeautifulSoup) -> dict[str, str]:
@@ -42,8 +48,11 @@ class SneakerbaasParser(AbstractParser):
         unused_metadata_keys = ["url", "image", "name"]
 
         for meta in metadata_section[1:]:
-            if meta.has_attr("itemprop") and meta["itemprop"] not in unused_metadata_keys:
-                key = self.get_slug((meta["itemprop"]))
+            if (
+                meta.has_attr("itemprop")
+                and meta["itemprop"] not in unused_metadata_keys
+            ):
+                key = self.get_slug(meta["itemprop"])
                 metadata[key] = self.fix_html(meta["content"])
 
         metadata["title"] = self.fix_html(title_section[2].text)
@@ -63,7 +72,9 @@ class SneakerbaasParser(AbstractParser):
 
 
 async def main():
-    await SneakerbaasParser(path=Path("data") / "raw", save_local=True, save_s3=False).parse_website()
+    await SneakerbaasParser(
+        path=Path("data") / "raw", save_local=True, save_s3=False
+    ).parse_website()
 
 
 if __name__ == "__main__":

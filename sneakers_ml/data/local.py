@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from src.data.base import AbstractStorage
+from sneakers_ml.data.base import AbstractStorage
 
 
 class LocalStorage(AbstractStorage):

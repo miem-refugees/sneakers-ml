@@ -10,13 +10,9 @@ class S3Storage(AbstractStorage):
     YANDEX_S3 = "https://storage.yandexcloud.net"
     SNEAKERS_BUCKET = "sneakers-ml"
 
-    def __init__(
-        self, bucket_name: str = SNEAKERS_BUCKET, endpoint_url: str = YANDEX_S3
-    ):
+    def __init__(self, bucket_name: str = SNEAKERS_BUCKET, endpoint_url: str = YANDEX_S3):
         self.bucket_name = bucket_name
-        self.s3: boto3.ServiceResource = boto3.resource(
-            service_name="s3", endpoint_url=endpoint_url
-        )
+        self.s3: boto3.ServiceResource = boto3.resource(service_name="s3", endpoint_url=endpoint_url)
         self.bucket = self.s3.Bucket(bucket_name)
 
     def upload_file(self, local_path: str, s3_path: str) -> None:
@@ -56,7 +52,5 @@ class S3Storage(AbstractStorage):
         """
         Returns all filenames in directory
         """
-        s3_objects = self.bucket.objects.filter(
-            Prefix=s3_dir + "/"
-        ).all()  # prefix acts like regex pattern
+        s3_objects = self.bucket.objects.filter(Prefix=s3_dir + "/").all()  # prefix acts like regex pattern
         return [Path(f.key).name for f in s3_objects]

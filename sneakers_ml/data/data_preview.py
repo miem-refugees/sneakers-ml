@@ -14,9 +14,7 @@ class ImagePreview:
         self.storage = storage
         self.logger = logging.getLogger(self.__class__.__name__)
 
-    def preview(
-        self, data_frame: DataFrame, path_column: str, preview_column: str = "preview"
-    ) -> Optional[str]:
+    def preview(self, data_frame: DataFrame, path_column: str, preview_column: str = "preview") -> Optional[str]:
         """
         Loads image from storage to new column in frame
         :param data_frame: Pandas dataframe

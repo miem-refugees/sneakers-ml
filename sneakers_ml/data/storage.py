@@ -36,9 +36,7 @@ class StorageProcessor:
         binaries = set(self.download_all_files_binary(directory))
         return binary in binaries
 
-    def images_to_directory(
-        self, source_list: list[str], directory: Union[str, Path]
-    ) -> int:
+    def images_to_directory(self, source_list: list[str], directory: Union[str, Path]) -> int:
         if isinstance(self.storage, S3Storage):
             raise NotImplementedError
 
@@ -53,24 +51,18 @@ class StorageProcessor:
             if source_path.is_dir():
                 for source_file in source_path.glob("*"):
                     image_binary = self.storage.download_binary(str(source_file))
-                    image_binary, image_extension = self.fix_image(
-                        image_binary, source_file.suffix
-                    )
+                    image_binary, image_extension = self.fix_image(image_binary, source_file.suffix)
                     if image_binary:
                         images.append((image_binary, image_extension))
             elif source_path.is_file():
                 image_binary = self.storage.download_binary(str(source_path))
-                image_binary, image_extension = self.fix_image(
-                    image_binary, source_path.suffix
-                )
+                image_binary, image_extension = self.fix_image(image_binary, source_path.suffix)
                 if image_binary:
                     images.append((image_binary, image_extension))
 
         return self.images_to_storage(images, directory)
 
-    def images_to_storage(
-        self, images: list[tuple[bytes, str]], directory: Union[Path, str]
-    ) -> int:
+    def images_to_storage(self, images: list[tuple[bytes, str]], directory: Union[Path, str]) -> int:
         if isinstance(self.storage, LocalStorage):
             Path(directory).mkdir(parents=True, exist_ok=True)
 
@@ -80,16 +72,12 @@ class StorageProcessor:
         for image_binary, image_ext in images:
             if image_binary not in existing_images:
                 current_max_file_name += 1
-                image_path = str(
-                    Path(directory, str(current_max_file_name) + image_ext)
-                )
+                image_path = str(Path(directory, str(current_max_file_name) + image_ext))
                 self.storage.upload_binary(image_binary, image_path)
                 existing_images.add(image_binary)
         return len(existing_images)
 
-    def metadata_to_storage(
-        self, metadata: list[dict[str, str]], path: str, index_columns: list[str]
-    ) -> None:
+    def metadata_to_storage(self, metadata: list[dict[str, str]], path: str, index_columns: list[str]) -> None:
         df = pd.DataFrame(metadata)
 
         directory, name = self.split_dir_name(path)
@@ -101,9 +89,7 @@ class StorageProcessor:
             csv_binary = self.storage.download_binary(path)
             old_df = pd.read_csv(io.BytesIO(csv_binary))
             df = pd.concat([old_df, df])
-            df = df.drop_duplicates(subset=index_columns, keep="first").reset_index(
-                drop=True
-            )
+            df = df.drop_duplicates(subset=index_columns, keep="first").reset_index(drop=True)
 
         binary_io = io.BytesIO()
         df.to_csv(binary_io, index=False)

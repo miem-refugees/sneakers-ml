@@ -6,13 +6,13 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
-from torchvision.models import resnet152, ResNet152_Weights
+from torchvision.models import ResNet152_Weights, resnet152
 from tqdm.autonotebook import tqdm
 
 
 class Identity(nn.Module):
     def __init__(self):
-        super(Identity, self).__init__()
+        super().__init__()
 
     def forward(self, x):
         return x
@@ -29,7 +29,9 @@ def get_resnet152_features(folder: str, save=False):
 
     preprocess = weights.transforms()
     dataset = ImageFolder(folder, transform=preprocess)
-    dataloader = DataLoader(dataset, batch_size=64, shuffle=False, drop_last=False, num_workers=4)
+    dataloader = DataLoader(
+        dataset, batch_size=64, shuffle=False, drop_last=False, num_workers=4
+    )
 
     features = []
     with torch.inference_mode():
@@ -51,4 +53,6 @@ def get_resnet152_features(folder: str, save=False):
 
 
 if __name__ == "__main__":
-    get_resnet152_features(str(Path("data", "merged", "images", "by-brands")), save=True)
+    get_resnet152_features(
+        str(Path("data", "merged", "images", "by-brands")), save=True
+    )

@@ -1,8 +1,8 @@
 import uuid
-
-from src.data.base import AbstractStorage
-from src.data.s3 import S3Storage
 from tempfile import NamedTemporaryFile
+
+from sneakers_ml.data.base import AbstractStorage
+from sneakers_ml.data.s3 import S3Storage
 
 
 class TestS3:
@@ -10,11 +10,11 @@ class TestS3:
         self.storage: AbstractStorage = S3Storage()
         self.file = NamedTemporaryFile()
         self.secret_code = uuid.uuid4().bytes
-        with open(self.file.name, 'wb') as f:
+        with open(self.file.name, "wb") as f:
             f.write(self.secret_code)
 
         self.file_name = self.file.name.split("/")[-1]
-        self.s3_path = f'tmp/{self.file_name}'
+        self.s3_path = f"tmp/{self.file_name}"
 
     def teardown(self):
         self.file.close()

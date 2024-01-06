@@ -1,13 +1,12 @@
 import base64
-import logging
 import io
-
+import logging
 from typing import Optional
 
 from pandas import DataFrame
 from PIL import Image
 
-from src.data.base import AbstractStorage
+from sneakers_ml.data.base import AbstractStorage
 
 
 class ImagePreview:
@@ -15,7 +14,9 @@ class ImagePreview:
         self.storage = storage
         self.logger = logging.getLogger(self.__class__.__name__)
 
-    def preview(self, data_frame: DataFrame, path_column: str, preview_column: str = "preview") -> Optional[str]:
+    def preview(
+        self, data_frame: DataFrame, path_column: str, preview_column: str = "preview"
+    ) -> Optional[str]:
         """
         Loads image from storage to new column in frame
         :param data_frame: Pandas dataframe
@@ -34,7 +35,7 @@ class ImagePreview:
 
         im = Image.open(io.BytesIO(binary))
 
-        with (io.BytesIO() as buffer):
-            im.save(buffer, 'jpeg')
+        with io.BytesIO() as buffer:
+            im.save(buffer, "jpeg")
             image_base64 = base64.b64encode(buffer.getvalue()).decode()
             return f'<img src="data:image/jpeg;base64,{image_base64}">'

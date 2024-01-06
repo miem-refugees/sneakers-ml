@@ -9,6 +9,7 @@
 ## Чекпоинты
 
 - [ ] [Поиск и сбор данных](https://docs.google.com/document/d/1ZiSaJdyIBDxR2tN6hkaq2Dc5KgajTxphSlj7CzCoUAg)
+
   - [x] Парсинг [sneakerbaas](https://www.sneakerbaas.com)
   - [x] Парсинг [superkicks](https://www.superkicks.in)
   - [x] Парсинг [highsnobiety](https://www.highsnobiety.com)

@@ -38,7 +38,7 @@ flake8-pyproject = "^1.2.3"
 autoflake = "^2.2.1"
 pyupgrade = "^3.15.0"
 nbqa = "^1.7.1"
-bandit = "^1.7.6"
+bandit = {extras = ["toml"], version = "^1.7.6"}
 pre-commit = "^3.6.0"
 
 [tool.poetry.group.vscode]

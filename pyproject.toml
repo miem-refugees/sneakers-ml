@@ -33,20 +33,25 @@ dvc = {extras = ["gdrive", "s3"], version = "^3.37.0"}
 black = "^23.12.1"
 isort = "^5.13.2"
 flake8 = "^6.1.0"
-pylint = "^3.0.3"
-pre-commit = "^3.6.0"
-mypy = "^1.8.0"
 flake8-bugbear = "^23.12.2"
 flake8-pyproject = "^1.2.3"
-ruff = "^0.1.9"
 autoflake = "^2.2.1"
 pyupgrade = "^3.15.0"
 nbqa = "^1.7.1"
 bandit = "^1.7.6"
+pre-commit = "^3.6.0"
+
+[tool.poetry.group.vscode]
+optional = true
+
+[tool.poetry.group.vscode.dependencies]
+mypy = "^1.8.0"
+pylint = "^3.0.3"
+ruff = "^0.1.11"
 pandas-stubs = "^2.1.4.231227"
-types-pillow = "^10.1.0.2"
-types-beautifulsoup4 = "^4.12.0.7"
-types-tqdm = "^4.66.0.5"
+types-pillow = "^10.1.0.20240106"
+types-beautifulsoup4 = "^4.12.0.20240106"
+types-tqdm = "^4.66.0.20240106"
 
 [tool.black]
 line-length = 88

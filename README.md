@@ -8,14 +8,14 @@
 
 ## Чекпоинты
 
-- [X] [Поиск и сбор данных](https://docs.google.com/document/d/1ZiSaJdyIBDxR2tN6hkaq2Dc5KgajTxphSlj7CzCoUAg)
+- [x] [Поиск и сбор данных](https://docs.google.com/document/d/1ZiSaJdyIBDxR2tN6hkaq2Dc5KgajTxphSlj7CzCoUAg)
 
   - [x] Парсинг [sneakerbaas](https://www.sneakerbaas.com)
   - [x] Парсинг [superkicks](https://www.superkicks.in)
   - [x] Парсинг [highsnobiety](https://www.highsnobiety.com)
 
   - [x] Выгрузка данных на s3
-  - [X] Объединение данных в одну базу
+  - [x] Объединение данных в одну базу
   - [x] [Документация и описание данных](notes/)
   - [x] Настроить poetry
 
@@ -37,7 +37,7 @@ DL:
 - Добавить text2image и image2text поиск
 - Если модели работали на "чистых" изображениях (без фона), попробовать использовать данные из реального мира
 
-## [Требования](https://docs.google.com/document/d/1Gdz3_W7x7L9Ff1-Sl61Cv3L6GHBiceH863Vn1ucXzjU/edit)
+## [Требования](https://docs.google.com/document/d/1Gdz3_W7x7L9Ff1-Sl61Cv3L6GHBiceH863Vn1ucxzjU/edit)
 
 Требования к инфраструктурной части общие для всех проектов.
 

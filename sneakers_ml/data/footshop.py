@@ -28,9 +28,7 @@ class FootshopParser(AbstractParser):
 
     def get_sneakers_urls(self, soup: BeautifulSoup) -> set[str]:
         products_section = soup.findAll(name="div", itemprop="itemListElement")
-        sneakers_urls = [
-            item.find(itemprop="url")["content"] for item in products_section
-        ]
+        sneakers_urls = [item.find(itemprop="url")["content"] for item in products_section]
         return set(sneakers_urls)
 
     def get_sneakers_metadata(self, soup: BeautifulSoup) -> dict[str, str]:
@@ -41,13 +39,9 @@ class FootshopParser(AbstractParser):
         title_section = properties_section.find(class_=re.compile("Headline_wrapper_"))
         color_section = properties_section.find(class_=re.compile("Headline_wrapper_"))
 
-        meta_section = soup.find(
-            name="div", class_=re.compile("Product_productProperties")
-        )
+        meta_section = soup.find(name="div", class_=re.compile("Product_productProperties"))
         pricecurrency_section = meta_section.find(name="meta", itemprop="priceCurrency")
-        price_section = soup.find(
-            name="strong", class_=re.compile("Properties_priceValue")
-        )
+        price_section = soup.find(name="strong", class_=re.compile("Properties_priceValue"))
 
         metadata["brand"] = self.fix_html(brand_section["title"])
         metadata["title"] = self.fix_html(title_section.h1.text)
@@ -70,9 +64,7 @@ class FootshopParser(AbstractParser):
         )
         script = script.text.replace("-->", "").replace("<!--", "")[1:-1]
 
-        script_cut = script[
-            script.find("product_data") - 1 : script.find("last_image") - 2
-        ]
+        script_cut = script[script.find("product_data") - 1 : script.find("last_image") - 2]
 
         script_json = json.loads("{" + script_cut + "}}")
 
@@ -84,9 +76,7 @@ class FootshopParser(AbstractParser):
 
 
 async def main():
-    await FootshopParser(
-        path=Path("data") / "raw", save_local=True, save_s3=False
-    ).parse_website()
+    await FootshopParser(path=Path("data") / "raw", save_local=True, save_s3=False).parse_website()
 
 
 if __name__ == "__main__":

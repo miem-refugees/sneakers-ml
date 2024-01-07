@@ -9,7 +9,7 @@ class AbstractStorage(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def upload_binary(self, binary_data: bytes, path: str) -> None:
+    def upload_binary(self, binary_data: bytes, local_path: str) -> None:
         raise NotImplementedError
 
     @abstractmethod
@@ -17,7 +17,7 @@ class AbstractStorage(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def download_binary(self, path: str) -> bytes:
+    def download_binary(self, local_path: str) -> bytes:
         raise NotImplementedError
 
     @abstractmethod

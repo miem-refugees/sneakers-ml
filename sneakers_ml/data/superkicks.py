@@ -31,9 +31,7 @@ class SuperkicksParser(AbstractParser):
 
     def get_collection_info(self, soup: BeautifulSoup) -> dict[str, Union[str, int]]:
         try:
-            pagination = soup.find(name="nav", class_="pagination").ul.find_all(
-                name="li"
-            )
+            pagination = soup.find(name="nav", class_="pagination").ul.find_all(name="li")
             pagination = pagination[-2].a.text
         except Exception as e:
             tqdm.write(f"Pagination - {e}")
@@ -42,23 +40,15 @@ class SuperkicksParser(AbstractParser):
         return info
 
     def get_sneakers_urls(self, soup: BeautifulSoup) -> set[str]:
-        products_section = soup.find_all(
-            name="div", class_="card__information product-card2"
-        )
-        sneakers_urls = [
-            urljoin(self.HOSTNAME_URL, item.a["href"]) for item in products_section
-        ]
+        products_section = soup.find_all(name="div", class_="card__information product-card2")
+        sneakers_urls = [urljoin(self.HOSTNAME_URL, item.a["href"]) for item in products_section]
         return set(sneakers_urls)
 
     def get_sneakers_metadata(self, soup: BeautifulSoup) -> dict[str, str]:
         metadata = {}
 
-        brand_section = soup.find(class_="product__text") or soup.find(
-            class_="product__vendor"
-        )
-        title_section = soup.find(class_="product__title").h1 or soup.find(
-            class_="product__title"
-        )
+        brand_section = soup.find(class_="product__text") or soup.find(class_="product__vendor")
+        title_section = soup.find(class_="product__title").h1 or soup.find(class_="product__title")
         price_section = soup.find(name="span", class_="price-item price-item--regular")
         description_section = soup.find(name="div", class_="product__description")
 
@@ -84,9 +74,7 @@ class SuperkicksParser(AbstractParser):
 
 
 async def main():
-    await SuperkicksParser(
-        path=Path("data") / "raw", save_local=True, save_s3=False
-    ).parse_website()
+    await SuperkicksParser(path=Path("data") / "raw", save_local=True, save_s3=False).parse_website()
 
 
 if __name__ == "__main__":

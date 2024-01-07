@@ -1,6 +1,10 @@
 name: pre-Commit
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - trunk
+  pull_request:
 
 jobs:
   pre-commit:

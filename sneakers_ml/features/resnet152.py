@@ -14,11 +14,12 @@ class Identity(nn.Module):
     def __init__(self):
         super().__init__()
 
-    def forward(self, x):
+    @staticmethod
+    def forward(x):
         return x
 
 
-def get_resnet152_features(folder: str, save=False):
+def get_resnet152_features(folder: str, save=False) -> (np.ndarray, np.ndarray, dict):
     weights = ResNet152_Weights.DEFAULT
     model = resnet152(weights=weights)
     model.fc = Identity()

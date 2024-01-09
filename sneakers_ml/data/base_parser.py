@@ -2,7 +2,6 @@ import asyncio
 from abc import ABC, abstractmethod
 from pathlib import Path
 from string import ascii_letters, digits
-from typing import Union
 from urllib.parse import urljoin, urlparse, urlsplit
 
 import aiohttp
@@ -23,15 +22,15 @@ class AbstractParser(ABC):
     COLLECTIONS: list[str]
     INDEX_COLUMNS: list[str]
 
-    def __init__(self, path: Path, save_local: bool, save_s3: bool):
+    def __init__(self, path: str, save_local: bool, save_s3: bool) -> None:
         self.path = Path(str(path).lower())
         self.save_local = save_local
         self.save_s3 = save_s3
 
         self.headers = {"User-Agent": UserAgent().random}
 
-        self.images_path = self.path / "images" / self.WEBSITE_NAME
-        self.metadata_path = self.path / "metadata" / f"{self.WEBSITE_NAME}.csv"
+        self.images_path = str(self.path / "images" / self.WEBSITE_NAME)
+        self.metadata_path = str(self.path / "metadata" / f"{self.WEBSITE_NAME}.csv")
 
         self.parser = "html.parser"
 
@@ -44,8 +43,7 @@ class AbstractParser(ABC):
         async with aiohttp.ClientSession(headers=self.headers) as session:
             async with session.get(url) as resp:
                 text = await resp.text()
-        soup = BeautifulSoup(text, self.parser)
-        return soup
+        return BeautifulSoup(text, self.parser)
 
     async def get_image(self, image_url: str) -> bytes:
         async with aiohttp.ClientSession(headers=self.headers) as session:
@@ -53,7 +51,7 @@ class AbstractParser(ABC):
                 return await resp.read()
 
     @abstractmethod
-    def get_collection_info(self, soup: BeautifulSoup) -> dict[str, Union[str, int]]:
+    def get_collection_info(self, soup: BeautifulSoup) -> dict[str, str]:
         raise NotImplementedError
 
     @abstractmethod
@@ -74,10 +72,9 @@ class AbstractParser(ABC):
             image_ext = self.get_image_extension(image_url)
             return image_binary, image_ext
 
-        images = await asyncio.gather(*[download_image(image_url) for image_url in images_urls])
-        return images
+        return await asyncio.gather(*[download_image(image_url) for image_url in images_urls])
 
-    async def parse_sneakers(self, url: str, collection_info: dict[str, Union[int, str]]) -> dict[str, str]:
+    async def parse_sneakers(self, url: str, collection_info: dict[str, str]) -> dict[str, str]:
         for _ in range(5):
             try:
                 soup = await self.get_soup(url)
@@ -99,14 +96,15 @@ class AbstractParser(ABC):
                 self.save_images(images, save_path)
                 metadata["images_path"] = save_path
 
-                return metadata
             except Exception as e:
                 tqdm.write(f"{e} - {url}")
+            else:
+                return metadata
 
         tqdm.write(f"RETRY: FAIL - {url}")
         return {}
 
-    async def parse_page(self, collection_info: dict[str, Union[int, str]], page: int) -> list[dict[str, str]]:
+    async def parse_page(self, collection_info: dict[str, str], page: int) -> list[dict[str, str]]:
         page_url = self.add_page(collection_info["url"], page)
         soup = await self.get_soup(page_url)
         sneakers_urls = self.get_sneakers_urls(soup)
@@ -127,7 +125,7 @@ class AbstractParser(ABC):
         collection_info["name"] = collection
         collection_info["url"] = collection_url
 
-        pbar = trange(1, collection_info["number_of_pages"] + 1, leave=False)
+        pbar = trange(1, int(collection_info["number_of_pages"]) + 1, leave=False)
         for page in pbar:
             pbar.set_description(f"Page {page}")
             metadata_collection += await self.parse_page(collection_info, page)
@@ -137,16 +135,16 @@ class AbstractParser(ABC):
     async def parse_website(self) -> list[dict[str, str]]:
         full_metadata = []
 
-        bar = tqdm(self.COLLECTIONS)
-        for collection in bar:
-            bar.set_description(f"Collection: {collection}")
+        tqdm_bar = tqdm(self.COLLECTIONS)
+        for collection in tqdm_bar:
+            tqdm_bar.set_description(f"Collection: {collection}")
             full_metadata += await self.parse_collection(collection)
 
         self.save_metadata(full_metadata, self.metadata_path, self.INDEX_COLUMNS)
-        print(f"Collected {len(full_metadata)} sneakers from {self.WEBSITE_NAME} website")
+        tqdm.write(f"Collected {len(full_metadata)} sneakers from {self.WEBSITE_NAME} website")
         return full_metadata
 
-    def save_images(self, images: list[tuple[bytes, str]], directory: Union[str, Path]) -> None:
+    def save_images(self, images: list[tuple[bytes, str]], directory: str) -> None:
         if self.save_local:
             self.local.images_to_storage(images, directory)
         if self.save_s3:
@@ -155,13 +153,13 @@ class AbstractParser(ABC):
     def save_metadata(
         self,
         metadata: list[dict[str, str]],
-        path: Union[str, Path],
+        path: str,
         index_columns: list[str],
     ) -> None:
         if self.save_local:
-            self.local.metadata_to_storage(metadata, str(path), index_columns)
+            self.local.metadata_to_storage(metadata, path, index_columns)
         if self.save_s3:
-            self.s3.metadata_to_storage(metadata, str(path), index_columns)
+            self.s3.metadata_to_storage(metadata, path, index_columns)
 
     @staticmethod
     def get_hostname_url(url: str) -> str:
@@ -193,8 +191,7 @@ class AbstractParser(ABC):
         allowed_symbols = ascii_letters + digits + " "
         input_string = input_string.lower()
         input_string = "".join(char for char in input_string if char in allowed_symbols).strip()
-        input_string = input_string.replace(" ", "-")
-        return input_string
+        return input_string.replace(" ", "-")
 
     @staticmethod
     def fix_html(text: str) -> str:

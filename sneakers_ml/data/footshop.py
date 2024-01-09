@@ -1,8 +1,6 @@
 import asyncio
 import json
 import re
-from pathlib import Path
-from typing import Union
 
 from bs4 import BeautifulSoup
 from tqdm import tqdm
@@ -17,13 +15,13 @@ class FootshopParser(AbstractParser):
     COLLECTIONS = ["5-mens-shoes", "6-womens-shoes", "55-kids-sneakers-and-shoes"]
     INDEX_COLUMNS = ["url", "collection_name"]
 
-    def get_collection_info(self, soup: BeautifulSoup) -> dict[str, Union[str, int]]:
+    def get_collection_info(self, soup: BeautifulSoup) -> dict[str, str]:
         try:
             pagination = soup.findAll(class_=re.compile("PaginationLink_item"))[-2].text
         except Exception as e:
             tqdm.write(f"Pagination - {e}")
             pagination = 1
-        info = {"number_of_pages": int(pagination)}
+        info = {"number_of_pages": str(int(pagination))}
         return info
 
     def get_sneakers_urls(self, soup: BeautifulSoup) -> set[str]:
@@ -75,8 +73,8 @@ class FootshopParser(AbstractParser):
         return images_urls
 
 
-async def main():
-    await FootshopParser(path=Path("data") / "raw", save_local=True, save_s3=False).parse_website()
+async def main() -> None:
+    await FootshopParser(path="data/raw", save_local=True, save_s3=False).parse_website()
 
 
 if __name__ == "__main__":

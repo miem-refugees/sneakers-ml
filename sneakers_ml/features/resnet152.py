@@ -14,7 +14,7 @@ class Identity(nn.Module):
         super().__init__()
 
     @staticmethod
-    def forward(x):
+    def forward(x: torch.Tensor) -> torch.Tensor:
         return x
 
 

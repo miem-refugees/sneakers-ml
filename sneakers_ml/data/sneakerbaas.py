@@ -1,7 +1,5 @@
 import asyncio
 import re
-from pathlib import Path
-from typing import Union
 from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
@@ -17,14 +15,14 @@ class SneakerbaasParser(AbstractParser):
     COLLECTIONS = ["category-kids", "category-unisex", "category-women", "category-men"]
     INDEX_COLUMNS = ["url", "collection_name"]
 
-    def get_collection_info(self, soup: BeautifulSoup) -> dict[str, Union[str, int]]:
+    def get_collection_info(self, soup: BeautifulSoup) -> dict[str, str]:
         try:
             pagination_section = soup.find(class_=re.compile(r"(?<!\S)pagination(?!\S)"))
             pagination = pagination_section.find_all("span")[-2].a.text
         except Exception as e:
             tqdm.write(f"Pagination - {e}")
             pagination = 1
-        info = {"number_of_pages": int(pagination)}
+        info = {"number_of_pages": str(int(pagination))}
         return info
 
     def get_sneakers_urls(self, soup: BeautifulSoup) -> set[str]:
@@ -62,8 +60,8 @@ class SneakerbaasParser(AbstractParser):
         return images_urls
 
 
-async def main():
-    await SneakerbaasParser(path=Path("data") / "raw", save_local=True, save_s3=False).parse_website()
+async def main() -> None:
+    await SneakerbaasParser(path="data/raw", save_local=True, save_s3=False).parse_website()
 
 
 if __name__ == "__main__":

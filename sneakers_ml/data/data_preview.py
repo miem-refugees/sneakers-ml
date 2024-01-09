@@ -10,13 +10,12 @@ from sneakers_ml.data.base import AbstractStorage
 
 
 class ImagePreview:
-    def __init__(self, storage: AbstractStorage):
+    def __init__(self, storage: AbstractStorage) -> None:
         self.storage = storage
         self.logger = logging.getLogger(self.__class__.__name__)
 
     def preview(self, data_frame: DataFrame, path_column: str, preview_column: str = "preview") -> Optional[str]:
-        """
-        Loads image from storage to new column in frame
+        """Loads image from storage to new column in frame
         :param data_frame: Pandas dataframe
         :param path_column: Column name with image path
         :param preview_column: Column name to watch sneaker

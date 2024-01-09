@@ -1,8 +1,6 @@
 import asyncio
 import itertools
 import json
-from pathlib import Path
-from typing import Union
 from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
@@ -29,14 +27,14 @@ class SuperkicksParser(AbstractParser):
     ]
     INDEX_COLUMNS = ["url", "collection_name"]
 
-    def get_collection_info(self, soup: BeautifulSoup) -> dict[str, Union[str, int]]:
+    def get_collection_info(self, soup: BeautifulSoup) -> dict[str, str]:
         try:
             pagination = soup.find(name="nav", class_="pagination").ul.find_all(name="li")
             pagination = pagination[-2].a.text
         except Exception as e:
             tqdm.write(f"Pagination - {e}")
             pagination = 1
-        info = {"number_of_pages": int(pagination)}
+        info = {"number_of_pages": str(int(pagination))}
         return info
 
     def get_sneakers_urls(self, soup: BeautifulSoup) -> set[str]:
@@ -73,8 +71,8 @@ class SuperkicksParser(AbstractParser):
         return images_urls
 
 
-async def main():
-    await SuperkicksParser(path=Path("data") / "raw", save_local=True, save_s3=False).parse_website()
+async def main() -> None:
+    await SuperkicksParser(path="data/raw", save_local=True, save_s3=False).parse_website()
 
 
 if __name__ == "__main__":

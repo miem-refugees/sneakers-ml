@@ -11,11 +11,7 @@ from loguru import logger
 from pandarallel import pandarallel
 from tqdm.auto import tqdm
 
-from sneakers_ml.data.image import (
-    get_images_count,
-    get_images_formats,
-    get_images_suffixes,
-)
+from sneakers_ml.data.image import get_images_count, get_images_formats, get_images_suffixes
 from sneakers_ml.data.local import LocalStorage
 from sneakers_ml.data.storage import StorageProcessor
 

@@ -1,0 +1,6 @@
+outs:
+- md5: a95be3978c6d25c3b1e9a5d9852fe3a4.dir
+  size: 309936735
+  nfiles: 4
+  hash: md5
+  path: hog

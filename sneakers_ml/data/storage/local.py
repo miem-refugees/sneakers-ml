@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from sneakers_ml.data.base import AbstractStorage
+from sneakers_ml.data.storage.base import AbstractStorage
 
 
 class LocalStorage(AbstractStorage):
@@ -8,14 +8,14 @@ class LocalStorage(AbstractStorage):
         raise NotImplementedError
 
     def upload_binary(self, binary_data: bytes, local_path: str) -> None:
-        with open(local_path, "wb") as file:
+        with Path(local_path).open("wb") as file:
             file.write(binary_data)
 
     def download_file(self, path: str, local_path: str) -> None:
         raise NotImplementedError
 
     def download_binary(self, local_path: str) -> bytes:
-        with open(local_path, "rb") as file:
+        with Path(local_path).open("rb") as file:
             return file.read()
 
     def delete_file(self, path: str) -> None:

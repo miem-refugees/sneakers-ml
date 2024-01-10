@@ -1,13 +1,12 @@
 import io
 from pathlib import Path
-from typing import Union
 
 import pandas as pd
 from PIL import Image
 
-from sneakers_ml.data.base import AbstractStorage
-from sneakers_ml.data.local import LocalStorage
-from sneakers_ml.data.s3 import S3Storage
+from sneakers_ml.data.storage.base import AbstractStorage
+from sneakers_ml.data.storage.local import LocalStorage
+from sneakers_ml.data.storage.s3 import S3Storage
 
 
 class StorageProcessor:
@@ -29,14 +28,13 @@ class StorageProcessor:
         if filenames:
             without_ext = [int(Path(fn).stem) for fn in filenames]
             return max(without_ext)
-        else:
-            return -1
+        return -1
 
     def exact_binary_exists(self, binary: bytes, directory: str) -> bool:
         binaries = set(self.download_all_files_binary(directory))
         return binary in binaries
 
-    def images_to_directory(self, source_list: list[str], directory: Union[str, Path]) -> int:
+    def images_to_directory(self, source_list: list[str], directory: str) -> int:
         if isinstance(self.storage, S3Storage):
             raise NotImplementedError
 
@@ -46,23 +44,23 @@ class StorageProcessor:
         images = []
 
         for source_path in source_list:
-            source_path = Path(source_path)
+            path = Path(source_path)
 
-            if source_path.is_dir():
-                for source_file in source_path.glob("*"):
+            if path.is_dir():
+                for source_file in path.glob("*"):
                     image_binary = self.storage.download_binary(str(source_file))
                     image_binary, image_extension = self.fix_image(image_binary, source_file.suffix)
                     if image_binary:
                         images.append((image_binary, image_extension))
-            elif source_path.is_file():
-                image_binary = self.storage.download_binary(str(source_path))
-                image_binary, image_extension = self.fix_image(image_binary, source_path.suffix)
+            elif path.is_file():
+                image_binary = self.storage.download_binary(str(path))
+                image_binary, image_extension = self.fix_image(image_binary, path.suffix)
                 if image_binary:
                     images.append((image_binary, image_extension))
 
         return self.images_to_storage(images, directory)
 
-    def images_to_storage(self, images: list[tuple[bytes, str]], directory: Union[Path, str]) -> int:
+    def images_to_storage(self, images: list[tuple[bytes, str]], directory: str) -> int:
         if isinstance(self.storage, LocalStorage):
             Path(directory).mkdir(parents=True, exist_ok=True)
 
@@ -78,7 +76,7 @@ class StorageProcessor:
         return len(existing_images)
 
     def metadata_to_storage(self, metadata: list[dict[str, str]], path: str, index_columns: list[str]) -> None:
-        df = pd.DataFrame(metadata)
+        metadata_df = pd.DataFrame(metadata)
 
         directory, name = self.split_dir_name(path)
 
@@ -88,11 +86,11 @@ class StorageProcessor:
         if self.filename_exists(name, directory):
             csv_binary = self.storage.download_binary(path)
             old_df = pd.read_csv(io.BytesIO(csv_binary))
-            df = pd.concat([old_df, df])
-            df = df.drop_duplicates(subset=index_columns, keep="first").reset_index(drop=True)
+            metadata_df = pd.concat([old_df, metadata_df])
+            metadata_df = metadata_df.drop_duplicates(subset=index_columns, keep="first").reset_index(drop=True)
 
         binary_io = io.BytesIO()
-        df.to_csv(binary_io, index=False)
+        metadata_df.to_csv(binary_io, index=False)
         self.storage.upload_binary(binary_io.getvalue(), path)
 
     @staticmethod
@@ -112,7 +110,7 @@ class StorageProcessor:
         return image_binary, ".jpeg"
 
     @staticmethod
-    def split_dir_filename_ext(path: Union[str, Path]) -> tuple[str, str, str]:
+    def split_dir_filename_ext(path: str) -> tuple[str, str, str]:
         path_obj = Path(path)
         directory = path_obj.parent
         filename = path_obj.stem
@@ -120,7 +118,7 @@ class StorageProcessor:
         return str(directory), filename, file_extension
 
     @staticmethod
-    def split_dir_name(path: Union[str, Path]) -> tuple[str, str]:
+    def split_dir_name(path: str) -> tuple[str, str]:
         path_obj = Path(path)
         directory = path_obj.parent
         name = path_obj.name

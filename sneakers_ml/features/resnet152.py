@@ -1,24 +1,22 @@
-import pickle
-from pathlib import Path
-
 import numpy as np
 import torch
-import torch.nn as nn
+from torch import nn
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
 from torchvision.models import ResNet152_Weights, resnet152
-from tqdm.autonotebook import tqdm
+from tqdm.auto import tqdm
 
 
 class Identity(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
-    def forward(self, x):
+    @staticmethod
+    def forward(x: torch.Tensor) -> torch.Tensor:
         return x
 
 
-def get_resnet152_features(folder: str, save=False):
+def get_resnet152_features(folder: str) -> tuple[np.ndarray, np.ndarray, dict[str, int]]:
     weights = ResNet152_Weights.DEFAULT
     model = resnet152(weights=weights)
     model.fc = Identity()
@@ -43,12 +41,4 @@ def get_resnet152_features(folder: str, save=False):
     numpy_features = full_images_features.numpy()
     classes = np.array(dataset.imgs)
 
-    if save:
-        with open(Path("data", "features", "resnet152.pickle"), "wb") as f:
-            pickle.dump((numpy_features, classes, dataset.class_to_idx), f)
-
     return numpy_features, classes, dataset.class_to_idx
-
-
-if __name__ == "__main__":
-    get_resnet152_features(str(Path("data", "merged", "images", "by-brands")), save=True)

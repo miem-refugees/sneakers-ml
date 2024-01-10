@@ -150,12 +150,7 @@ class AbstractParser(ABC):
         if self.save_s3:
             self.s3.images_to_storage(images, directory)
 
-    def save_metadata(
-        self,
-        metadata: list[dict[str, str]],
-        path: str,
-        index_columns: list[str],
-    ) -> None:
+    def save_metadata(self, metadata: list[dict[str, str]], path: str, index_columns: list[str]) -> None:
         if self.save_local:
             self.local.metadata_to_storage(metadata, path, index_columns)
         if self.save_s3:

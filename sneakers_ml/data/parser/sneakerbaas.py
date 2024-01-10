@@ -5,7 +5,7 @@ from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
-from sneakers_ml.data.base_parser import AbstractParser
+from sneakers_ml.data.parser.base_parser import AbstractParser
 
 
 class SneakerbaasParser(AbstractParser):

@@ -3,8 +3,8 @@ from pathlib import Path
 import pandas as pd
 import splitfolders
 
-from sneakers_ml.data.local import LocalStorage
-from sneakers_ml.data.storage import StorageProcessor
+from sneakers_ml.data.storage.local import LocalStorage
+from sneakers_ml.data.storage.storage import StorageProcessor
 
 
 def move_top_sneakers(dataset_path: str, move_path: str, min_count: int = 100) -> None:

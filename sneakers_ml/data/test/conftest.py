@@ -1,4 +1,4 @@
-from sneakers_ml.data.base import AbstractStorage
+from sneakers_ml.data.storage.base import AbstractStorage
 
 
 class DummyStorage(AbstractStorage):

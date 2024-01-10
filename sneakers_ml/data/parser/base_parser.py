@@ -10,9 +10,9 @@ from fake_useragent import UserAgent
 from tqdm import tqdm, trange
 from tqdm.asyncio import tqdm as tqdm_async
 
-from sneakers_ml.data.local import LocalStorage
-from sneakers_ml.data.s3 import S3Storage
-from sneakers_ml.data.storage import StorageProcessor
+from sneakers_ml.data.storage.local import LocalStorage
+from sneakers_ml.data.storage.s3 import S3Storage
+from sneakers_ml.data.storage.storage import StorageProcessor
 
 
 class AbstractParser(ABC):

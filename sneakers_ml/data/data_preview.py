@@ -6,7 +6,7 @@ from typing import Optional
 from pandas import DataFrame
 from PIL import Image
 
-from sneakers_ml.data.base import AbstractStorage
+from sneakers_ml.data.storage.base import AbstractStorage
 
 
 class ImagePreview:

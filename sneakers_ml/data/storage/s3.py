@@ -3,7 +3,7 @@ from pathlib import Path
 
 import boto3
 
-from sneakers_ml.data.base import AbstractStorage
+from sneakers_ml.data.storage.base import AbstractStorage
 
 
 class S3Storage(AbstractStorage):

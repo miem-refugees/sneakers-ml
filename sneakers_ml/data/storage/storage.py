@@ -4,9 +4,9 @@ from pathlib import Path
 import pandas as pd
 from PIL import Image
 
-from sneakers_ml.data.base import AbstractStorage
-from sneakers_ml.data.local import LocalStorage
-from sneakers_ml.data.s3 import S3Storage
+from sneakers_ml.data.storage.base import AbstractStorage
+from sneakers_ml.data.storage.local import LocalStorage
+from sneakers_ml.data.storage.s3 import S3Storage
 
 
 class StorageProcessor:

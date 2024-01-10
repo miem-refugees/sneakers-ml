@@ -119,7 +119,7 @@ class ColumnPreprocessor:
         return text.strip()
 
     @classmethod
-    def preprocess_title(cls, title: str, brands: list[str], colors: list) -> str:
+    def preprocess_title(cls, title: str, brands: list[str], colors: list[str]) -> str:
         title = cls.preprocess_text(title)
 
         for brand in brands:
@@ -165,7 +165,7 @@ class ColumnPreprocessor:
         return extra_symbols
 
     @staticmethod
-    def flatten_list(images_list: list) -> list[str]:
+    def flatten_list(images_list: list[list[str]]) -> list[str]:
         return np.unique([item for item in np.hstack(images_list) if not pd.isna(item)]).tolist()
 
     @staticmethod
@@ -178,7 +178,7 @@ class ColumnPreprocessor:
         return colors
 
     @staticmethod
-    def merge_images_columns(columns: dict, images_columns: list[str]) -> list[str]:
+    def merge_images_columns(columns: pd.Series, images_columns: list[str]) -> list[str]:
         return [columns[images_column] for images_column in images_columns]
 
     @staticmethod

@@ -5,10 +5,10 @@ from loguru import logger
 from tqdm.auto import tqdm
 
 from sneakers_ml.data.image import get_images_count, get_images_formats, get_images_suffixes
-from sneakers_ml.data.local import LocalStorage
 from sneakers_ml.data.merger.column import ColumnPreprocessor
 from sneakers_ml.data.merger.dataframe import DataFramePreprocessor
-from sneakers_ml.data.storage import StorageProcessor
+from sneakers_ml.data.storage.local import LocalStorage
+from sneakers_ml.data.storage.storage import StorageProcessor
 
 
 class Merger:

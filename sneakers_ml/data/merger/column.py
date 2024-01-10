@@ -147,11 +147,7 @@ class ColumnPreprocessor:
             for symbol in text:
                 if not any(
                     symbol.lower() in d
-                    for d in (
-                        cls.ALLOWED_SYMBOLS,
-                        cls.DEFAULT_REPLACEMENTS,
-                        cls.WHITESPACE_REPLACEMENTS,
-                    )
+                    for d in (cls.ALLOWED_SYMBOLS, cls.DEFAULT_REPLACEMENTS, cls.WHITESPACE_REPLACEMENTS)
                 ):
                     if symbol not in out:
                         out[symbol] = []
@@ -160,7 +156,7 @@ class ColumnPreprocessor:
         return out
 
     @classmethod
-    def check_extra_symbols(cls, datasets: dict[str, pd.DataFrame], columns: tuple[str]) -> dict[str, set[str]]:
+    def check_extra_symbols(cls, datasets: dict[str, pd.DataFrame], columns: tuple[str, ...]) -> dict[str, set[str]]:
         extra_symbols: dict[str, set[str]] = {dataset_name: set() for dataset_name in datasets}
         for dataset_name, dataset in datasets.items():
             for column in columns:
@@ -188,11 +184,7 @@ class ColumnPreprocessor:
     @staticmethod
     def sneakerbaas_get_color(input_string: str) -> Union[list[str], float]:
         if pd.notna(input_string):
-            match = re.search(
-                r"(Colour|Colours|Colors|Color|Kleur): (.*?)(?:-|$)",
-                input_string,
-                re.IGNORECASE,
-            )
+            match = re.search(r"(Colour|Colours|Colors|Color|Kleur): (.*?)(?:-|$)", input_string, re.IGNORECASE)
             if match:
                 colors = match.group(2).strip()
                 colors = colors.replace("/", " ").lower().split()

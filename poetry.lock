@@ -5470,6 +5470,20 @@ files = [
 ]
 
 [[package]]
+name = "split-folders"
+version = "0.5.1"
+description = "Split folders with files (e.g. images) into training, validation and test (dataset) folders."
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "split_folders-0.5.1-py3-none-any.whl", hash = "sha256:cb010e00f34d247b8e8bbfd6cfe527f871361d8524ed54734924e7efd261801f"},
+    {file = "split_folders-0.5.1.tar.gz", hash = "sha256:7127a226b90e00fa86cda4451fe015c6f3755bc3d627064adb9c5209fc8280f6"},
+]
+
+[package.extras]
+full = ["tqdm"]
+
+[[package]]
 name = "sqltrie"
 version = "0.11.0"
 description = "SQL-based prefix tree inspired by pygtrie and python-diskcache"
@@ -6340,4 +6354,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "c0bfaec3e6fe3f5d05bda491f31e266369e099b8c9e87d743700bdc72c1f8163"
+content-hash = "461217f7206cd56cbfba51df640527659ad2e96245485e9684ebdf3eab3acdd5"

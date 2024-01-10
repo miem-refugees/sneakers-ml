@@ -86,11 +86,7 @@ class AbstractParser(ABC):
                 metadata["collection_url"] = collection_info["url"]
                 metadata["url"] = url
 
-                model_path = Path(
-                    metadata["collection_name"],
-                    metadata["brand_slug"],
-                    metadata["slug"],
-                )
+                model_path = Path(metadata["collection_name"], metadata["brand_slug"], metadata["slug"])
                 save_path = str(Path(self.images_path, model_path)).lower()
 
                 self.save_images(images, save_path)
@@ -110,8 +106,7 @@ class AbstractParser(ABC):
         sneakers_urls = self.get_sneakers_urls(soup)
 
         metadata_page = await tqdm_async.gather(
-            *[self.parse_sneakers(sneakers_url, collection_info) for sneakers_url in sneakers_urls],
-            leave=False,
+            *[self.parse_sneakers(sneakers_url, collection_info) for sneakers_url in sneakers_urls], leave=False
         )
         return list(filter(None, metadata_page))
 

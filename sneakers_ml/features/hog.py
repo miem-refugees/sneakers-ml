@@ -1,12 +1,10 @@
-from pathlib import Path
-
 import numpy as np
 from skimage.feature import hog
 from torchvision.datasets import ImageFolder
 from tqdm.auto import tqdm
 
 
-def get_hog_features(folder: Path) -> tuple[np.ndarray, np.ndarray, dict[str, int]]:
+def get_hog_features(folder: str) -> tuple[np.ndarray, np.ndarray, dict[str, int]]:
     dataset = ImageFolder(folder)
 
     features = []

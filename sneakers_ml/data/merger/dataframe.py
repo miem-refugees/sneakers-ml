@@ -4,22 +4,25 @@ from pandarallel import pandarallel
 
 from sneakers_ml.data.merger.column import ColumnPreprocessor
 
-pandarallel.initialize(progress_bar=False)
-
 
 class DataFramePreprocessor:
     def __init__(self, datasets: [str, pd.DataFrame]) -> None:
-        self.datasets = {name: dataset.copy() for name, dataset in datasets.items()}
-        self.brands = ColumnPreprocessor.get_all_brands(datasets)
-        logger.info(f"Generated {len(self.brands)} brands")
-        self.colors = ColumnPreprocessor.get_colors(ColumnPreprocessor.COLOR_WORDS_PATH)
-        logger.info(f"Read {len(self.colors)} colors")
+        pandarallel.initialize(progress_bar=False)
 
+        self.datasets = {name: dataset.copy() for name, dataset in datasets.items()}
         for name in self.datasets:
             self.datasets[name]["website"] = name
             self.datasets[name].columns = self.datasets[name].columns.str.lower()
 
-    def _preprocess_superkicks(self, dataframe: pd.DataFrame) -> pd.DataFrame:
+        self.brands = ColumnPreprocessor.get_all_brands(datasets)
+        self.colors = ColumnPreprocessor.get_colors(ColumnPreprocessor.COLOR_WORDS_PATH)
+        self.preprocessed = False
+
+        logger.info(f"Read {len(self.colors)} colors")
+        logger.info(f"Generated {len(self.brands)} brands")
+
+    def preprocess_superkicks(self, superkicks_dataframe: pd.DataFrame) -> pd.DataFrame:
+        dataframe = superkicks_dataframe.copy()
         dataframe = dataframe.drop(
             [
                 "product-dimensions",
@@ -54,7 +57,8 @@ class DataFramePreprocessor:
 
         return dataframe
 
-    def _preprocess_sneakerbaas(self, dataframe: pd.DataFrame) -> pd.DataFrame:
+    def preprocess_sneakerbaas(self, raw_dataframe: pd.DataFrame) -> pd.DataFrame:
+        dataframe = raw_dataframe.copy()
         dataframe = dataframe.drop(["collection_url", "slug", "brand_slug"], axis=1)
         dataframe = dataframe.drop_duplicates(subset=["title", "collection_name", "url"])
 
@@ -72,7 +76,8 @@ class DataFramePreprocessor:
 
         return dataframe
 
-    def _preprocess_footshop(self, dataframe: pd.DataFrame) -> pd.DataFrame:
+    def preprocess_footshop(self, raw_dataframe: pd.DataFrame) -> pd.DataFrame:
+        dataframe = raw_dataframe.copy()
         dataframe = dataframe.drop(["collection_url", "slug", "brand_slug"], axis=1)
         dataframe = dataframe.drop_duplicates(subset=["title", "collection_name", "url"])
 
@@ -91,7 +96,8 @@ class DataFramePreprocessor:
 
         return dataframe
 
-    def _preprocess_kickscrew(self, dataframe: pd.DataFrame) -> pd.DataFrame:
+    def preprocess_kickscrew(self, raw_dataframe: pd.DataFrame) -> pd.DataFrame:
+        dataframe = raw_dataframe.copy()
         images_columns = ["right-side-img", "left-side-img", "front-both-img"]
 
         dataframe["images_path"] = dataframe.apply(
@@ -113,14 +119,25 @@ class DataFramePreprocessor:
 
     def _create_merge_columns(self, dataframe: pd.DataFrame) -> pd.DataFrame:
         dataframe["title_merge"] = dataframe["title_without_color"].parallel_apply(
-            lambda x: ColumnPreprocessor.preprocess_title(x, self.brands, self.colors),
+            lambda x: ColumnPreprocessor.preprocess_title(x, self.brands, self.colors)
         )
 
         dataframe["brand_merge"] = dataframe["brand"].apply(ColumnPreprocessor.preprocess_text)
         return dataframe
 
+    def _log_extra_symbols(self) -> None:
+        extra_symbols_columns: tuple[str, ...] = ("title", "brand")
+        logger.info(f"Extra symbols columns {extra_symbols_columns}")
+        extra_symbols = ColumnPreprocessor.check_extra_symbols(self.datasets, extra_symbols_columns)
+        for dataset_name, symbols in extra_symbols.items():
+            logger.info(f"{dataset_name}: {symbols}")
+
+    def preprocess_datasets(self) -> None:
+        self.datasets = {name: getattr(self, f"preprocess_{name}")(self.datasets[name]) for name in self.datasets}
+        self._log_extra_symbols()
+        self.preprocessed = True
+
     def get_preprocessed_datasets(self) -> dict[str, pd.DataFrame]:
-        return {
-            "superkicks": self._preprocess_superkicks(self.datasets["superkicks"]),
-            "sneakerbaas": self._preprocess_sneakerbaas(self.datasets["sneakerbaas"]),
-        }
+        if not self.preprocessed:
+            self.preprocess_datasets()
+        return {name: dataset.copy() for name, dataset in self.datasets.items()}

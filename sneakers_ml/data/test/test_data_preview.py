@@ -11,10 +11,7 @@ class TestImagePreview:
 
     def test_preview(self):
         img_path_col = "img_path"
-        sample = {
-            "name": "New Balance 547",
-            img_path_col: "src/data/test/static/newbalance574.jpg",
-        }
+        sample = {"name": "New Balance 547", img_path_col: "src/data/test/static/newbalance574.jpg"}
         self.storage.upload_file(sample[img_path_col], sample[img_path_col])
 
         frame = pd.DataFrame([sample, sample])  # to check consistence for all rows

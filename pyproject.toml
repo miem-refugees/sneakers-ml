@@ -29,6 +29,7 @@ opencv-python = "^4.8.1.78"
 matplotlib = "^3.8.2"
 scikit-image = "^0.22.0"
 algoliasearch = "^3.0.0"
+split-folders = "^0.5.1"
 
 [tool.poetry.group.dev.dependencies]
 dvc = { extras = ["gdrive", "s3"], version = "^3.37.0" }
@@ -60,6 +61,7 @@ types-tqdm = "^4.66.0.20240106"
 # skip-string-normalization = true
 line-length = 120
 target-version = ["py39"]
+# skip-magic-trailing-comma = true
 
 [tool.isort]
 profile = "black"
@@ -81,7 +83,7 @@ extend-ignore = "E203"
 
 [tool.ruff]
 select = ["ALL"]
-ignore = ["D", "ANN101", "RUF012", "ANN102"]
+ignore = ["D", "ANN101", "RUF012", "ANN102", "COM812"]
 target-version = "py39"
 line-length = 120
 
@@ -99,7 +101,7 @@ disable = ["C0116", "C0114", "C0115"]
 
 [tool.bandit]
 exclude_dirs = ["sneakers_ml/data/test"]
-skips = ["B403"] # to-do
+skips = ["B403"]                         # to-do - remove pickle and switch to onnx
 
 [build-system]
 requires = ["poetry-core"]

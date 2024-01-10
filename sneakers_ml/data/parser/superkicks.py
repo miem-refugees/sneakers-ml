@@ -16,13 +16,7 @@ class SuperkicksParser(AbstractParser):
     COLLECTIONS = [
         f"{item[0]}-{item[1]}"
         for item in itertools.product(
-            ["men", "women"],
-            [
-                "sneakers",
-                "basketball-sneakers",
-                "classics-sneakers",
-                "skateboard-sneakers",
-            ],
+            ["men", "women"], ["sneakers", "basketball-sneakers", "classics-sneakers", "skateboard-sneakers"]
         )
     ]
     INDEX_COLUMNS = ["url", "collection_name"]

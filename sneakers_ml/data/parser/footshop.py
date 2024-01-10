@@ -55,11 +55,7 @@ class FootshopParser(AbstractParser):
     def get_sneakers_images_urls(self, soup: BeautifulSoup) -> list[str]:
         images_urls = []
 
-        script = soup.find(
-            name="script",
-            type="application/json",
-            attrs={"data-hypernova-key": "ProductDetail"},
-        )
+        script = soup.find(name="script", type="application/json", attrs={"data-hypernova-key": "ProductDetail"})
         script = script.text.replace("-->", "").replace("<!--", "")[1:-1]
 
         script_cut = script[script.find("product_data") - 1 : script.find("last_image") - 2]

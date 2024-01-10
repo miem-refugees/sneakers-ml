@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import numpy as np
 import torch
 from torch import nn
@@ -18,7 +16,7 @@ class Identity(nn.Module):
         return x
 
 
-def get_resnet152_features(folder: Path) -> tuple[np.ndarray, np.ndarray, dict[str, int]]:
+def get_resnet152_features(folder: str) -> tuple[np.ndarray, np.ndarray, dict[str, int]]:
     weights = ResNet152_Weights.DEFAULT
     model = resnet152(weights=weights)
     model.fc = Identity()

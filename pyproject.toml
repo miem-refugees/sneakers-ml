@@ -30,6 +30,9 @@ matplotlib = "^3.8.2"
 scikit-image = "^0.22.0"
 algoliasearch = "^3.0.0"
 split-folders = "^0.5.1"
+skl2onnx = "^1.16.0"
+onnxruntime = "^1.16.3"
+catboost = "^1.2.2"
 
 [tool.poetry.group.dev.dependencies]
 dvc = { extras = ["gdrive", "s3"], version = "^3.37.0" }
@@ -97,11 +100,11 @@ ignore_missing_imports = true
 [tool.pylint]
 py-version = "3.9"
 max-line-length = 120
-disable = ["C0116", "C0114", "C0115"]
+disable = ["C0116", "C0114", "C0115", "W1514"]
 
 [tool.bandit]
 exclude_dirs = ["sneakers_ml/data/test"]
-skips = ["B403"]                         # to-do - remove pickle and switch to onnx
+skips = ["B403", "B301"]                         # to-do - remove pickle and switch to onnx
 
 [build-system]
 requires = ["poetry-core"]

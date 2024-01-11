@@ -86,7 +86,7 @@ extend-ignore = "E203"
 
 [tool.ruff]
 select = ["ALL"]
-ignore = ["D", "ANN101", "RUF012", "ANN102", "COM812"]
+ignore = ["D", "ANN101", "RUF012", "ANN102", "COM812", "FA100"]
 target-version = "py39"
 line-length = 120
 

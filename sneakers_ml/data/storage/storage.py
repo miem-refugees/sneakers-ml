@@ -1,5 +1,6 @@
 import io
 from pathlib import Path
+from typing import Union
 
 import pandas as pd
 from PIL import Image
@@ -48,14 +49,14 @@ class StorageProcessor:
 
             if path.is_dir():
                 for source_file in path.glob("*"):
-                    image_binary = self.storage.download_binary(str(source_file))
-                    image_binary, image_extension = self.fix_image(image_binary, source_file.suffix)
-                    if image_binary:
+                    image_binary_raw = self.storage.download_binary(str(source_file))
+                    image_binary, image_extension = self.fix_image(image_binary_raw)
+                    if image_binary and image_extension:
                         images.append((image_binary, image_extension))
             elif path.is_file():
-                image_binary = self.storage.download_binary(str(path))
-                image_binary, image_extension = self.fix_image(image_binary, path.suffix)
-                if image_binary:
+                image_binary_raw = self.storage.download_binary(str(path))
+                image_binary, image_extension = self.fix_image(image_binary_raw)
+                if image_binary and image_extension:
                     images.append((image_binary, image_extension))
 
         return self.images_to_storage(images, directory)
@@ -94,7 +95,7 @@ class StorageProcessor:
         self.storage.upload_binary(binary_io.getvalue(), path)
 
     @staticmethod
-    def fix_image(image_binary: bytes, image_suffix: str) -> tuple[bytes, str]:
+    def fix_image(image_binary: bytes) -> Union[tuple[bytes, str], tuple[None, None]]:
         image = Image.open(io.BytesIO(image_binary))
 
         if image.mode == "P":  # remove gif images
@@ -103,7 +104,6 @@ class StorageProcessor:
         if image.mode != "RGB":
             image = image.convert("RGB")
 
-        # image_suffix = image.format.lower()
         output_buffer = io.BytesIO()
         image.save(output_buffer, format="JPEG")
         image_binary = output_buffer.getvalue()

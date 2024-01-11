@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from pathlib import Path
 
 import pandas as pd
@@ -12,7 +13,7 @@ from sneakers_ml.data.storage.storage import StorageProcessor
 
 
 class Merger:
-    def __init__(self, metadata_path: str, ignore: tuple[str, ...]) -> None:
+    def __init__(self, metadata_path: str, ignore: Sequence[str]) -> None:
         tqdm.pandas()
 
         self.metadata_path = Path(metadata_path)

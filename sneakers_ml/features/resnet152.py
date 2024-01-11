@@ -31,8 +31,8 @@ def get_resnet152_features(folder: str) -> tuple[np.ndarray, np.ndarray, dict[st
 
     features = []
     with torch.inference_mode():
-        for x, _ in tqdm(dataloader):
-            x = x.to(device)
+        for data in tqdm(dataloader):
+            x = data[0].to(device)
             prediction = model(x)
 
             features.append(prediction.cpu())

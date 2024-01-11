@@ -22,7 +22,7 @@ class AbstractParser(ABC):
     COLLECTIONS: list[str]
     INDEX_COLUMNS: list[str]
 
-    def __init__(self, path: str, save_local: bool, save_s3: bool) -> None:
+    def __init__(self, path: str, save_local: bool, save_s3: bool) -> None:  # noqa: FBT001
         self.path = Path(str(path).lower())
         self.save_local = save_local
         self.save_s3 = save_s3
@@ -40,13 +40,13 @@ class AbstractParser(ABC):
             self.s3 = StorageProcessor(S3Storage())
 
     async def get_soup(self, url: str) -> BeautifulSoup:
-        async with aiohttp.ClientSession(headers=self.headers) as session:
+        async with aiohttp.ClientSession(headers=self.headers) as session:  # noqa: SIM117
             async with session.get(url) as resp:
                 text = await resp.text()
         return BeautifulSoup(text, self.parser)
 
     async def get_image(self, image_url: str) -> bytes:
-        async with aiohttp.ClientSession(headers=self.headers) as session:
+        async with aiohttp.ClientSession(headers=self.headers) as session:  # noqa: SIM117
             async with session.get(image_url) as resp:
                 return await resp.read()
 

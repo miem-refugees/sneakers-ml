@@ -21,8 +21,7 @@ class FootshopParser(AbstractParser):
         except Exception as e:
             tqdm.write(f"Pagination - {e}")
             pagination = 1
-        info = {"number_of_pages": str(int(pagination))}
-        return info
+        return {"number_of_pages": str(int(pagination))}
 
     def get_sneakers_urls(self, soup: BeautifulSoup) -> set[str]:
         products_section = soup.findAll(name="div", itemprop="itemListElement")

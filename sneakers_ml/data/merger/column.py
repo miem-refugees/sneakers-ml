@@ -1,4 +1,5 @@
 import re
+from collections.abc import Sequence
 from itertools import permutations
 from pathlib import Path
 from string import ascii_letters, digits
@@ -155,7 +156,7 @@ class ColumnPreprocessor:
         return out
 
     @classmethod
-    def check_extra_symbols(cls, datasets: dict[str, pd.DataFrame], columns: tuple[str, ...]) -> dict[str, set[str]]:
+    def check_extra_symbols(cls, datasets: dict[str, pd.DataFrame], columns: Sequence[str]) -> dict[str, set[str]]:
         extra_symbols: dict[str, set[str]] = {dataset_name: set() for dataset_name in datasets}
         for dataset_name, dataset in datasets.items():
             for column in columns:

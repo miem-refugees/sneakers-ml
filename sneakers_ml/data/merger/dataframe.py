@@ -126,7 +126,7 @@ class DataFramePreprocessor:
         return dataframe
 
     def _log_extra_symbols(self) -> None:
-        extra_symbols_columns: tuple[str, ...] = ("title", "brand")
+        extra_symbols_columns = ("title", "brand")
         logger.info(f"Extra symbols columns {extra_symbols_columns}")
         extra_symbols = ColumnPreprocessor.check_extra_symbols(self.datasets, extra_symbols_columns)
         for dataset_name, symbols in extra_symbols.items():

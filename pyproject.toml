@@ -33,6 +33,7 @@ split-folders = "^0.5.1"
 skl2onnx = "^1.16.0"
 onnxruntime = "^1.16.3"
 catboost = "^1.2.2"
+ipywidgets = "^8.1.1"
 
 [tool.poetry.group.dev.dependencies]
 dvc = { extras = ["gdrive", "s3"], version = "^3.37.0" }

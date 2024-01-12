@@ -1,7 +1,18 @@
 import numpy as np
+from PIL import Image
 from skimage.feature import hog
 from torchvision.datasets import ImageFolder
 from tqdm.auto import tqdm
+
+
+def crop_image(image: Image.Image, crop_sides: int, crop_top_bot: int) -> Image.Image:
+    width, height = image.size
+    left = (width - crop_sides) // 2
+    top = (height - crop_top_bot) // 2
+    right = (width + crop_sides) // 2
+    bottom = (height + crop_top_bot) // 2
+
+    return image.crop((left, top, right, bottom))
 
 
 def get_hog_features(folder: str) -> tuple[np.ndarray, np.ndarray, dict[str, int]]:
@@ -10,16 +21,7 @@ def get_hog_features(folder: str) -> tuple[np.ndarray, np.ndarray, dict[str, int
     features = []
     for image, _ in tqdm(dataset):
         image_resized = image.resize((256, 256))
-
-        width, height = image_resized.size
-        crop_sides = 224
-        crop_top_bot = 128
-        left = (width - crop_sides) / 2
-        top = (height - crop_top_bot) / 2
-        right = (width + crop_sides) / 2
-        bottom = (height + crop_top_bot) / 2
-
-        image_cropped = image_resized.crop((left, top, right, bottom))
+        image_cropped = crop_image(image_resized, 224, 128)
 
         feature = hog(
             image_cropped,

@@ -6,8 +6,7 @@ from PIL import Image
 
 def get_all_images(directory: str) -> list[str]:
     directory_path = Path(directory)
-    files = [str(file) for file in directory_path.rglob("*") if file.is_file()]
-    return files
+    return [str(file) for file in directory_path.rglob("*") if file.is_file()]
 
 
 def get_images_count(directory: str) -> int:
@@ -16,8 +15,7 @@ def get_images_count(directory: str) -> int:
 
 def get_images_suffixes(directory: str) -> list[str]:
     directory_path = Path(directory)
-    files = [file.suffix for file in directory_path.rglob("*") if file.is_file()]
-    return files
+    return [file.suffix for file in directory_path.rglob("*") if file.is_file()]
 
 
 def get_images_formats(directory: str) -> list[Optional[str]]:

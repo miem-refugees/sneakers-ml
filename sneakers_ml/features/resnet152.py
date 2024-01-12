@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+from PIL import Image
 from torch import nn
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
@@ -14,6 +15,24 @@ class Identity(nn.Module):
     @staticmethod
     def forward(x: torch.Tensor) -> torch.Tensor:
         return x
+
+
+def get_resnet152_feature(image: Image.Image) -> np.array:
+    weights = ResNet152_Weights.DEFAULT
+    model = resnet152(weights=weights)
+    model.fc = Identity()
+
+    device = "cpu"
+    # device = "cuda:0" if torch.cuda.is_available() else "cpu"
+    model.to(device)
+    model.eval()
+    preprocess = weights.transforms()
+    preprocessed = preprocess(image)
+
+    with torch.inference_mode():
+        x = preprocessed.to(device).unsqueeze(0)
+        prediction = model(x)
+    return prediction.cpu().numpy()[0]
 
 
 def get_resnet152_features(folder: str) -> tuple[np.ndarray, np.ndarray, dict[str, int]]:
@@ -31,8 +50,8 @@ def get_resnet152_features(folder: str) -> tuple[np.ndarray, np.ndarray, dict[st
 
     features = []
     with torch.inference_mode():
-        for x, _ in tqdm(dataloader):
-            x = x.to(device)
+        for data in tqdm(dataloader):
+            x = data[0].to(device)
             prediction = model(x)
 
             features.append(prediction.cpu())

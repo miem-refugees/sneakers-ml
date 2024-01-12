@@ -28,8 +28,7 @@ class SuperkicksParser(AbstractParser):
         except Exception as e:
             tqdm.write(f"Pagination - {e}")
             pagination = 1
-        info = {"number_of_pages": str(int(pagination))}
-        return info
+        return {"number_of_pages": str(int(pagination))}
 
     def get_sneakers_urls(self, soup: BeautifulSoup) -> set[str]:
         products_section = soup.find_all(name="div", class_="card__information product-card2")
@@ -61,8 +60,7 @@ class SuperkicksParser(AbstractParser):
     def get_sneakers_images_urls(self, soup: BeautifulSoup) -> list[str]:
         script = soup.findAll("script")[3].text.split("\n")[2]
         json_script = json.loads(script[script.find("{") : -1])
-        images_urls = [self.fix_image_url(url) for url in json_script["images"]]
-        return images_urls
+        return [self.fix_image_url(url) for url in json_script["images"]]
 
 
 async def main() -> None:

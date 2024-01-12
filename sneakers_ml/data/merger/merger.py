@@ -88,12 +88,12 @@ class Merger:
     def _copy_images(self, row: pd.Series, images_column: str, merge_column: str, path: Path) -> pd.Series:
         images = row[images_column]
         path = path / row[merge_column]
-        return pd.Series([self.processor.images_to_directory(images, path), str(path)])
+        return pd.Series([self.processor.images_to_directory(images, str(path)), str(path)])  # type: ignore[list-item]
 
     def _merge_images(self, dataframe: pd.DataFrame, merge_column: str, path: Path) -> pd.DataFrame:
         dataframe[["unique_images_count", "images"]] = dataframe.progress_apply(
             lambda x: self._copy_images(x, "images_path", merge_column, path), axis=1
-        )
+        )  # type: ignore[operator]
         dataframe = dataframe.drop("images_path", axis=1)
 
         images_count = get_images_count(str(path))

@@ -22,8 +22,7 @@ class SneakerbaasParser(AbstractParser):
         except Exception as e:
             tqdm.write(f"Pagination - {e}")
             pagination = 1
-        info = {"number_of_pages": str(int(pagination))}
-        return info
+        return {"number_of_pages": str(int(pagination))}
 
     def get_sneakers_urls(self, soup: BeautifulSoup) -> set[str]:
         products_section = soup.find_all(href=re.compile("/collections/sneakers/products"))

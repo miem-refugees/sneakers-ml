@@ -35,6 +35,7 @@ onnxruntime = "^1.16.3"
 catboost = "^1.2.2"
 ipywidgets = "^8.1.1"
 wandb = "^0.16.2"
+aiogram = "^3.3.0"
 
 [tool.poetry.group.dev.dependencies]
 dvc = { extras = ["gdrive", "s3"], version = "^3.37.0" }

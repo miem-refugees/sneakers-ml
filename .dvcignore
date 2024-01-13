@@ -2,7 +2,8 @@
 # the performance. Learn more at
 # https://dvc.org/doc/user-guide/dvcignore
 
-sneakers_ml/
+.github/
+.venv/
 notebooks/
 notes/
-.DS_Store
+sneakers_ml/

@@ -27,7 +27,7 @@
 
 ## Metadata
 
-В папке `data/raw/metadata` содержится файл `superkicks.csv` с полями:
+В папке [data/raw/metadata](/data/raw/metadata) содержится файл `superkicks.csv` с полями:
 
 - **brand** - бренд
 - **title** - название модели

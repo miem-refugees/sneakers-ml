@@ -21,7 +21,7 @@
 
 ## Metadata
 
-В папке `data/raw/metadata` содержится файл `sneakerbaas.csv` с полями:
+В папке [data/raw/metadata](/data/raw/metadata) содержится файл `sneakerbaas.csv` с полями:
 
 - **brand** - бренд
 - **description** - описание, из которого можно достадь дополнительную информацию (цвет модели и т.д.)

@@ -1,6 +1,6 @@
 # [sneakerbaas](https://www.sneakerbaas.com)
 
-## [4 категории]
+## 4 категории
 
 - kids
 - men

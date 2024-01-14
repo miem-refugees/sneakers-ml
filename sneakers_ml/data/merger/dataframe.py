@@ -6,7 +6,7 @@ from sneakers_ml.data.merger.column import ColumnPreprocessor
 
 
 class DataFramePreprocessor:
-    def __init__(self, datasets: [str, pd.DataFrame]) -> None:
+    def __init__(self, datasets: dict[str, pd.DataFrame]) -> None:
         pandarallel.initialize(progress_bar=False)
 
         self.datasets = {name: dataset.copy() for name, dataset in datasets.items()}

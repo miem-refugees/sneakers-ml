@@ -1,6 +1,6 @@
 outs:
-- md5: 8f56db0df9eb7be68f3afc5af5e87036.dir
-  size: 201523492
-  nfiles: 6
+- md5: 720863af7d75d2ceecf09cc804c2112e.dir
+  size: 458552423
+  nfiles: 9
   hash: md5
   path: brands-classification-splits

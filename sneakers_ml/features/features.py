@@ -1,8 +1,9 @@
 import pickle
 from pathlib import Path
-from typing import Callable
 
 import numpy as np
+
+from sneakers_ml.features.extractor import FeatureExtractor
 
 
 def save_features(path: str, numpy_features: np.ndarray, classes: np.ndarray, class_to_idx: dict[str, int]) -> None:
@@ -38,7 +39,7 @@ def get_train_val_test(
 def create_features(
     images_dataset_path: str,
     save_folder: str,
-    feature_creation_func: Callable[[str], tuple[np.ndarray, np.ndarray, dict[str, int]]],
+    feature_extractor: FeatureExtractor,
     features_name: str,
 ) -> None:
     subdirectories = [x.name for x in Path(images_dataset_path).iterdir() if x.is_dir()]
@@ -47,10 +48,10 @@ def create_features(
         for folder in ["train", "test", "val"]:
             split_path = str(Path(images_dataset_path) / folder)
 
-            features, classes, class_to_idx = feature_creation_func(split_path)
+            features, classes, class_to_idx = feature_extractor.get_features(split_path)
             save_path = str(Path(save_folder) / f"{features_name}-{folder}.pickle")
             save_features(save_path, features, classes, class_to_idx)
     else:
-        features, classes, class_to_idx = feature_creation_func(images_dataset_path)
+        features, classes, class_to_idx = feature_extractor.get_features(images_dataset_path)
         save_path = str(Path(save_folder) / f"{features_name}.pickle")
         save_features(save_path, features, classes, class_to_idx)

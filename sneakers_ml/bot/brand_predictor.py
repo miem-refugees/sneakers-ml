@@ -10,7 +10,7 @@ from sneakers_ml.bot.config import (
     sklearn_hog_models,
     sklearn_resnet_models,
 )
-from sneakers_ml.features.hog import get_hog
+from sneakers_ml.features.hog import HogFeatureExtractor
 from sneakers_ml.features.resnet152 import get_resnet152_feature
 from sneakers_ml.models.onnx import load_catboost_onnx, load_sklearn_onnx, predict_catboost_onnx, predict_sklearn_onnx
 
@@ -20,6 +20,8 @@ logger = logging.getLogger(__name__)
 class BrandPredictor:
     def __init__(self):
         self.models = {}
+        self.hog = HogFeatureExtractor()
+
         logger.debug("Loading sklearn_hog_models...")
         for model in sklearn_hog_models + sklearn_resnet_models:
             self.models[Path(model).stem] = load_sklearn_onnx(model)
@@ -48,9 +50,10 @@ class BrandPredictor:
     def predict(self, image: Image.Image) -> dict:
         preds = {}
         logger.debug("Calculating hog embedding...")
-        hog_embedding = get_hog(image)[np.newaxis]
+        hog_embedding = self.hog.get_hog(image)[np.newaxis]
         logger.debug("Calculating resnet embedding...")
         resnet_embedding = get_resnet152_feature(image)[np.newaxis]
+
         for model in self.models:
             logger.debug(f"Predicting {model}...")
             if "hog" in model:

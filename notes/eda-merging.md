@@ -42,7 +42,7 @@
 
 > По итогу 2067 моделей кроссовок смерджились в 877
 
-![image](https://github.com/miem-refugees/sneakers-ml/assets/57370975/215fd546-21b1-492a-8bb9-6f759c466b69)
+![image](https://github.com/miem-refugees/sneakers-ml/assets/57370975/f67ee994-4746-4756-8cae-a42e196d8a5c)
 
 ## Images merge
 
@@ -65,9 +65,7 @@
   - **unique_images_count** - количество картинок в папке бренда
   - **images** - путь к папке со смердженными картинками
 
-> Получили всего 30 брендов
->
-> Наблюдается большой дисбаланс по количеству картинок в разных брендах
+> Получили всего 30 брендов. Наблюдается большой дисбаланс по количеству картинок в разных брендах
 
 ![image](https://github.com/miem-refugees/sneakers-ml/assets/57370975/4afdad96-b861-4723-88b9-6ccfaa796e96)
 
@@ -118,3 +116,5 @@
 
 - Аналоличная ситуация с эмбеддингами [`HOG`](/notebooks/features/HOG.ipynb).
 - В нем картинки делятся по ракурсам.
+- Для HOG делали crop картинок. ![image](https://github.com/miem-refugees/sneakers-ml/assets/57370975/41e81836-2dbe-459b-92a2-afca7537e605)
+- UMAP для HOG ![image](https://github.com/miem-refugees/sneakers-ml/assets/57370975/c7845ef5-9ba6-4721-8122-203c01ed563e)

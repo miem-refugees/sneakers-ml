@@ -1,25 +1,32 @@
-import logging
+import time
 from pathlib import Path
 
 import numpy as np
 from PIL import Image
 
-from sneakers_ml.bot.config import (
-    catboost_hog_models,
-    catboost_resnet_models,
-    sklearn_hog_models,
-    sklearn_resnet_models,
-)
+from sneakers_ml.bot.loggers import MultilineLogger
 from sneakers_ml.features.hog import get_hog
 from sneakers_ml.features.resnet152 import get_resnet152_feature
 from sneakers_ml.models.onnx import load_catboost_onnx, load_sklearn_onnx, predict_catboost_onnx, predict_sklearn_onnx
 
-logger = logging.getLogger(__name__)
+logger = MultilineLogger().logger
 
 
 class BrandPredictor:
     def __init__(self):
         self.models = {}
+
+        sklearn_hog_models = [
+            "data/models/brands-classification/hog-sgd.onnx",
+            "data/models/brands-classification/hog-svc.onnx",
+        ]
+        sklearn_resnet_models = [
+            "data/models/brands-classification/resnet-sgd.onnx",
+            "data/models/brands-classification/resnet-svc.onnx",
+        ]
+        catboost_hog_models = ["data/models/brands-classification/hog-catboost.onnx"]
+        catboost_resnet_models = ["data/models/brands-classification/resnet-catboost.onnx"]
+
         logger.debug("Loading sklearn_hog_models...")
         for model in sklearn_hog_models + sklearn_resnet_models:
             self.models[Path(model).stem] = load_sklearn_onnx(model)
@@ -46,6 +53,7 @@ class BrandPredictor:
         }
 
     def predict(self, image: Image.Image) -> dict:
+        start_time = time.time()
         preds = {}
         logger.debug("Calculating hog embedding...")
         hog_embedding = get_hog(image)[np.newaxis]
@@ -63,7 +71,8 @@ class BrandPredictor:
                     preds[model] = self.label_decode(predict_catboost_onnx(self.models[model], resnet_embedding)[0][0])
                 else:
                     preds[model] = self.label_decode(predict_sklearn_onnx(self.models[model], resnet_embedding)[0])
-        logger.info("Predictions done")
+        logger.info("Predictions done in %ssec", (time.time() - start_time))
+        # TODO: write metrics
         return preds
 
     def label_decode(self, label: str) -> str:

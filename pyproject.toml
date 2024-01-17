@@ -8,7 +8,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-dvc = {extras = ["s3"], version = "^3.39.0"}
+dvc = { extras = ["s3"], version = "^3.39.0" }
 loguru = "^0.7.2"
 onnxruntime = "^1.16.3"
 opencv-python = "^4.8.1.78"
@@ -90,6 +90,7 @@ target-version = ["py39"]
 profile = "black"
 line_length = 120
 float_to_top = true
+known_third_party = ["wandb"]
 
 [tool.autoflake]
 remove-all-unused-imports = true

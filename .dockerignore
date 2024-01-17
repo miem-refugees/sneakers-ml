@@ -1,9 +1,9 @@
 .dvc
+!.dvc/config
 .github
 .venv
 data
 !data/models
-!data/models/brands-classification
 notebooks
 notes
 */test

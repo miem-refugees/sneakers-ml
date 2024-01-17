@@ -1,4 +1,4 @@
-FROM python:3.9-slim-bullseye as production
+FROM python:3.9-slim as production
 
 ENV PYTHONPATH "${PYTHONPATH}:/app"
 ENV PATH "/app/scripts:${PATH}"
@@ -18,11 +18,11 @@ RUN set +x \
 
 COPY pyproject.toml poetry.lock sneakers_ml/bot /app/
 RUN poetry config installer.max-workers 16
-RUN poetry install --with telegram --without ml --no-interaction --no-ansi -vvv
+RUN --mount=type=cache,target=/root/.cache poetry install --with telegram --without ml --no-interaction --no-ansi -vvv
 
 # ML models
 RUN dvc pull data/models/brands-classification.dvc
-COPY data/models/brands-classification /app/data/models/brands-classification
+ADD data/models/brands-classification /app/data/models/brands-classification
 
 ADD . /app/
 CMD ["python", "__main__.py"]

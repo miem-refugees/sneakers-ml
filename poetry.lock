@@ -6275,6 +6275,24 @@ dynamo = ["jinja2"]
 opt-einsum = ["opt-einsum (>=3.3)"]
 
 [[package]]
+name = "torcheval"
+version = "0.0.7"
+description = "A library for providing a simple interface to create new metrics and an easy-to-use toolkit for metric computations and checkpointing."
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "torcheval-0.0.7-py3-none-any.whl", hash = "sha256:20cc34dac7aa9b32f942c8a9f014d1d02098631b6cd0b102c078600577017956"},
+    {file = "torcheval-0.0.7.tar.gz", hash = "sha256:a498dec34137bc66c9cf1adc7353a46c604dd62255884c72dcb4e2e4fc2cd7e9"},
+]
+
+[package.dependencies]
+typing-extensions = "*"
+
+[package.extras]
+dev = ["Cython (>=0.28.5)", "numpy", "pre-commit", "pytest", "pytest-cov", "pytest-timeout", "scikit-image (>=0.18.3)", "scikit-learn (>=0.22)", "torchtnt-nightly"]
+image = ["torchvision"]
+
+[[package]]
 name = "torchvision"
 version = "0.16.2"
 description = "image and video datasets and models for torch deep learning"
@@ -6951,4 +6969,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "704f0a76063f67f0ee6017ef46fde17cd270cc0c877b362d3b970c1d7f9b53f8"
+content-hash = "c458cbbeb4ce21c110a88edc024c79f4017141fc5f0e2711178f708d8fbc0b2b"

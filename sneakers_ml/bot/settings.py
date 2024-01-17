@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     webhook_secret_token: str = Field(default_factory=secrets.token_urlsafe)
     reset_webhook: bool = True
 
-    model_config = SettingsConfigDict(env_file_encoding="utf-8", env_file="sneakers_ml/bot/.env")
+    model_config = SettingsConfigDict(env_file_encoding="utf-8", env_file=".env")
 
     def build_postgres_dsn(self) -> str:
         return (

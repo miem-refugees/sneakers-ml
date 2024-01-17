@@ -4,17 +4,16 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from sneakers_ml.bot.loggers import MultilineLogger
+from sneakers_ml.bot.loggers import ml as ml_logger
 from sneakers_ml.features.hog import get_hog
 from sneakers_ml.features.resnet152 import get_resnet152_feature
 from sneakers_ml.models.onnx import load_catboost_onnx, load_sklearn_onnx, predict_catboost_onnx, predict_sklearn_onnx
-
-logger = MultilineLogger().logger
 
 
 class BrandPredictor:
     def __init__(self):
         self.models = {}
+        self.logger = ml_logger
 
         sklearn_hog_models = [
             "data/models/brands-classification/hog-sgd.onnx",
@@ -27,15 +26,15 @@ class BrandPredictor:
         catboost_hog_models = ["data/models/brands-classification/hog-catboost.onnx"]
         catboost_resnet_models = ["data/models/brands-classification/resnet-catboost.onnx"]
 
-        logger.debug("Loading sklearn_hog_models...")
+        self.logger.debug("Loading sklearn_hog_models...")
         for model in sklearn_hog_models + sklearn_resnet_models:
             self.models[Path(model).stem] = load_sklearn_onnx(model)
 
-        logger.debug("Loading catboost_hog_models...")
+        self.logger.debug("Loading catboost_hog_models...")
         for model in catboost_hog_models + catboost_resnet_models:
             self.models[Path(model).stem] = load_catboost_onnx(model)
 
-        logger.info("All models loaded")
+        self.logger.info("All models loaded")
         self.labels = {
             0: "adidas",
             1: "asics",
@@ -53,14 +52,17 @@ class BrandPredictor:
         }
 
     def predict(self, image: Image.Image) -> dict:
+        """
+        TODO: improve
+        """
         start_time = time.time()
         preds = {}
-        logger.debug("Calculating hog embedding...")
+        self.logger.debug("Calculating hog embedding...")
         hog_embedding = get_hog(image)[np.newaxis]
-        logger.debug("Calculating resnet embedding...")
+        self.logger.debug("Calculating resnet embedding...")
         resnet_embedding = get_resnet152_feature(image)[np.newaxis]
         for model in self.models:
-            logger.debug(f"Predicting {model}...")
+            self.logger.debug(f"Predicting {model}...")
             if "hog" in model:
                 if "catboost" in model:
                     preds[model] = self.label_decode(predict_catboost_onnx(self.models[model], hog_embedding)[0][0])
@@ -71,7 +73,7 @@ class BrandPredictor:
                     preds[model] = self.label_decode(predict_catboost_onnx(self.models[model], resnet_embedding)[0][0])
                 else:
                     preds[model] = self.label_decode(predict_sklearn_onnx(self.models[model], resnet_embedding)[0])
-        logger.info("Predictions done in %ssec", (time.time() - start_time))
+        self.logger.info("Predictions done in %d sec", (time.time() - start_time))
         # TODO: write metrics
         return preds
 

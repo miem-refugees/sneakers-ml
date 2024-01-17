@@ -16,8 +16,12 @@ RUN set +x \
  && poetry config virtualenvs.create false \
  && rm -rf /var/lib/apt/lists/*
 
-COPY pyproject.toml poetry.lock /app/
-RUN poetry install -n --only main --no-root
+COPY pyproject.toml poetry.lock sneakers_ml/bot /app/
+RUN poetry config installer.max-workers 16
+RUN poetry install --with telegram --without ml --no-interaction --no-ansi -vvv
+
+# ML models
+COPY data/models/brands-classification /app/data/models/brands-classification
 
 ADD . /app/
-CMD ["python", "sneakers_ml/bot/bot.py"]
+CMD ["python", "__main__.py"]

@@ -26,7 +26,7 @@ services:
     command: sh -c "python -m alembic upgrade head"
 
   bot:
-    build: .
+    build: ./docker/bot
     restart: always
     env_file: .env
     depends_on:

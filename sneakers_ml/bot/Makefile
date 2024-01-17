@@ -2,19 +2,6 @@
 project_dir := ../..
 bot_dir := sneakers_ml/bot
 
-# Lint code
-.PHONY: lint
-lint:
-	@black --check --diff $(project_dir)
-	@ruff $(project_dir)
-	@mypy $(project_dir) --strict
-
-# Reformat code
-.PHONY: reformat
-reformat:
-	@black $(project_dir)
-	@ruff $(project_dir) --fix
-
 # Make database migration
 .PHONY: migration
 migration:
@@ -25,28 +12,3 @@ migration:
 
 .PHONY: migrate
 	alembic upgrade head
-
-.PHONY: app-build
-app-build:
-	docker-compose build
-
-.PHONY: app-run
-app-run:
-	docker-compose stop
-	docker-compose up -d --remove-orphans
-
-.PHONY: app-stop
-app-stop:
-	docker-compose stop
-
-.PHONY: app-down
-app-down:
-	docker-compose down
-
-.PHONY: app-destroy
-app-destroy:
-	docker-compose down -v --remove-orphans
-
-.PHONY: app-logs
-app-logs:
-	docker-compose logs -f bot

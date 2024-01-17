@@ -8,12 +8,12 @@
 
 # Features and models
 
-| feature-model | baseline | hog-svm | hog-sgd | hog-catboost | resnet-svm | resnet-sgd | resnet-catboost |
-| ------------- | -------- | ------- | ------- | ------------ | ---------- | ---------- | --------------- |
-| f1-weighted   | 0.13     | 0.81    | 0.76    | 0.72         | 0.76       | 0.69       | 0.68            |
-| f1-macro      | 0.03     | 0.78    | 0.72    | 0.68         | 0.76       | 0.65       | 0.64            |
+| feature-model | baseline | hog-svm  | hog-sgd | hog-catboost | resnet-svm | resnet-sgd | resnet-catboost |
+| ------------- | -------- | -------- | ------- | ------------ | ---------- | ---------- | --------------- |
+| f1-weighted   | 0.13     | **0.81** | 0.76    | 0.72         | 0.76       | 0.69       | 0.68            |
+| f1-macro      | 0.03     | **0.78** | 0.72    | 0.68         | 0.76       | 0.65       | 0.64            |
 
-| feature-model | baseline | sift-svm | sift-sgd | sift-catboost |
-| ------------- | -------- | -------- | -------- | ------------- |
-| f1-weighted   | 0.13     | 0.48     | 0.47     | 0.45          |
-| f1-macro      | 0.03     | 0.43     | 0.40     | 0.36          |
+| feature-model | baseline | sift-svm | sift-sgd | sift-catboost | resnet-finetune |
+| ------------- | -------- | -------- | -------- | ------------- | --------------- |
+| f1-weighted   | 0.13     | 0.48     | 0.47     | 0.45          | 0.58            |
+| f1-macro      | 0.03     | 0.43     | 0.40     | 0.36          | 0.52            |

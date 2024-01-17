@@ -21,6 +21,7 @@ RUN poetry config installer.max-workers 16
 RUN poetry install --with telegram --without ml --no-interaction --no-ansi -vvv
 
 # ML models
+RUN dvc pull data/models/brands-classification.dvc
 COPY data/models/brands-classification /app/data/models/brands-classification
 
 ADD . /app/

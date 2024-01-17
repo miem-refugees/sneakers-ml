@@ -1,4 +1,5 @@
 import logging
+import os
 
 from sneakers_ml.bot.loggers.multiline import MultilineLogger
 
@@ -11,7 +12,7 @@ ml: logging.Logger = logging.getLogger("bot.ml")
 
 def setup_logger(level: int = logging.INFO) -> None:
     for name in ["aiogram.middlewares", "aiogram.event", "aiohttp.access"]:
-        logging.getLogger(name).setLevel(logging.WARNING)
+        logging.getLogger(name).setLevel(os.environ.get("LOGLEVEL", logging.DEBUG))
 
     logging.basicConfig(
         format="%(asctime)s %(levelname)s | %(name)s: %(message)s",

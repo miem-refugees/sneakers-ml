@@ -8,7 +8,7 @@ from aiogram.enums import ParseMode
 from aiogram.utils.callback_answer import CallbackAnswerMiddleware
 
 from sneakers_ml.bot.encoding import json
-from sneakers_ml.bot.handlers import extra, image, main
+from sneakers_ml.bot.handlers import image, main
 from sneakers_ml.bot.middlewares import (
     CommitMiddleware,
     DBSessionMiddleware,
@@ -43,7 +43,7 @@ def create_dispatcher(settings: Settings) -> Dispatcher:
         name="main_dispatcher",
         settings=settings,
     )
-    dispatcher.include_routers(main.router, image.router, extra.router)
+    dispatcher.include_routers(main.router, image.router)
     if settings.enable_db_storage:
         _setup_outer_middlewares(dispatcher=dispatcher, settings=settings)
     _setup_inner_middlewares(dispatcher=dispatcher)

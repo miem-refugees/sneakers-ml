@@ -37,6 +37,7 @@ pydantic = "^2.5.3"
 msgspec = "^0.18.5"
 typing-extensions = "^4.9.0"
 asyncpg = "^0.29.0"
+torcheval = "^0.0.7"
 
 [tool.poetry.group.dev.dependencies]
 algoliasearch = "^3.0.0"

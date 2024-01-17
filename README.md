@@ -50,6 +50,10 @@
 - [ ] similarity learning
 - [ ] Возможно text2image, image2text
 
+## Пример работы телеграм бота
+
+![ezgif-3-a70e75c32f](https://github.com/miem-refugees/sneakers-ml/assets/57370975/0ded53d5-479d-458a-b1ed-3675b3e1f71c)
+
 ## Список членов команды
 
 - Литвинов Вячеслав

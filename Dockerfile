@@ -20,9 +20,5 @@ COPY pyproject.toml poetry.lock sneakers_ml/bot /app/
 RUN poetry config installer.max-workers 16
 RUN --mount=type=cache,target=/root/.cache poetry install --with telegram --without ml --no-interaction --no-ansi -vvv
 
-# ML models
-RUN dvc pull data/models/brands-classification.dvc
-ADD data/models/brands-classification /app/data/models/brands-classification
-
 ADD . /app/
 CMD ["python", "__main__.py"]

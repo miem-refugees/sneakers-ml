@@ -3,7 +3,6 @@
 .github
 .venv
 data
-!data/models
 notebooks
 notes
 */test

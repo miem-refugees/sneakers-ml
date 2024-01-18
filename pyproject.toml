@@ -20,6 +20,10 @@ skl2onnx = "^1.16.0"
 split-folders = "^0.5.1"
 torchvision = "^0.16.1"
 tqdm = "^4.66.1"
+fastapi = "^0.109.0"
+sqlalchemy = "^2.0.25"
+jupyter = "^1.0.0"
+pytest = "^7.4.4"
 
 [tool.poetry.group.ml.dependencies]
 catboost = "^1.2.2"
@@ -127,6 +131,12 @@ disable = ["C0116", "C0114", "C0115", "W1514"]
 exclude_dirs = ["sneakers_ml/data/test"]
 skips = ["B403", "B301"]                         # to-do - remove pickle and switch to onnx
 
+[tool.bandit.assert_used]
+skips = ['*_test.py', '*/test_*.py']
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[pytest]
+addopts = ["--ignore=data", "--ignore=notebooks", "--ignore=notes", "--ignore=docker"]

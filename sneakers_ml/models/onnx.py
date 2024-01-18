@@ -28,4 +28,8 @@ def predict_sklearn_onnx(sess: rt.InferenceSession, x: np.ndarray) -> np.ndarray
 
 
 def predict_catboost_onnx(sess: rt.InferenceSession, x: np.ndarray) -> np.ndarray:
+    """
+
+    :rtype: object
+    """
     return sess.run(["label"], {"features": x.astype(np.float32)})

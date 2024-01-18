@@ -75,6 +75,17 @@ repos:
         args: ["-c", "pyproject.toml"]
         additional_dependencies: ["bandit[toml]"]
 
+  - repo: local
+    hooks:
+      - id: pytest-check
+        name: pytest-check
+        stages: [commit]
+        types: [python]
+        entry: pytest
+        language: system
+        pass_filenames: false
+        always_run: true
+
   # - repo: https://github.com/astral-sh/ruff-pre-commit
   #   rev: v0.1.9
   #   hooks:

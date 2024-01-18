@@ -8,6 +8,7 @@ __all__: list[str] = ["database", "webhook", "ml", "setup_logger", "MultilineLog
 webhook: logging.Logger = logging.getLogger("bot.webhook")
 database: logging.Logger = logging.getLogger("bot.database")
 ml: logging.Logger = logging.getLogger("bot.ml")
+api: logging.Logger = logging.getLogger("api")
 
 
 def setup_logger(level: int = logging.INFO) -> None:

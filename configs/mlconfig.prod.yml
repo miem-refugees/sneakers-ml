@@ -1,0 +1,36 @@
+# This config is production. Be attentive =)
+models:
+  sklearn_hog_models:
+    - data/models/brands-classification/hog-sgd.onnx
+    - data/models/brands-classification/hog-svc.onnx
+  sklearn_resnet_models:
+    - data/models/brands-classification/resnet-sgd.onnx
+    - data/models/brands-classification/resnet-svc.onnx
+  sklearn_sift_models:
+    - data/models/brands-classification/sift-sgd.onnx
+    - data/models/brands-classification/sift-svc.onnx
+  catboost_hog_models:
+    - data/models/brands-classification/hog-catboost.onnx
+  catboost_resnet_models:
+    - data/models/brands-classification/resnet-catboost.onnx
+  catboost_sift_models:
+    - data/models/brands-classification/sift-catboost.onnx
+
+features:
+  kmeans: data/models/brands-classification/sift-kmeans.onnx
+  # TODO(@searayeah)
+
+labels:
+  0: adidas
+  1: asics
+  2: clarks
+  3: converse
+  4: jordan
+  5: kangaroos
+  6: karhu
+  7: new balance
+  8: nike
+  9: puma
+  10: reebok
+  11: saucony
+  12: vans

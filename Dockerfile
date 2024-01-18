@@ -1,4 +1,4 @@
-FROM python:3.9-slim-bullseye as production
+FROM python:3.9-slim as production
 
 ENV PYTHONPATH "${PYTHONPATH}:/app"
 ENV PATH "/app/scripts:${PATH}"
@@ -16,8 +16,9 @@ RUN set +x \
  && poetry config virtualenvs.create false \
  && rm -rf /var/lib/apt/lists/*
 
-COPY pyproject.toml poetry.lock /app/
-RUN poetry install -n --only main --no-root
+COPY pyproject.toml poetry.lock sneakers_ml/bot /app/
+RUN poetry config installer.max-workers 16
+RUN --mount=type=cache,target=/root/.cache poetry install --with telegram --without ml --no-interaction --no-ansi -vvv
 
 ADD . /app/
-CMD ["python", "sneakers_ml/bot/bot.py"]
+CMD ["python", "__main__.py"]

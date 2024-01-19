@@ -24,6 +24,7 @@ fastapi = "^0.109.0"
 sqlalchemy = "^2.0.25"
 jupyter = "^1.0.0"
 pytest = "^7.4.4"
+sqlmodel = "^0.0.14"
 
 [tool.poetry.group.ml.dependencies]
 catboost = "^1.2.2"

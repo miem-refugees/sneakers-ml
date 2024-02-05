@@ -45,7 +45,6 @@ class BrandClassifier:
         resnet_embedding = get_resnet152_feature(image)[np.newaxis]
         sift_embedding = get_sift_feature(image, self.kmeans, 2000)[np.newaxis]
         for model in self.models:
-            print(model)
             if "hog" in model:
                 if "catboost" in model:
                     preds[model] = predict_catboost_onnx(self.models[model], hog_embedding)[0][0]

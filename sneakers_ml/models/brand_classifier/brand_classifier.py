@@ -61,4 +61,4 @@ class BrandClassifier:
                     preds[model] = predict_catboost_onnx(self.models[model], sift_embedding)[0][0]
                 else:
                     preds[model] = predict_sklearn_onnx(self.models[model], sift_embedding)[0]
-        return preds
+        return {model: self.labels.get(int(prediction)) for model, prediction in preds.items()}

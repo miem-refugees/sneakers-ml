@@ -1,3 +1,4 @@
+import logging
 from typing import BinaryIO
 
 import aiohttp
@@ -5,12 +6,14 @@ from aiogram import Dispatcher
 from aiogram.filters import CommandStart
 from aiogram.types import Message
 from aiogram.utils.markdown import hbold
-from PIL import Image
+from aiohttp.client_exceptions import ClientResponseError
+from aiohttp.formdata import FormData
 
-from sneakers_ml.app.models.brand_classify import BrandClassifyRequest
 from sneakers_ml.bot.filters.image import ImageFilter
 
 dispatcher = Dispatcher()
+logger = logging.getLogger(__name__)
+CLASSIFY_URL = "http://localhost:8000/classify-brand/upload/"
 
 
 @dispatcher.message(CommandStart())
@@ -25,16 +28,23 @@ async def command_start_handler(message: Message) -> None:
 async def on_image(message: Message, image_file_id: str):
     file: BinaryIO = await message.bot.download(image_file_id)
     file.seek(0)
-    image = Image.open(file)
     await message.answer("Predicting brand for your photo...")
-    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session:
-        async with session.post(
-            url="http://localhost:8000/classify-brand/",  # TODO: change to prod url
-            json=BrandClassifyRequest(
-                image=image.tobytes().decode("utf-8"),
-                name=str(message.message_id),
-                from_username=message.from_user.username,
-            ).model_dump(),
-        ) as response:
-            predictions = await response.json()
-            await message.answer("\n".join([f"{hbold(model)}: {hbold(predictions[model])}" for model in predictions]))
+    predictions = None
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            data = FormData()
+            data.add_field("image", file, filename="report.xls")
+            data.add_field("username", message.from_user.username)
+            resp = await session.post(CLASSIFY_URL, data=data)
+            content = await resp.json()
+            resp.raise_for_status()
+            predictions = content
+    except ClientResponseError as e:
+        logger.error("Got response error from classify-brand: %s\n%s", e, content)
+        await message.answer("Oh no! Could not predict brand, sorry =(")
+
+    if predictions is not None:
+        await message.answer("\n".join([f"{hbold(model)}: {hbold(predictions[model])}" for model in predictions]))
+    else:
+        await message.answer("Oh no! Could not predict brand, sorry =(")

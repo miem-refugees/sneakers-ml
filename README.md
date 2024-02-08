@@ -1,3 +1,5 @@
+[![pre-Commit](https://github.com/miem-refugees/sneakers-ml/actions/workflows/pre-commit.yaml/badge.svg)](https://github.com/miem-refugees/sneakers-ml/actions/workflows/pre-commit.yaml)
+
 # Платформа для поиска похожих кроссовок
 
 ## [Цель проекта](https://docs.google.com/document/d/1Gdz3_W7x7L9Ff1-Sl61Cv3L6GHBiceH863Vn1ucXzjU/edit#heading=h.j88xs4dca7be)

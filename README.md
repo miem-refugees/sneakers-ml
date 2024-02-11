@@ -1,4 +1,5 @@
 [![pre-Commit](https://github.com/miem-refugees/sneakers-ml/actions/workflows/pre-commit.yaml/badge.svg)](https://github.com/miem-refugees/sneakers-ml/actions/workflows/pre-commit.yaml)
+[![codecov](https://codecov.io/gh/miem-refugees/sneakers-ml/graph/badge.svg?token=ZTQC72KIPN)](https://codecov.io/gh/miem-refugees/sneakers-ml)
 
 # Платформа для поиска похожих кроссовок
 

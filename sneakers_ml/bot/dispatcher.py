@@ -4,6 +4,7 @@ from typing import BinaryIO
 import aiohttp
 from aiogram import Dispatcher
 from aiogram.filters import CommandStart
+from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import Message
 from aiogram.utils.markdown import hbold
 from aiohttp.client_exceptions import ClientResponseError
@@ -11,7 +12,7 @@ from aiohttp.formdata import FormData
 
 from sneakers_ml.bot.filters.image import ImageFilter
 
-dispatcher = Dispatcher()
+dispatcher = Dispatcher(storage=MemoryStorage())
 logger = logging.getLogger(__name__)
 CLASSIFY_URL = "http://localhost:8000/classify-brand/upload/"
 

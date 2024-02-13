@@ -1,0 +1,3 @@
+[submodule "vendor/aiogram_tests"]
+	path = vendor/aiogram_tests
+	url = https://github.com/miem-refugees/aiogram_tests.git

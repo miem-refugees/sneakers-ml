@@ -13,7 +13,7 @@ async def test_start():
     calls = await requester.query(MESSAGE.as_object(text="/start"))
     answer_message = calls.send_message.fetchone().text
     assert answer_message == (
-        "Hello, FirstName LastName!" "Just send me a photo of you sneaker and I'll try to predict it's brand"
+        "Hello, FirstName LastName!\nJust send me a photo of you sneaker and I'll try to predict it's brand"
     )
 
 

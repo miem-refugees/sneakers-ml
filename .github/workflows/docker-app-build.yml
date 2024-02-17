@@ -10,9 +10,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Build sneakers-ml-app
-        run: docker build . -t sneakers-ml-app --file deploy/app/Dockerfile \
-              --build-arg AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
-              --build-arg AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+        run: |
+          docker buildx create --use
+          docker buildx build . --file deploy/app/Dockerfile \
+                --build-arg AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
+                --build-arg AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY --push
         env:
           # for dvc pull
           AWS_ACCESS_KEY_ID: ${{ vars.AWS_ACCESS_KEY_ID }}

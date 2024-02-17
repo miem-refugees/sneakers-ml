@@ -40,7 +40,7 @@ RUN --mount=type=cache,target=/root/.cache \
 WORKDIR /sneakers_ml
 
 # install dependencies
-COPY pyproject.toml poetry.lock .
+COPY pyproject.toml poetry.lock ./
 
 RUN poetry config installer.max-workers 10
 RUN --mount=type=cache,target=/root/.cache \
@@ -54,7 +54,7 @@ ARG AWS_SECRET_ACCESS_KEY
 RUN dvc remote modify storage access_key_id ${AWS_ACCESS_KEY_ID}
 RUN dvc remote modify storage secret_access_key ${AWS_SECRET_ACCESS_KEY}
 
-COPY data data/ 
+COPY data data/
 COPY configs configs/
 COPY sneakers_ml sneakers_ml/
 

@@ -10,4 +10,4 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Build sneakers-ml-bot
-        run: docker build . -t sneakers-ml-bot --file deploy/bot/Dockerfile
+        run: docker build . -t sneakers-ml-bot:$(date +%s) --file deploy/bot/Dockerfile

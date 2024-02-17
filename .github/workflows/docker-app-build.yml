@@ -12,7 +12,7 @@ jobs:
       - name: Build sneakers-ml-app
         run: |
           docker buildx create --use
-          docker buildx build . --file deploy/app/Dockerfile \
+          docker buildx build . -t sneakers-ml-app:$(date +%s) --file deploy/app/Dockerfile \
                 --build-arg AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
                 --build-arg AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY --push
         env:

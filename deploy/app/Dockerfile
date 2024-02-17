@@ -66,9 +66,7 @@ RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
 
 COPY data sneakers_ml configs /sneakers_ml/
 
-RUN pip install dvc && \
-    dvc pull data/models/brands-classification.dvc && \
-    pip uninstall dvc
+RUN dvc pull data/models/brands-classification.dvc
 
 WORKDIR /
 CMD ["uvicorn", "sneakers_ml.app.main:app", "--proxy-headers", "--host", "0.0.0.0", "--port", "80"]

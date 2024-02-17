@@ -1,0 +1,13 @@
+name: Bot docker build check
+
+on:
+  pull_request:
+    branches: ["trunk"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build sneakers-ml-bot
+        run: docker build . -t sneakers-ml-bot --file deploy/bot/Dockerfile

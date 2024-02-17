@@ -1,5 +1,5 @@
-.dvc
-!.dvc/config
+.dvc/tmp
+.dvc/cache
 .github
 .venv
 data
@@ -9,3 +9,4 @@ node_modules
 notebooks
 notes
 */test
+vendor

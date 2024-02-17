@@ -1,15 +1,17 @@
 version: "3"
 
 services:
-  api:
+  app:
     build:
-      dockerfile: Dockerfile
-      target: api-service
-    restart: always
+      context: .
+      dockerfile: deploy/app/Dockerfile
     env_file: .env
+    restart: always
   bot:
     build:
-      dockerfile: Dockerfile
-      target: telegram-bot-service
-    restart: always
+      context: .
+      dockerfile: deploy/bot/Dockerfile
     env_file: .env
+    restart: always
+    depends_on:
+      - app

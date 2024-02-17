@@ -3,6 +3,9 @@
 .github
 .venv
 data
+!data/models
+dist
+node_modules
 notebooks
 notes
 */test

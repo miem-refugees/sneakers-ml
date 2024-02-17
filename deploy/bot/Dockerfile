@@ -1,4 +1,5 @@
 FROM python:3.9-slim as python-base
+LABEL authors="Slava and Daniil, miem-refugees"
 
     # Python
 ENV PYTHONUNBUFFERED=1 \
@@ -40,22 +41,10 @@ RUN apt-get update \
 RUN --mount=type=cache,target=/root/.cache \
     curl -sSL https://install.python-poetry.org | python -
 
-COPY pyproject.toml poetry.lock sneakers_ml configs /sneakers_ml/
+COPY pyproject.toml poetry.lock sneakers_ml /sneakers_ml/
 
-FROM python-base as api-service
-
-RUN sudo apt install libcudnn8 libcudnn8-dev libcudnn8-samples
-
-RUN POETRY_INSTALLER_MAX_WORKERS=16  \
-    poetry install --with api --without ml --no-interaction --no-ansi
-
-WORKDIR /
-CMD ["python", "sneakers_ml/api/main.py"]
-
-FROM python-base as telegram-bot-service
-
-RUN POETRY_INSTALLER_MAX_WORKERS=16  \
-    poetry install --only bot --no-interaction --no-ansi
+RUN poetry config installer.max-workers 10
+RUN poetry install --only bot --no-interaction --no-ansi
 
 WORKDIR /
 CMD ["python", "sneakers_ml/bot/main.py"]

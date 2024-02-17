@@ -27,11 +27,8 @@ ENV PYTHONUNBUFFERED=1 \
 # Update the PATH
 ENV PATH="$POETRY_HOME/bin:$VIRTUAL_ENV/bin:$PATH"
 
-# Setup AWS config
-RUN mkdir -p /root/.aws
-COPY deploy/app/aws_config /root/.aws/config
-
-RUN ./deploy/app/setup.sh
+ENV AWS_ACCESS_KEY_ID AWS_ACCESS_KEY_ID
+ENV AWS_SECRET_ACCESS_KEY AWS_SECRET_ACCESS_KEY
 
 # Install Python and curl
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -39,15 +36,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-pip \
     python-is-python3 \
     curl \
+    wget \
     # for opencv
     ffmpeg libsm6 libxext6 \
-    build-essential \
-RUN snap install dvc --classic
+    build-essential
+
+# Setup data from DVC (using aws S3)
+ADD deploy/app/aws_setup.sh /root/aws_setup.sh
+ADD deploy/app/dvc_setup.sh /root/dvc_setup.sh
+
+RUN /root/aws_setup.sh
+RUN /root/dvc_setup.sh
 
 # install poetry - respects $POETRY_VERSION & $POETRY_HOME
 # The --mount will mount the buildx cache directory to where
 # Poetry and Pip store their cache so that they can re-use it
-RUN curl -sSL https://install.python-poetry.org | python -
+RUN --mount=type=cache,target=/root/.cache \
+    curl -sSL https://install.python-poetry.org | python -
 
 WORKDIR /sneakers_ml
 ENV PYTHONPATH="/sneakers-ml:$PYTHONPATH"
@@ -60,7 +65,10 @@ RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
     poetry install --with api --no-interaction --no-ansi --no-root
 
 COPY data sneakers_ml configs /sneakers_ml/
-RUN dvc pull data/models/brands-classification.dvc
+
+RUN pip install dvc && \
+    dvc pull data/models/brands-classification.dvc && \
+    pip uninstall dvc
 
 WORKDIR /
 CMD ["uvicorn", "sneakers_ml.app.main:app", "--proxy-headers", "--host", "0.0.0.0", "--port", "80"]

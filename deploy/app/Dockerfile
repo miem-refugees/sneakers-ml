@@ -19,7 +19,6 @@ ENV PYTHONUNBUFFERED=1 \
     POETRY_NO_INTERACTION=1 \
     # never create virtual environment automaticly, only use env prepared by us
     POETRY_VIRTUALENVS_CREATE=false \
-    POETRY_CACHE_DIR=/tmp/poetry_cache \
     \
     # this is where our requirements + virtual environment will live
     VIRTUAL_ENV="/venv"
@@ -33,7 +32,6 @@ ENV AWS_SECRET_ACCESS_KEY AWS_SECRET_ACCESS_KEY
 # Install Python and curl
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.9 \
-    python3-pip \
     python-is-python3 \
     curl \
     wget \
@@ -58,13 +56,14 @@ WORKDIR /sneakers_ml
 ENV PYTHONPATH="/sneakers-ml:$PYTHONPATH"
 
 # install dependencies
-COPY pyproject.toml poetry.lock /sneakers_ml/
+COPY pyproject.toml poetry.lock .
 
 RUN poetry config installer.max-workers 10
-RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
+RUN --mount=type=cache,target=/root/.cache \
     poetry install --with api --no-interaction --no-ansi --no-root
 
-COPY data sneakers_ml configs /sneakers_ml/
+COPY .dvc /
+COPY data sneakers_ml configs .
 
 RUN dvc pull data/models/brands-classification.dvc
 

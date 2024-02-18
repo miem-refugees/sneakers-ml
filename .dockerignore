@@ -4,9 +4,11 @@
 .venv
 data
 !data/models
+deploy
 dist
 node_modules
 notebooks
 notes
 */test
+*/tests
 vendor

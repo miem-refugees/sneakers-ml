@@ -50,5 +50,5 @@ RUN dvc remote modify storage access_key_id ${AWS_ACCESS_KEY_ID} &&  \
     dvc remote modify storage secret_access_key ${AWS_SECRET_ACCESS_KEY} && \
     dvc pull data/models/brands-classification.dvc -f -d
 
-WORKDIR /
+EXPOSE 80
 CMD ["uvicorn", "sneakers_ml.app.main:app", "--proxy-headers", "--host", "0.0.0.0", "--port", "80"]

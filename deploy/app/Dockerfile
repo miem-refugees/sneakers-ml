@@ -19,48 +19,46 @@ ENV PYTHONUNBUFFERED=1 \
     POETRY_NO_INTERACTION=1 \
     # never create virtual environment automaticly, only use env prepared by us
     POETRY_VIRTUALENVS_CREATE=false \
-    POETRY_CACHE_DIR=/tmp/poetry_cache \
-    \
-    # this is where our requirements + virtual environment will live
-    VIRTUAL_ENV="/venv"
-
-# Update the PATH
-ENV PATH="$POETRY_HOME/bin:$VIRTUAL_ENV/bin:$PATH"
-
-# Setup AWS config
-RUN mkdir -p /root/.aws
-COPY deploy/app/aws_config /root/.aws/config
-
-RUN ./deploy/app/setup.sh
+    POETRY_CACHE_DIR='/var/cache/pypoetry' \
+    POETRY_HOME='/usr/local'
 
 # Install Python and curl
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.9 \
-    python3-pip \
     python-is-python3 \
     curl \
     # for opencv
     ffmpeg libsm6 libxext6 \
-    build-essential \
-RUN snap install dvc --classic
+    build-essential
 
 # install poetry - respects $POETRY_VERSION & $POETRY_HOME
 # The --mount will mount the buildx cache directory to where
 # Poetry and Pip store their cache so that they can re-use it
-RUN curl -sSL https://install.python-poetry.org | python -
+RUN --mount=type=cache,target=/root/.cache \
+    curl -sSL https://install.python-poetry.org | python -
 
 WORKDIR /sneakers_ml
-ENV PYTHONPATH="/sneakers-ml:$PYTHONPATH"
 
 # install dependencies
-COPY pyproject.toml poetry.lock /sneakers_ml/
+COPY pyproject.toml poetry.lock ./
 
 RUN poetry config installer.max-workers 10
-RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
+RUN --mount=type=cache,target=/root/.cache \
     poetry install --with api --no-interaction --no-ansi --no-root
 
-COPY data sneakers_ml configs /sneakers_ml/
-RUN dvc pull data/models/brands-classification.dvc
+# Setup DVC
+COPY .dvc .dvc/
+COPY .git .git/
+ARG AWS_ACCESS_KEY_ID
+ARG AWS_SECRET_ACCESS_KEY
+RUN dvc remote modify storage access_key_id ${AWS_ACCESS_KEY_ID}
+RUN dvc remote modify storage secret_access_key ${AWS_SECRET_ACCESS_KEY}
+
+COPY data data/
+COPY configs configs/
+COPY sneakers_ml sneakers_ml/
+
+RUN dvc pull data/models/brands-classification.dvc -f -d
 
 WORKDIR /
 CMD ["uvicorn", "sneakers_ml.app.main:app", "--proxy-headers", "--host", "0.0.0.0", "--port", "80"]

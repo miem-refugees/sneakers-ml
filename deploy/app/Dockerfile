@@ -25,40 +25,30 @@ ENV PYTHONUNBUFFERED=1 \
 # Install Python and curl
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.9 \
-    python-is-python3 \
     curl \
     # for opencv
     ffmpeg libsm6 libxext6 \
-    build-essential
-
-# install poetry - respects $POETRY_VERSION & $POETRY_HOME
-# The --mount will mount the buildx cache directory to where
-# Poetry and Pip store their cache so that they can re-use it
-RUN --mount=type=cache,target=/root/.cache \
-    curl -sSL https://install.python-poetry.org | python -
+    build-essential && \
+    apt-get clean autoclean && \
+    apt-get autoremove --yes && \
+    rm -rf /var/lib/{apt,dpkg,cache,log}/; \
+    curl -sSL https://install.python-poetry.org | python3 -
 
 WORKDIR /sneakers_ml
 
 # install dependencies
 COPY pyproject.toml poetry.lock ./
 
-RUN poetry config installer.max-workers 10
-RUN --mount=type=cache,target=/root/.cache \
-    poetry install --with api --no-interaction --no-ansi --no-root
+RUN poetry install --with api --no-interaction --no-ansi --no-root
+
+COPY . ./
 
 # Setup DVC
-COPY .dvc .dvc/
-COPY .git .git/
 ARG AWS_ACCESS_KEY_ID
 ARG AWS_SECRET_ACCESS_KEY
-RUN dvc remote modify storage access_key_id ${AWS_ACCESS_KEY_ID}
-RUN dvc remote modify storage secret_access_key ${AWS_SECRET_ACCESS_KEY}
-
-COPY data data/
-COPY configs configs/
-COPY sneakers_ml sneakers_ml/
-
-RUN dvc pull data/models/brands-classification.dvc -f -d
+RUN dvc remote modify storage access_key_id ${AWS_ACCESS_KEY_ID} &&  \
+    dvc remote modify storage secret_access_key ${AWS_SECRET_ACCESS_KEY} && \
+    dvc pull data/models/brands-classification.dvc -f -d
 
 WORKDIR /
 CMD ["uvicorn", "sneakers_ml.app.main:app", "--proxy-headers", "--host", "0.0.0.0", "--port", "80"]

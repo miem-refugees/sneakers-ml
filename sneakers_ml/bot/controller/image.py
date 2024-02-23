@@ -7,9 +7,10 @@ from telegram.ext import ContextTypes
 
 
 class ImageController:
-    def __init__(self, api_url: str) -> None:
+    def __init__(self, api_url: str, classify_brand_func=None) -> None:
         self.api_url = api_url
         self.classify_brand_url = f"{api_url}/classify-brand/upload/"
+        self.classify_brand = classify_brand_func if classify_brand_func is not None else self.classify_brand
 
     async def classify_brand(self, image: bytearray, username: str, filename: str) -> str:
         try:

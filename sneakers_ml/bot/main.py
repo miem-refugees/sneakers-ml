@@ -18,7 +18,7 @@ def main():
     application.add_handler(CommandHandler(["start", "help"], common_controller.start_handler))
     application.add_handler(MessageHandler(filters=filters.PHOTO, callback=image_controller.image_handler))
 
-    logger.info("Started polling with %d handlers", len(application.handlers))
+    logger.info("Started polling with {} handlers: ", len(application.handlers.values()))
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 

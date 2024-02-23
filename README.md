@@ -1,7 +1,5 @@
 [![pre-Commit](https://github.com/miem-refugees/sneakers-ml/actions/workflows/pre-commit.yaml/badge.svg)](https://github.com/miem-refugees/sneakers-ml/actions/workflows/pre-commit.yaml)
-[![Docker API](https://github.com/miem-refugees/sneakers-ml/actions/workflows/docker-publish-api.yml/badge.svg)](https://github.com/miem-refugees/sneakers-ml/actions/workflows/docker-publish-api.yml)
-[![Docker BOT](https://github.com/miem-refugees/sneakers-ml/actions/workflows/docker-publish-bot.yml/badge.svg)](https://github.com/miem-refugees/sneakers-ml/actions/workflows/docker-publish-bot.yml)
-[![codecov](https://codecov.io/gh/miem-refugees/sneakers-ml/graph/badge.svg?token=ZTQC72KIPN)](https://codecov.io/gh/miem-refugees/sneakers-ml)
+[![Docker builds](https://github.com/miem-refugees/sneakers-ml/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/miem-refugees/sneakers-ml/actions/workflows/docker-publish.yml)
 
 # Платформа для поиска похожих кроссовок
 

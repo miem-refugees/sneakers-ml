@@ -89,7 +89,11 @@ pandas-stubs = "^2.2.0.240218"
 types-pillow = "^10.2.0.20240213"
 types-beautifulsoup4 = "^4.12.0.20240106"
 types-tqdm = "^4.66.0.20240106"
-# tests
+
+[tool.poetry.group.testing]
+optional = true
+
+[tool.poetry.group.testing.dependencies]
 pytest = "^7.4.4"
 pytest-cov = "^4.1.0"
 pytest-asyncio = "^0.23.5"
@@ -126,12 +130,12 @@ extend-include = ["*.ipynb"]
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
-    "D",      # documentation
+    "D", # documentation
     "ANN101", # annotationg self in class methods, will be deprecated
     "RUF012", # mutable class attributes type checking
     "ANN102", # annotationg cls in class methods, will be deprecated
     "COM812", # missing-trailing-comma
-    "FA100",  # future-annotations
+    "FA100", # future-annotations
 ]
 
 [tool.mypy]
@@ -157,13 +161,8 @@ skips = ["B403", "B301"]                 # to-do - remove pickle and switch to o
 [tool.bandit.assert_used]
 skips = ['*_test.py', '*/test_*.py']
 
-[tool.pytest]
-addopts = [
-    "--ignore=data",
-    "--ignore=notebooks",
-    "--ignore=notes",
-    "--ignore=docker",
-]
+[tool.pytest.ini_options]
+testpaths = "sneakers_ml"
 
 [build-system]
 requires = ["poetry-core"]

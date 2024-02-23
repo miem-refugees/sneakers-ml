@@ -1,4 +1,0 @@
-full: data/features/brands-classification/hog.pickle
-train: data/features/brands-classification-splits/hog-train.pickle
-val: data/features/brands-classification-splits/hog-val.pickle
-test: data/features/brands-classification-splits/hog-test.pickle

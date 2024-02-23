@@ -1,0 +1,22 @@
+project_name: sneakers_ml
+log_wandb: false
+data:
+  brands_classification:
+    full: data/training/brands-classification
+    train: data/training/brands-classification-splits/train
+    val: data/training/brands-classification-splits/val
+    test: data/training/brands-classification-splits/test
+features:
+  hog:
+    full: data/features/brands-classification/hog.pickle
+    train: data/features/brands-classification-splits/hog-train.pickle
+    val: data/features/brands-classification-splits/hog-val.pickle
+    test: data/features/brands-classification-splits/hog-test.pickle
+  resnet152:
+    full: data/features/${....data}/resnet.pickle
+    train: ${data}
+    val: data/features/${hydra:runtime.choices.data}-splits/resnet-val.pickle
+    test: data/features/${config.data}-splits/resnet-test.pickle
+    device: cuda
+    use_onnx: true
+    onnx_path: ''

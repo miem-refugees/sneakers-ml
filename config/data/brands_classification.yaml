@@ -1,0 +1,5 @@
+name: brands-classification
+full: data/training/brands-classification
+train: data/training/brands-classification-splits/train
+val: data/training/brands-classification-splits/val
+test: data/training/brands-classification-splits/test

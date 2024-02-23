@@ -1,18 +1,20 @@
 import pickle
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import Union
 
 import numpy as np
+import torch
 from omegaconf import DictConfig
 from PIL import Image
 
 
 class BaseFeatures(ABC):
-    def __init__(self, cfg_data: DictConfig, cfg_features: DictConfig) -> None:
+    def __init__(self, cfg_features: DictConfig, cfg_data: DictConfig) -> None:
         super().__init__()
 
-        self.cfg_data = cfg_data
         self.cfg_features = cfg_features
+        self.cfg_data = cfg_data
 
     @staticmethod
     def save_features(path: str, numpy_features: np.ndarray, classes: np.ndarray, class_to_idx: dict[str, int]) -> None:
@@ -45,8 +47,13 @@ class BaseFeatures(ABC):
     def load_full_split(self) -> tuple[np.ndarray, np.ndarray]:
         return self.load_split(self.cfg_features.full)
 
+    def create_features(self) -> None:
+        for split in self.cfg_data:
+            numpy_features, classes, class_to_idx = self.get_features(self.cfg_data[split])
+            self.save_features(self.cfg_features[split], numpy_features, classes, class_to_idx)
+
     @abstractmethod
-    def apply_transforms(self, image: Image.Image) -> Image.Image:
+    def apply_transforms(self, image: Image.Image) -> Union[Image.Image, torch.Tensor]:
         raise NotImplementedError
 
     @abstractmethod
@@ -57,7 +64,22 @@ class BaseFeatures(ABC):
     def get_features(self, folder_path: str) -> tuple[np.ndarray, np.ndarray, dict[str, int]]:
         raise NotImplementedError
 
-    def create_features(self) -> None:
-        for split in self.cfg_data:
-            numpy_features, classes, class_to_idx = self.get_features(self.cfg_data[split])
-            self.save_features(self.cfg_features[split], numpy_features, classes, class_to_idx)
+    @staticmethod
+    def get_device(device: str) -> str:
+        if device.lower().startswith("cuda"):
+            return "cuda" if torch.cuda.is_available() else "cpu"
+        return "cpu"
+
+    @staticmethod
+    def crop_image(image: Image.Image, crop_sides: int, crop_top_bot: int) -> Image.Image:
+        width, height = image.size
+        left = (width - crop_sides) // 2
+        top = (height - crop_top_bot) // 2
+        right = (width + crop_sides) // 2
+        bottom = (height + crop_top_bot) // 2
+
+        return image.crop((left, top, right, bottom))
+
+    @staticmethod
+    def to_numpy(tens: torch.Tensor) -> np.ndarray:
+        return tens.detach().cpu().numpy() if tens.requires_grad else tens.cpu().numpy()  # type: ignore[no-any-return]

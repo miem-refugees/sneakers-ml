@@ -1,4 +1,0 @@
-full: data/features/brands-classification/resnet.pickle
-train: data/features/brands-classification-splits/resnet-train.pickle
-val: data/features/brands-classification-splits/resnet-val.pickle
-test: data/features/brands-classification-splits/resnet-test.pickle

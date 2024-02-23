@@ -1,0 +1,9 @@
+resnet152:
+  full: data/features/${data.name}/resnet.pickle
+  train: data/features/${data.name}-splits/resnet-train.pickle
+  val: data/features/${data.name}-splits/resnet-val.pickle
+  test: data/features/${data.name}-splits/resnet-test.pickle
+
+  device: cuda
+  use_onnx: true
+  onnx_path: ""

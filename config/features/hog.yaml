@@ -1,0 +1,5 @@
+hog:
+  full: data/features/${data.name}/hog.pickle
+  train: data/features/${data.name}-splits/hog-train.pickle
+  val: data/features/${data.name}-splits/hog-val.pickle
+  test: data/features/${data.name}-splits/hog-test.pickle

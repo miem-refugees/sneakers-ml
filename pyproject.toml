@@ -13,23 +13,39 @@ loguru = "^0.7.2"
 onnxruntime = "^1.16.3"
 opencv-python = "^4.8.1.78"
 pillow = "^10.1.0"
-requests = "^2.31.0"
 scikit-image = "^0.22.0"
 skl2onnx = "^1.16.0"
 torchvision = "^0.16.1"
+requests = "^2.31.0"
+
+[tool.poetry.group.data-eda]
+optional = true
+
+[tool.poetry.group.data-eda.dependencies]
+split-folders = "^0.5.1"
+fake-useragent = "^1.4.0"
+algoliasearch = "^3.0.0"
+beautifulsoup4 = "^4.12.2"
+pandarallel = "^1.6.5"
+ipywidgets = "^8.1.1"
+jupyterlab = "^4.0.9"
+matplotlib = "^3.8.2"
+seaborn = "^0.13.0"
+umap-learn = "^0.5.5"
+
+[tool.poetry.group.ml]
+optional = true
 
 [tool.poetry.group.ml.dependencies]
 catboost = "^1.2.2"
-matplotlib = "^3.8.2"
 numpy = "^1.26.2"
 pandas = "^2.1.3"
 pillow = "^10.1.0"
 scikit-learn = "^1.3.2"
-seaborn = "^0.13.0"
 torch = "^2.1.1"
 torcheval = "^0.0.7"
 tqdm = "^4.66.1"
-umap-learn = "^0.5.5"
+wandb = "^0.16.2"
 
 [tool.poetry.group.bot]
 optional = true
@@ -48,58 +64,35 @@ python-multipart = "^0.0.9"
 sqlalchemy = "^2.0.25"
 sqlmodel = "^0.0.14"
 uvicorn = "^0.27.1"
+typing-extensions = "^4.9.0"
 
 [tool.poetry.group.dev]
 optional = true
 
 [tool.poetry.group.dev.dependencies]
-algoliasearch = "^3.0.0"
-autoflake = "^2.2.1"
-bandit = { extras = ["toml"], version = "^1.7.6" }
-beautifulsoup4 = "^4.12.2"
-black = "^23.12.1"
-fake-useragent = "^1.4.0"
-flake8 = "^6.1.0"
-flake8-bugbear = "^23.12.2"
-flake8-pyproject = "^1.2.3"
-ipywidgets = "^8.1.1"
+pre-commit = "^3.6.2"
+pyupgrade = "^3.15.1"
+autoflake = "^2.3.0"
 isort = "^5.13.2"
-jupyter = "^1.0.0"
-jupyterlab = "^4.0.9"
+black = "^24.2.0"
+flake8 = "^7.0.0"
+flake8-bugbear = "^24.2.6"
+flake8-pyproject = "^1.2.3"
 nbqa = "^1.7.1"
-pandarallel = "^1.6.5"
-pre-commit = "^3.6.0"
+bandit = { extras = ["toml"], version = "^1.7.7" }
+# vscode highlighting
+mypy = "^1.8.0"
+pylint = "^3.0.3"
+ruff = "^0.2.2"
+# stubs for mypy type checking
+pandas-stubs = "^2.2.0.240218"
+types-pillow = "^10.2.0.20240213"
+types-beautifulsoup4 = "^4.12.0.20240106"
+types-tqdm = "^4.66.0.20240106"
+# tests
 pytest = "^7.4.4"
-pyupgrade = "^3.15.0"
-split-folders = "^0.5.1"
-typing-extensions = "^4.9.0"
-wandb = "^0.16.2"
 pytest-cov = "^4.1.0"
 pytest-asyncio = "^0.23.5"
-
-[tool.poetry.group.vscode]
-optional = true
-
-[tool.poetry.group.vscode.dependencies]
-mypy = "^1.8.0"
-pandas-stubs = "^2.1.4.231227"
-pylint = "^3.0.3"
-ruff = "^0.1.11"
-types-beautifulsoup4 = "^4.12.0.20240106"
-types-pillow = "^10.1.0.20240106"
-types-tqdm = "^4.66.0.20240106"
-
-[tool.black]
-# skip-string-normalization = true
-line-length = 120
-target-version = ["py39"]
-# skip-magic-trailing-comma = true
-
-[tool.isort]
-profile = "black"
-line_length = 120
-float_to_top = true
-known_third_party = ["wandb"]
 
 [tool.autoflake]
 remove-all-unused-imports = true
@@ -110,38 +103,68 @@ recursive = true
 expand-star-imports = true
 in-place = true
 
+[tool.isort]
+profile = "black"
+line_length = 120
+float_to_top = true
+
+[tool.black]
+line-length = 120
+target-version = ["py39"]
+# skip-string-normalization = true
+# skip-magic-trailing-comma = true
+
 [tool.flake8]
 max-line-length = 120
-extend-ignore = "E203"
+extend-ignore = "E203" # Whitespace before ':' for black compatability
 
 [tool.ruff]
-select = ["ALL"]
-ignore = ["D", "ANN101", "RUF012", "ANN102", "COM812", "FA100"]
 target-version = "py39"
 line-length = 120
+extend-include = ["*.ipynb"]
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "D",      # documentation
+    "ANN101", # annotationg self in class methods, will be deprecated
+    "RUF012", # mutable class attributes type checking
+    "ANN102", # annotationg cls in class methods, will be deprecated
+    "COM812", # missing-trailing-comma
+    "FA100",  # future-annotations
+]
 
 [tool.mypy]
 python_version = "3.9"
 strict = true
 show_error_context = true
 pretty = true
-ignore_missing_imports = true
+# ignore_missing_imports = true # ignore packages without type-checking
 
 [tool.pylint]
 py-version = "3.9"
 max-line-length = 120
-disable = ["C0116", "C0114", "C0115", "W1514"]
+disable = [
+    "C0116", # documentation
+    "C0114", # documentation
+    "C0115", # documentation
+]
 
 [tool.bandit]
 exclude_dirs = ["sneakers_ml/data/test"]
-skips = ["B403", "B301"]                         # to-do - remove pickle and switch to onnx
+skips = ["B403", "B301"]                 # to-do - remove pickle and switch to onnx
 
 [tool.bandit.assert_used]
 skips = ['*_test.py', '*/test_*.py']
 
+[tool.pytest]
+addopts = [
+    "--ignore=data",
+    "--ignore=notebooks",
+    "--ignore=notes",
+    "--ignore=docker",
+]
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-
-[pytest]
-addopts = ["--ignore=data", "--ignore=notebooks", "--ignore=notes", "--ignore=docker"]

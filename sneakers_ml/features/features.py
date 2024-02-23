@@ -1,56 +1,63 @@
 import pickle
+from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Callable
 
 import numpy as np
+from omegaconf import DictConfig
+from PIL import Image
 
 
-def save_features(path: str, numpy_features: np.ndarray, classes: np.ndarray, class_to_idx: dict[str, int]) -> None:
-    save_path = Path(path)
-    save_path.parent.mkdir(parents=True, exist_ok=True)
-    with save_path.open("wb") as save_file:
-        pickle.dump((numpy_features, classes, class_to_idx), save_file)
+class BaseFeatures(ABC):
+    def __init__(self, cfg_data: DictConfig, cfg_features: DictConfig) -> None:
+        super().__init__()
 
+        self.cfg_data = cfg_data
+        self.cfg_features = cfg_features
 
-def load_features(path: str) -> tuple[np.ndarray, np.ndarray, dict[str, int]]:
-    with Path(path).open("rb") as file:
-        return pickle.load(file)
+    @staticmethod
+    def save_features(path: str, numpy_features: np.ndarray, classes: np.ndarray, class_to_idx: dict[str, int]) -> None:
+        save_path = Path(path)
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        with save_path.open("wb") as save_file:
+            pickle.dump((numpy_features, classes, class_to_idx), save_file)
 
+    @staticmethod
+    def load_features(path: str) -> tuple[np.ndarray, np.ndarray, dict[str, int]]:
+        with Path(path).open("rb") as file:
+            return pickle.load(file)
 
-def load_split(features_folder_path: str, features_name: str, split: str) -> tuple[np.ndarray, np.ndarray]:
-    split_path = str(Path(features_folder_path) / f"{features_name}-{split}.pickle")
-    numpy_features, classes, _ = load_features(split_path)
-    x = numpy_features
-    y = classes[:, 1]
-    return x, y
+    @classmethod
+    def load_split(cls, split_path: str) -> tuple[np.ndarray, np.ndarray]:
+        numpy_features, classes, _ = cls.load_features(split_path)
+        x = numpy_features
+        y = classes[:, 1]
+        return x, y
 
+    def load_train_val_test_splits(
+        self,
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        x_train, y_train = self.load_split(self.cfg_features.train)
+        x_val, y_val = self.load_split(self.cfg_features.val)
+        x_test, y_test = self.load_split(self.cfg_features.test)
 
-def get_train_val_test(
-    features_folder_path: str, features_name: str
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    x_train, y_train = load_split(features_folder_path, features_name, "train")
-    x_val, y_val = load_split(features_folder_path, features_name, "val")
-    x_test, y_test = load_split(features_folder_path, features_name, "test")
+        return x_train, x_val, x_test, y_train, y_val, y_test
 
-    return x_train, x_val, x_test, y_train, y_val, y_test
+    def load_full_split(self) -> tuple[np.ndarray, np.ndarray]:
+        return self.load_split(self.cfg_features.full)
 
+    @abstractmethod
+    def apply_transforms(self, image: Image.Image) -> Image.Image:
+        raise NotImplementedError
 
-def create_features(
-    images_dataset_path: str,
-    save_folder: str,
-    feature_creation_func: Callable[[str], tuple[np.ndarray, np.ndarray, dict[str, int]]],
-    features_name: str,
-) -> None:
-    subdirectories = [x.name for x in Path(images_dataset_path).iterdir() if x.is_dir()]
-    has_splits = bool(len(set(subdirectories).intersection({"train", "test", "val"})))
-    if has_splits:
-        for folder in ["train", "test", "val"]:
-            split_path = str(Path(images_dataset_path) / folder)
+    @abstractmethod
+    def get_feature(self, image: Image.Image) -> np.ndarray:
+        raise NotImplementedError
 
-            features, classes, class_to_idx = feature_creation_func(split_path)
-            save_path = str(Path(save_folder) / f"{features_name}-{folder}.pickle")
-            save_features(save_path, features, classes, class_to_idx)
-    else:
-        features, classes, class_to_idx = feature_creation_func(images_dataset_path)
-        save_path = str(Path(save_folder) / f"{features_name}.pickle")
-        save_features(save_path, features, classes, class_to_idx)
+    @abstractmethod
+    def get_features(self, folder_path: str) -> tuple[np.ndarray, np.ndarray, dict[str, int]]:
+        raise NotImplementedError
+
+    def create_features(self) -> None:
+        for split in self.cfg_data:
+            numpy_features, classes, class_to_idx = self.get_features(self.cfg_data[split])
+            self.save_features(self.cfg_features[split], numpy_features, classes, class_to_idx)

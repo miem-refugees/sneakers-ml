@@ -44,7 +44,7 @@ RUN --mount=type=cache,target=/root/.cache \
 COPY pyproject.toml poetry.lock sneakers_ml /sneakers_ml/
 
 RUN poetry config installer.max-workers 10
-RUN poetry install --only bot --no-interaction --no-ansi
+RUN poetry install --only bot --no-interaction --no-ansi --no-root
 
 WORKDIR /
 CMD ["python", "sneakers_ml/bot/main.py"]

@@ -14,14 +14,14 @@ from sneakers_ml.models.onnx import load_catboost_onnx, load_sklearn_onnx, predi
 
 class BrandClassifier:
     def __init__(self, config_path: Path):
-        self.logger = logging.getLogger()
+        self._logger = logging.getLogger()
 
         with open(config_path) as config_file:
             config = yaml.safe_load(config_file)
         _models = config["models"]
 
         start_time = time.time()
-        self.logger.info("Loading models: %s", ", ".join(_models))
+        self._logger.info("Loading models: %s", ", ".join(_models))
         self.models = {}
         for model_category, models in _models.items():
             if model_category.startswith("sklearn"):
@@ -37,7 +37,7 @@ class BrandClassifier:
             raise ValueError("Labels must be a dictionary of int: str:\n", self.labels)
 
         end_time = time.time()
-        self.logger.info("All models loaded in %.2f seconds", end_time - start_time)
+        self._logger.info("All models loaded in %.2f seconds", end_time - start_time)
 
     def predict_using_all_models(self, image: Image.Image) -> dict:
         preds = {}

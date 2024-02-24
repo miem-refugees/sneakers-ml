@@ -1,78 +1,98 @@
-from typing import Union
+from collections.abc import Sequence
+from pathlib import Path
 
 import cv2
 import numpy as np
-import onnxruntime as rt
+import onnxruntime
+from omegaconf import DictConfig
 from PIL import Image
+from skl2onnx import to_onnx
 from sklearn.cluster import KMeans
 from torchvision.datasets import ImageFolder
-from tqdm.auto import tqdm
+from tqdm import tqdm
 
-from sneakers_ml.features import crop_image
-from sneakers_ml.models.onnx import predict_sklearn_onnx
-
-
-def get_sift(image: Image.Image, sift_instance: type) -> np.ndarray:
-    image_resized = image.resize((256, 256))
-    image_cropped = crop_image(image_resized, 224, 224)
-    _, descriptors = sift_instance.detectAndCompute(np.array(image_cropped), None)
-    return descriptors
+from sneakers_ml.features.features import BaseFeatures
 
 
-def get_sift_descriptors(folder: str) -> tuple[np.ndarray, np.ndarray, dict[str, int], list[np.ndarray]]:
-    dataset = ImageFolder(folder)
-    sift_instance = cv2.SIFT_create()
+class SIFTFeatues(BaseFeatures):
 
-    images_descriptors = []
-    flattened_sift_descriptors = []
-    for image, _ in tqdm(dataset):
-        descriptors = get_sift(image, sift_instance)
-        images_descriptors.append(descriptors)
+    def __init__(self, config: DictConfig, config_data: DictConfig) -> None:
+        super().__init__(config, config_data)
+        self.sift_instance = cv2.SIFT_create()  # type: ignore[attr-defined] # pylint: disable=no-member
+        self.kmeans = KMeans(n_clusters=self.config.kmeans_config.n_clusters, n_init="auto")
 
-    classes = np.array(dataset.imgs)
-    class_to_idx = dataset.class_to_idx
+        if self.config.kmeans_config.use_onnx is True:
+            self.onnx_session = onnxruntime.InferenceSession(
+                self.config.kmeans_config.onnx_path, providers=["CPUExecutionProvider"]
+            )
 
-    for image_descriptors in tqdm(images_descriptors):
-        if image_descriptors is not None:
-            for descriptor in image_descriptors:
-                flattened_sift_descriptors.append(descriptor)
+    def apply_transforms(self, image: Image.Image) -> Image.Image:
+        image_resized = image.resize((256, 256))
+        return self.crop_image(image_resized, 224, 224)
 
-    return np.array(flattened_sift_descriptors), classes, class_to_idx, images_descriptors
+    # methods for creating features and training
+    def _get_sift(self, image: Image.Image) -> np.ndarray:
+        transformed_image = self.apply_transforms(image)
+        _, descriptors = self.sift_instance.detectAndCompute(np.array(transformed_image), None)
+        return descriptors  # type: ignore[no-any-return]
 
+    def _get_sift_descriptors(self, folder: str) -> tuple[np.ndarray, np.ndarray, dict[str, int], list[np.ndarray]]:
+        dataset = ImageFolder(folder)
 
-def train_kmeans(n_clusters: int, flattened_sift_descriptors: np.ndarray) -> KMeans:
-    kmeans = KMeans(n_clusters=n_clusters, n_init="auto")
-    kmeans.fit(flattened_sift_descriptors)
-    return kmeans
+        images_descriptors = []
+        flattened_sift_descriptors = []
+        for image, _ in tqdm(dataset):
+            descriptors = self._get_sift(image)
+            images_descriptors.append(descriptors)
 
+        classes = np.array(dataset.imgs)
+        class_to_idx = dataset.class_to_idx
 
-def get_feature_vector(sift_image_descriptors: np.ndarray, kmeans: KMeans) -> np.ndarray:
-    n_clusters = kmeans.get_params()["n_clusters"]
-    image_feature_vector = [0] * n_clusters
-    if sift_image_descriptors is not None:
-        descriptors_clusters = kmeans.predict(sift_image_descriptors)
-        for cluster in descriptors_clusters:
-            image_feature_vector[cluster] += 1
-    return np.array(image_feature_vector)
+        for image_descriptors in tqdm(images_descriptors):
+            if image_descriptors is not None:
+                for descriptor in image_descriptors:
+                    flattened_sift_descriptors.append(descriptor)  # noqa: PERF402
 
+        return np.array(flattened_sift_descriptors), classes, class_to_idx, images_descriptors
 
-def get_sift_features(
-    folder: str, n_clusters: int, kmeans: Union[KMeans, None] = None
-) -> tuple[np.ndarray, np.ndarray, dict[str, int], KMeans, np.ndarray]:
-    flattened_sift_descriptors, classes, class_to_idx, images_descriptors = get_sift_descriptors(folder)
-    kmeans = kmeans if kmeans is not None else train_kmeans(n_clusters, flattened_sift_descriptors)
-    features = [get_feature_vector(images_descriptors, kmeans) for images_descriptors in tqdm(images_descriptors)]
+    def _get_feature_vector(self, sift_image_descriptors: np.ndarray) -> np.ndarray:
+        image_feature_vector = [0] * self.config.kmeans_config.n_clusters
+        if sift_image_descriptors is not None:
+            descriptors_clusters = self.kmeans.predict(sift_image_descriptors)
+            for cluster in descriptors_clusters:
+                image_feature_vector[cluster] += 1
+        return np.array(image_feature_vector)
 
-    return np.array(features), classes, class_to_idx, kmeans, flattened_sift_descriptors[:1]
+    def _save_onnx(self, x: np.ndarray) -> None:
+        onx = to_onnx(self.kmeans, x[:1].astype(np.float32))
+        with Path(self.config.kmeans_config.onnx_path).open("wb") as file:
+            file.write(onx.SerializeToString())
 
+    def get_feature(self, image: Image.Image) -> np.ndarray:
+        descriptors = self._get_sift(image)
 
-def get_sift_feature(image: Image.Image, kmeans: rt.InferenceSession, n_clusters: int) -> np.array:
-    sift_instance = cv2.SIFT_create()
-    descriptors = get_sift(image, sift_instance)
+        image_feature_vector = [0] * self.config.kmeans_config.n_clusters
+        if descriptors is not None:
+            if self.config.kmeans_config.use_onnx is True:
+                onnxruntime_input = {self.onnx_session.get_inputs()[0].name: descriptors.astype(np.float32)}
+                clusters = self.onnx_session.run(self.onnx_session.get_outputs()[0].name, onnxruntime_input)[0]
+            else:
+                clusters = self.kmeans.predict(descriptors)
+            for cluster in clusters:
+                image_feature_vector[cluster] += 1
 
-    image_feature_vector = [0] * n_clusters
-    if descriptors is not None:
-        descriptors_clusters = predict_sklearn_onnx(kmeans, descriptors)
-        for cluster in descriptors_clusters:
-            image_feature_vector[cluster] += 1
-    return np.array(image_feature_vector)
+        return np.array(image_feature_vector)
+
+    def get_features(self, images: Sequence[Image.Image]) -> np.ndarray:
+        features = [self.get_feature(image) for image in images]
+        return np.array(features)
+
+    def get_features_folder(self, folder_path: str) -> tuple[np.ndarray, np.ndarray, dict[str, int]]:
+        flattened_sift_descriptors, classes, class_to_idx, images_descriptors = self._get_sift_descriptors(folder_path)
+        self.kmeans.fit(flattened_sift_descriptors)
+        features = [self._get_feature_vector(images_descriptors) for images_descriptors in tqdm(images_descriptors)]
+
+        if self.config.kmeans_config.use_onnx:
+            self._save_onnx(flattened_sift_descriptors[:1])
+
+        return np.array(features), classes, class_to_idx

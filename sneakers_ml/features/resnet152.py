@@ -71,7 +71,8 @@ class ResNet152Featues(BaseFeatures):
             onnxruntime_input = {
                 self.onnx_session.get_inputs()[0].name: np.array([self.to_numpy(x) for x in preprocessed_images])
             }
-            return self.onnx_session.run(["output"], onnxruntime_input)[0]  # type: ignore[no-any-return]
+            onnxruntime_output_name = self.onnx_session.get_outputs()[0].name
+            return self.onnx_session.run(onnxruntime_output_name, onnxruntime_input)[0]  # type: ignore[no-any-return]
 
         with torch.inference_mode():
             x = preprocessed_images.to(self.device)

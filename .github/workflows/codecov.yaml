@@ -2,6 +2,8 @@ name: Codecov report
 
 on:
   push:
+    paths:
+      - sneakers_ml/**
     branches:
       - trunk
   pull_request:

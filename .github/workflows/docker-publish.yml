@@ -38,4 +38,4 @@ jobs:
         run: |
           docker build -t $CR_REGISTRY/$NAME:$IMAGE_TAG -t $CR_REGISTRY/$NAME:latest . --file deploy/app/Dockerfile \
           --build-arg="AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" --build-arg="AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY"
-          docker push $CR_REGISTRY/$NAME:$IMAGE_TAG $CR_REGISTRY/$NAME:$IMAGE_TAG
+          docker push $CR_REGISTRY/$NAME:$IMAGE_TAG

@@ -5,6 +5,7 @@ on:
     branches:
       - trunk
     tags: ["v*.*.*"]
+  pull_request:
 
 jobs:
   push_to_registries:
@@ -25,7 +26,7 @@ jobs:
           NAME: sneakers-ml-bot
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $CR_REGISTRY/$NAME:$IMAGE_TAG -t $CR_REGISTRY/$NAME:latest . --file deploy/bot/Dockerfile
+          docker build --squash=true -t $CR_REGISTRY/$NAME:$IMAGE_TAG -t $CR_REGISTRY/$NAME:latest . --file deploy/bot/Dockerfile
           docker push $CR_REGISTRY/$NAME --all-tags
 
       - name: Build, tag and push api
@@ -36,6 +37,6 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          docker build -t $CR_REGISTRY/$NAME:$IMAGE_TAG -t $CR_REGISTRY/$NAME:latest . --file deploy/app/Dockerfile \
+          docker build --squash=true  -t $CR_REGISTRY/$NAME:$IMAGE_TAG -t $CR_REGISTRY/$NAME:latest . --file deploy/app/Dockerfile \
           --build-arg="AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" --build-arg="AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY"
           docker push $CR_REGISTRY/$NAME --all-tags

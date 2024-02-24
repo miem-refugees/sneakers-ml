@@ -1,4 +1,4 @@
-name: Codecov report
+name: Codecov pytest report
 
 on:
   push:

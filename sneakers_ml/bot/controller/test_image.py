@@ -1,12 +1,13 @@
 import datetime
 
 import pytest
+from loguru import logger
 from telegram import Chat, PhotoSize, Update, User
 
 from sneakers_ml.bot.controller.image import ImageController
-from sneakers_ml.bot.controller.test.mock.context import MockedContext
-from sneakers_ml.bot.controller.test.mock.message import MockedMessage
-from sneakers_ml.bot.controller.test.mock.mockedbot import MockedBot
+from sneakers_ml.bot.testing.mock.context import MockedContext
+from sneakers_ml.bot.testing.mock.message import MockedMessage
+from sneakers_ml.bot.testing.mock.mockedbot import MockedBot
 
 
 @pytest.fixture
@@ -42,7 +43,7 @@ class TestImageController:
         return self.test_prediction
 
     async def test_image_handler(self, bot, context):
-        image_controller = ImageController("http://localhost:8000", self.classify_brand_mock_function)
+        image_controller = ImageController("http://localhost:8000", logger, self.classify_brand_mock_function)
         message = create_image_message(bot)
 
         await image_controller.image_handler(Update(update_id=12345, message=message), context)
@@ -52,11 +53,11 @@ class TestImageController:
         assert bot.message_queue[1] == self.test_prediction
 
     async def test_image_with_error(self, bot, context):
-        image_controller = ImageController("http://localhost:8000")
+        image_controller = ImageController("http://localhost:8000", logger)
         message = create_image_message(bot)
 
         await image_controller.image_handler(Update(update_id=12345, message=message), context)
 
         assert len(bot.message_queue) == 2
         assert bot.message_queue[0] == "Predicting brand for your photo..."
-        assert bot.message_queue[1] == "Oh no! Could not predict brand, sorry =("
+        assert bot.message_queue[1] == "Oh no\\! Could not predict brand, sorry \\=\\("

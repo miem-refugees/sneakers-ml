@@ -1,6 +1,6 @@
 from telegram import TelegramObject
 
-from sneakers_ml.bot.controller.test.mock.file import MockedFile
+from sneakers_ml.bot.testing.mock.file import MockedFile
 
 
 class MockedBot(TelegramObject):

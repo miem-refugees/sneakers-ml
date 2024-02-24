@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+
 import numpy as np
 from PIL import Image
 from skimage.feature import hog  # pylint: disable=no-name-in-module
@@ -26,7 +28,11 @@ class HogFeatures(BaseFeatures):
             feature_vector=True,
         )
 
-    def get_features(self, folder_path: str) -> tuple[np.ndarray, np.ndarray, dict[str, int]]:
+    def get_features(self, images: Sequence[Image.Image]) -> np.ndarray:
+        features = [self.get_feature(image) for image in images]
+        return np.array(features)
+
+    def get_features_folder(self, folder_path: str) -> tuple[np.ndarray, np.ndarray, dict[str, int]]:
         dataset = ImageFolder(folder_path)
 
         features = []

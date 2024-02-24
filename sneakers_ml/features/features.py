@@ -1,5 +1,6 @@
 import pickle
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Union
 
@@ -10,11 +11,11 @@ from PIL import Image
 
 
 class BaseFeatures(ABC):
-    def __init__(self, cfg_features: DictConfig, cfg_data: DictConfig) -> None:
+    def __init__(self, config: DictConfig, config_data: DictConfig) -> None:
         super().__init__()
 
-        self.cfg_features = cfg_features
-        self.cfg_data = cfg_data
+        self.config = config
+        self.config_data = config_data
 
     @staticmethod
     def save_features(path: str, numpy_features: np.ndarray, classes: np.ndarray, class_to_idx: dict[str, int]) -> None:
@@ -38,19 +39,19 @@ class BaseFeatures(ABC):
     def load_train_val_test_splits(
         self,
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        x_train, y_train = self.load_split(self.cfg_features.train)
-        x_val, y_val = self.load_split(self.cfg_features.val)
-        x_test, y_test = self.load_split(self.cfg_features.test)
+        x_train, y_train = self.load_split(self.config.train)
+        x_val, y_val = self.load_split(self.config.val)
+        x_test, y_test = self.load_split(self.config.test)
 
         return x_train, x_val, x_test, y_train, y_val, y_test
 
     def load_full_split(self) -> tuple[np.ndarray, np.ndarray]:
-        return self.load_split(self.cfg_features.full)
+        return self.load_split(self.config.full)
 
     def create_features(self) -> None:
-        for split in self.cfg_data:
-            numpy_features, classes, class_to_idx = self.get_features(self.cfg_data[split])
-            self.save_features(self.cfg_features[split], numpy_features, classes, class_to_idx)
+        for split in self.config_data:
+            numpy_features, classes, class_to_idx = self.get_features(self.config_data[split])
+            self.save_features(self.config[split], numpy_features, classes, class_to_idx)
 
     @abstractmethod
     def apply_transforms(self, image: Image.Image) -> Union[Image.Image, torch.Tensor]:
@@ -61,7 +62,11 @@ class BaseFeatures(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_features(self, folder_path: str) -> tuple[np.ndarray, np.ndarray, dict[str, int]]:
+    def get_features(self, images: Sequence[Image.Image]) -> np.ndarray:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_features_folder(self, folder_path: str) -> tuple[np.ndarray, np.ndarray, dict[str, int]]:
         raise NotImplementedError
 
     @staticmethod

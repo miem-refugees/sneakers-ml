@@ -1,4 +1,7 @@
+from collections.abc import Sequence
+
 import numpy as np
+import onnxruntime
 import torch
 from omegaconf import DictConfig
 from PIL import Image
@@ -21,50 +24,72 @@ class Identity(nn.Module):
 
 
 class ResNet152Featues(BaseFeatures):
-    def __init__(self, cfg_data: DictConfig, cfg_features: DictConfig, cfg: DictConfig) -> None:
-        super().__init__(cfg_data, cfg_features)
-        weights = ResNet152_Weights.DEFAULT
+    def __init__(self, config: DictConfig, config_data: DictConfig) -> None:
+        super().__init__(config, config_data)
 
-        self.preprocess = weights.transforms()
-        self.device = self.get_device("cuda")
+        self.weights = ResNet152_Weights.DEFAULT
+        self.preprocess = self.weights.transforms()
+        self.device = self.get_device(self.config.device)
 
-        if cfg.feature.onxx.use is True:
-            pass
+        if self.config.use_onnx is True:
+            self.providers = (
+                ["CUDAExecutionProvider", "CPUExecutionProvider"] if self.device == "cuda" else ["CPUExecutionProvider"]
+            )
+            self.onnx_session = onnxruntime.InferenceSession(self.config.onnx_path, providers=self.providers)
         else:
-            self.model = resnet152(weights=weights)
-            self.model.fc = Identity()
+            self.model = self.initialize_torch_resnet()
             self.model.to(self.device)
-            self.model.eval()
+
+    def initialize_torch_resnet(self) -> torch.nn.Module:
+        model = resnet152(weights=self.weights)
+        model.fc = Identity()
+        model.eval()
+        return model  # type: ignore[no-any-return]
+
+    def create_onnx_model(self) -> None:
+        model = self.initialize_torch_resnet()
+        torch_input = torch.randn(1, 3, 224, 224)
+        torch.onnx.export(
+            model,
+            torch_input,
+            self.config.onnx_path,
+            input_names=["input"],
+            output_names=["output"],
+            dynamic_axes={"input": {0: "batch_size"}, "output": {0: "batch_size"}},
+        )
 
     def apply_transforms(self, image: Image.Image) -> torch.Tensor:
         return self.preprocess(image)  # type: ignore[no-any-return]
 
     def get_feature(self, image: Image.Image) -> np.ndarray:
-        preprocessed = self.apply_transforms(image)
+        return np.squeeze(self.get_features([image]))
+
+    def get_features(self, images: Sequence[Image.Image]) -> np.ndarray:
+        preprocessed_images = torch.stack([self.apply_transforms(image) for image in images])
+
+        if self.config.use_onnx is True:
+            onnxruntime_input = {
+                self.onnx_session.get_inputs()[0].name: np.array([self.to_numpy(x) for x in preprocessed_images])
+            }
+            return self.onnx_session.run(["output"], onnxruntime_input)[0]  # type: ignore[no-any-return]
 
         with torch.inference_mode():
-            x = preprocessed.to(self.device).unsqueeze(0)
+            x = preprocessed_images.to(self.device)
             prediction = self.model(x)
-        return prediction.cpu().numpy()[0]  # type: ignore[no-any-return]
+        return prediction.cpu().numpy()  # type: ignore[no-any-return]
 
-    def get_resnet152_features(folder: str) -> tuple[np.ndarray, np.ndarray, dict[str, int]]:
-        weights = ResNet152_Weights.DEFAULT
-        model = resnet152(weights=weights)
-        model.fc = Identity()
+    def get_features_folder(self, folder_path: str) -> tuple[np.ndarray, np.ndarray, dict[str, int]]:
+        if self.config.use_onnx is True:
+            raise NotImplementedError
 
-        device = "cuda:0" if torch.cuda.is_available() else "cpu"
-        model.to(device)
-        model.eval()
-
-        preprocess = weights.transforms()
-        dataset = ImageFolder(folder, transform=preprocess)
+        dataset = ImageFolder(folder_path, transform=self.preprocess)
         dataloader = DataLoader(dataset, batch_size=64, shuffle=False, drop_last=False, num_workers=4)
 
         features = []
         with torch.inference_mode():
             for data in tqdm(dataloader):
-                x = data[0].to(device)
-                prediction = model(x)
+                x = data[0].to(self.device)
+                prediction = self.model(x)
 
                 features.append(prediction.cpu())
 

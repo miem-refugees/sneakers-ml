@@ -31,8 +31,8 @@ jobs:
           NAME: sneakers-ml-bot
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t cr.yandex/$CR_REGISTRY/$NAME:$IMAGE_TAG . --file deploy/bot/Dockerfile
-          docker push cr.yandex/$CR_REGISTRY/$NAME:$IMAGE_TAG
+          docker build -t $CR_REGISTRY/$NAME:$IMAGE_TAG . --file deploy/bot/Dockerfile
+          docker push $CR_REGISTRY/$NAME:$IMAGE_TAG
 
       - name: Build, tag and push api
         env:
@@ -42,6 +42,6 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          docker build -t cr.yandex/$CR_REGISTRY/$NAME:$IMAGE_TAG . --file deploy/api/Dockerfile \
+          docker build -t $CR_REGISTRY/$NAME:$IMAGE_TAG . --file deploy/api/Dockerfile \
           --build-arg="AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" --build-arg="AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY"
-          docker push cr.yandex/$CR_REGISTRY/$NAME:$IMAGE_TAG
+          docker push $CR_REGISTRY/$NAME:$IMAGE_TAG

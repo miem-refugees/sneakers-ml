@@ -2,11 +2,11 @@ name: Codecov report
 
 on:
   push:
-    paths:
-      - sneakers_ml/**
     branches:
       - trunk
   pull_request:
+    paths:
+      - sneakers_ml/**
 
 jobs:
   pre-commit:

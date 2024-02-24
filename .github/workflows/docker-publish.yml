@@ -2,14 +2,14 @@ name: Docker build and publish
 
 on:
   push:
-    paths:
-      - sneakers_ml/**
-      - deploy/**
-      - config/**
     branches:
       - trunk
     tags: ["v*.*.*"]
   pull_request:
+    paths:
+      - sneakers_ml/**
+      - deploy/**
+      - config/**
 
 jobs:
   push_to_registries:

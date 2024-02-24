@@ -6,6 +6,10 @@ on:
       - trunk
     tags: ["v*.*.*"]
   pull_request:
+    paths:
+      - sneakers_ml/**
+      - deploy/**
+      - config/**
 
 jobs:
   push_to_registries:

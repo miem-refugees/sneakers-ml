@@ -30,6 +30,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Login to Yandex Cloud Container Registry
+        if: github.event_name != 'pull_request'
+        uses: yc-actions/yc-cr-login@v2
+        with:
+          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
+
       - name: Extract metadata (tags, labels) for bot
         id: bot-meta
         uses: docker/metadata-action@v5

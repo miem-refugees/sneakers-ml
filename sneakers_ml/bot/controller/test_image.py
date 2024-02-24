@@ -5,9 +5,9 @@ from loguru import logger
 from telegram import Chat, PhotoSize, Update, User
 
 from sneakers_ml.bot.controller.image import ImageController
-from sneakers_ml.bot.controller.test.mock.context import MockedContext
-from sneakers_ml.bot.controller.test.mock.message import MockedMessage
-from sneakers_ml.bot.controller.test.mock.mockedbot import MockedBot
+from sneakers_ml.bot.testing.mock.context import MockedContext
+from sneakers_ml.bot.testing.mock.message import MockedMessage
+from sneakers_ml.bot.testing.mock.mockedbot import MockedBot
 
 
 @pytest.fixture
@@ -60,4 +60,4 @@ class TestImageController:
 
         assert len(bot.message_queue) == 2
         assert bot.message_queue[0] == "Predicting brand for your photo..."
-        assert bot.message_queue[1] == "Oh no! Could not predict brand, sorry =("
+        assert bot.message_queue[1] == "Oh no\\! Could not predict brand, sorry \\=\\("

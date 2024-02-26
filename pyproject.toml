@@ -158,7 +158,7 @@ disable = [
 
 [tool.bandit]
 exclude_dirs = ["sneakers_ml/data/test"]
-skips = ["B403", "B301"]                 # to-do - remove pickle and switch to onnx
+# skips = ["B403", "B301"]                 # to-do - remove pickle and switch to onnx
 
 [tool.bandit.assert_used]
 skips = ['*_test.py', '*/test_*.py']

@@ -1,18 +1,18 @@
-import logging
 import time
-from pathlib import Path
 from typing import Annotated
 
 from fastapi import APIRouter, Form, UploadFile  # , BackgroundTasks
+from hydra import compose, initialize
+from loguru import logger
 from PIL import Image
 
 from sneakers_ml.app.service.s3 import S3ImageUtility
-from sneakers_ml.models.brand_classifier import BrandClassifier
+from sneakers_ml.models.predict import BrandsClassifier
 
-predictor: BrandClassifier = None
+predictor: BrandsClassifier = None
 s3 = S3ImageUtility("user_images")
 
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
 
 router: APIRouter = APIRouter(prefix="/classify-brand", tags=["brand-classification"])
 
@@ -20,8 +20,11 @@ router: APIRouter = APIRouter(prefix="/classify-brand", tags=["brand-classificat
 @router.on_event("startup")
 async def load_model():
     global predictor
-    predictor = BrandClassifier(Path(__file__).parent.parent.parent.parent / "configs/mlconfig.prod.yml")
-    logger.info("Loaded BrandClassifier")
+
+    with initialize(version_base=None, config_path="../../config", job_name="fastapi"):
+        cfg = compose(config_name="config")
+        predictor = BrandsClassifier(cfg)
+        logger.info("Loaded BrandsClassifier")
 
 
 @router.post("/upload/")
@@ -36,7 +39,7 @@ async def post_image_to_classify(
     # background_tasks.add_task(s3.write_image_to_s3, image=image, name=s3_key)
 
     start_time = time.time()
-    prediction = predictor.predict_using_all_models(image=image)
+    prediction = predictor.predict(image=[image])  # можно несколько картинок, но обязательно list
     end_time = time.time()
     logger.info("Predicted %s in %f seconds", prediction, end_time - start_time)
     return prediction

@@ -1,9 +1,11 @@
 resnet152:
-  full: data/features/${data.name}/resnet.pickle
-  train: data/features/${data.name}-splits/resnet-train.pickle
-  val: data/features/${data.name}-splits/resnet-val.pickle
-  test: data/features/${data.name}-splits/resnet-test.pickle
+  _target_: sneakers_ml.features.resnet152.ResNet152Features
+  config:
+    full: ${paths.features}/${data.name}/resnet.npy
+    train: ${paths.features}/${data.name}-splits/resnet-train.npy
+    val: ${paths.features}/${data.name}-splits/resnet-val.npy
+    test: ${paths.features}/${data.name}-splits/resnet-test.npy
 
-  device: cuda
-  use_onnx: true
-  onnx_path: ""
+    device: cuda
+    use_onnx: true
+    onnx_path: "${paths.models}/${data.name}/resnet152-features.onnx"

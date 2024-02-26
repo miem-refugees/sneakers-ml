@@ -1,0 +1,10 @@
+catboost:
+  name: catboost
+  save_onnx: true
+  model:
+    _target_: catboost.CatBoostClassifier
+    _convert_: partial
+    random_seed: 42
+    iterations: 1000
+    verbose: true
+    task_type: "GPU"

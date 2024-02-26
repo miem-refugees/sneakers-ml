@@ -8,7 +8,7 @@ from skimage.feature import hog  # pylint: disable=no-name-in-module
 from torchvision.datasets import ImageFolder
 from tqdm import tqdm
 
-from sneakers_ml.features.features import BaseFeatures
+from sneakers_ml.features.base import BaseFeatures
 
 
 class HogFeatures(BaseFeatures):

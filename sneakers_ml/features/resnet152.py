@@ -2,7 +2,6 @@ from collections.abc import Sequence
 
 import hydra
 import numpy as np
-import onnxruntime
 import torch
 from omegaconf import DictConfig
 from PIL import Image
@@ -12,7 +11,8 @@ from torchvision.datasets import ImageFolder
 from torchvision.models import ResNet152_Weights, resnet152
 from tqdm import tqdm
 
-from sneakers_ml.features.features import BaseFeatures
+from sneakers_ml.features.base import BaseFeatures
+from sneakers_ml.models.onnx_utils import get_device, get_session, predict, save_torch_model
 
 
 class Identity(nn.Module):
@@ -24,40 +24,30 @@ class Identity(nn.Module):
         return x
 
 
-class ResNet152Featues(BaseFeatures):
+class ResNet152Features(BaseFeatures):
     def __init__(self, config: DictConfig, config_data: DictConfig) -> None:
         super().__init__(config, config_data)
 
         self.weights = ResNet152_Weights.DEFAULT
         self.preprocess = self.weights.transforms()
-        self.device = self.get_device(self.config.device)
+        self.device = get_device(self.config.device)
 
         if self.config.use_onnx is True:
-            self.providers = (
-                ["CUDAExecutionProvider", "CPUExecutionProvider"] if self.device == "cuda" else ["CPUExecutionProvider"]
-            )
-            self.onnx_session = onnxruntime.InferenceSession(self.config.onnx_path, providers=self.providers)
+            self.onnx_session = get_session(self.config.onnx_path, self.device)
         else:
-            self.model = self.initialize_torch_resnet()
+            self.model = self._initialize_torch_resnet()
             self.model.to(self.device)
 
-    def initialize_torch_resnet(self) -> torch.nn.Module:
+    def _initialize_torch_resnet(self) -> torch.nn.Module:
         model = resnet152(weights=self.weights)
         model.fc = Identity()
         model.eval()
         return model  # type: ignore[no-any-return]
 
-    def create_onnx_model(self) -> None:
-        model = self.initialize_torch_resnet()
+    def _create_onnx_model(self) -> None:
+        model = self._initialize_torch_resnet()
         torch_input = torch.randn(1, 3, 224, 224)
-        torch.onnx.export(
-            model,
-            torch_input,
-            self.config.onnx_path,
-            input_names=["input"],
-            output_names=["output"],
-            dynamic_axes={"input": {0: "batch_size"}, "output": {0: "batch_size"}},
-        )
+        save_torch_model(model, torch_input, self.config.onnx_path)
 
     def apply_transforms(self, image: Image.Image) -> torch.Tensor:
         return self.preprocess(image)  # type: ignore[no-any-return]
@@ -69,11 +59,7 @@ class ResNet152Featues(BaseFeatures):
         preprocessed_images = torch.stack([self.apply_transforms(image) for image in images])
 
         if self.config.use_onnx is True:
-            onnxruntime_input = {
-                self.onnx_session.get_inputs()[0].name: np.array([self.to_numpy(x) for x in preprocessed_images])
-            }
-            onnxruntime_output_name = self.onnx_session.get_outputs()[0].name
-            return self.onnx_session.run(onnxruntime_output_name, onnxruntime_input)[0]  # type: ignore[no-any-return]
+            return predict(self.onnx_session, preprocessed_images)
 
         with torch.inference_mode():
             x = preprocessed_images.to(self.device)
@@ -83,6 +69,8 @@ class ResNet152Featues(BaseFeatures):
     def get_features_folder(self, folder_path: str) -> tuple[np.ndarray, np.ndarray, dict[str, int]]:
         if self.config.use_onnx is True:
             raise NotImplementedError
+
+        self._create_onnx_model()
 
         dataset = ImageFolder(folder_path, transform=self.preprocess)
         dataloader = DataLoader(dataset, batch_size=64, shuffle=False, drop_last=False, num_workers=4)
@@ -103,15 +91,9 @@ class ResNet152Featues(BaseFeatures):
 
 
 @hydra.main(version_base=None, config_path="../../config", config_name="config")
-def create_onnx_model(cfg: DictConfig) -> None:
-    ResNet152Featues(cfg.features.resnet152.config, cfg.data).create_onnx_model()
-
-
-@hydra.main(version_base=None, config_path="../../config", config_name="config")
 def create_features(cfg: DictConfig) -> None:
-    ResNet152Featues(cfg.features.resnet152.config, cfg.data).create_features()
+    ResNet152Features(cfg.features.resnet152.config, cfg.data).create_features()
 
 
 if __name__ == "__main__":
-    create_onnx_model()  # pylint: disable=no-value-for-parameter
     create_features()  # pylint: disable=no-value-for-parameter

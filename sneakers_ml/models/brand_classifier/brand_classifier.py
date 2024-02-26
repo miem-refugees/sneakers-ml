@@ -9,7 +9,12 @@ from PIL import Image
 from sneakers_ml.features.hog import get_hog
 from sneakers_ml.features.resnet152 import get_resnet152_feature
 from sneakers_ml.features.sift import get_sift_feature
-from sneakers_ml.models.onnx import load_catboost_onnx, load_sklearn_onnx, predict_catboost_onnx, predict_sklearn_onnx
+from sneakers_ml.models.onnx_utils import (
+    load_catboost_onnx,
+    load_sklearn_onnx,
+    predict_catboost_onnx,
+    predict_sklearn_onnx,
+)
 
 
 class BrandClassifier:

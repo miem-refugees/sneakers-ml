@@ -1,5 +1,7 @@
 hog:
-  full: data/features/${data.name}/hog.pickle
-  train: data/features/${data.name}-splits/hog-train.pickle
-  val: data/features/${data.name}-splits/hog-val.pickle
-  test: data/features/${data.name}-splits/hog-test.pickle
+  _target_: sneakers_ml.features.hog.HogFeatures
+  config:
+    full: ${paths.features}/${data.name}/hog.npy
+    train: ${paths.features}/${data.name}-splits/hog-train.npy
+    val: ${paths.features}/${data.name}-splits/hog-val.npy
+    test: ${paths.features}/${data.name}-splits/hog-test.npy

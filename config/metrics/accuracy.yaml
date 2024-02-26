@@ -1,0 +1,2 @@
+accuracy:
+  _target_: sklearn.metrics.accuracy_score

@@ -1,0 +1,3 @@
+f1_weighted:
+  _target_: sklearn.metrics.f1_score
+  average: "weighted"

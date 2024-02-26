@@ -1,37 +1,58 @@
+from collections.abc import Sequence
+
+import hydra
 import numpy as np
+from omegaconf import DictConfig
 from PIL import Image
-from skimage.feature import hog
+from skimage.feature import hog  # pylint: disable=no-name-in-module
 from torchvision.datasets import ImageFolder
-from tqdm.auto import tqdm
+from tqdm import tqdm
 
-from sneakers_ml.features import crop_image
-
-
-def get_hog(image: Image.Image) -> np.ndarray:
-    image_resized = image.resize((256, 256))
-    image_cropped = crop_image(image_resized, 224, 224)
-
-    return hog(
-        image_cropped,
-        orientations=8,
-        pixels_per_cell=(8, 8),
-        cells_per_block=(1, 1),
-        visualize=False,
-        channel_axis=-1,
-        feature_vector=True,
-    )
+from sneakers_ml.features.base import BaseFeatures
 
 
-def get_hog_features(folder: str) -> tuple[np.ndarray, np.ndarray, dict[str, int]]:
-    dataset = ImageFolder(folder)
+class HogFeatures(BaseFeatures):
 
-    features = []
-    for image, _ in tqdm(dataset):
-        feature = get_hog(image)
-        features.append(feature)
+    def apply_transforms(self, image: Image.Image) -> Image.Image:
+        image_resized = image.resize((256, 256))
+        return self.crop_image(image_resized, 224, 224)
 
-    classes = np.array(dataset.imgs)
-    class_to_idx = dataset.class_to_idx
-    numpy_features = np.array(features)
+    def _get_feature(self, image: Image.Image) -> np.ndarray:
+        transformed_image = self.apply_transforms(image)
 
-    return numpy_features, classes, class_to_idx
+        return hog(  # type: ignore[no-any-return]
+            transformed_image,
+            orientations=8,
+            pixels_per_cell=(8, 8),
+            cells_per_block=(1, 1),
+            visualize=False,
+            channel_axis=-1,
+            feature_vector=True,
+        )
+
+    def get_features(self, images: Sequence[Image.Image]) -> np.ndarray:
+        features = [self._get_feature(image) for image in images]
+        return np.array(features)
+
+    def get_features_folder(self, folder_path: str) -> tuple[np.ndarray, np.ndarray, dict[str, int]]:
+        dataset = ImageFolder(folder_path)
+
+        features = []
+        for image, _ in tqdm(dataset, desc=folder_path):
+            feature = self._get_feature(image)
+            features.append(feature)
+
+        classes = np.array(dataset.imgs)
+        class_to_idx = dataset.class_to_idx
+        numpy_features = np.array(features)
+
+        return numpy_features, classes, class_to_idx
+
+
+@hydra.main(version_base=None, config_path="../../config", config_name="config")
+def create_features(cfg: DictConfig) -> None:
+    HogFeatures(cfg.features.hog.config, cfg.data).create_features()
+
+
+if __name__ == "__main__":
+    create_features()  # pylint: disable=no-value-for-parameter

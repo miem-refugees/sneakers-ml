@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 from loguru import logger
-from tqdm.auto import tqdm
+from tqdm import tqdm
 
 from sneakers_ml.data.merger.column import ColumnPreprocessor
 from sneakers_ml.data.merger.dataframe import DataFramePreprocessor
@@ -76,7 +76,7 @@ class Merger:
         )
 
         main_dataframe["brand_merge"] = main_dataframe["brand_merge"].apply(
-            lambda x: ColumnPreprocessor.BRANDS_MAPPING[x] if x in ColumnPreprocessor.BRANDS_MAPPING else x
+            lambda x: ColumnPreprocessor.BRANDS_MAPPING.get(x, x)
         )
 
         logger.info(f"Main dataframe columns: {main_dataframe.columns.to_numpy()}")

@@ -37,12 +37,10 @@ jobs:
 
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root --with testing --with bot
+        run: poetry install --no-interaction --no-root --with dev,bot
 
       - name: Pull dvc data
-        run: |
-          poetry run pip install dvc
-          poetry run dvc pull data/models/brands-classification.dvc -f -d
+        run: poetry run dvc pull data/models/brands-classification.dvc data/features/brands-classification.dvc data/features/brands-classification-splits.dvc -f -d
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

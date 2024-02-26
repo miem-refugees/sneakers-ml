@@ -1,0 +1,24 @@
+sgd:
+  name: sgd
+  save_onnx: true
+  model:
+    _target_: sklearn.model_selection.GridSearchCV
+    _convert_: partial
+    estimator:
+      _target_: sklearn.linear_model.SGDClassifier
+      random_state: 42
+    param_grid:
+      loss:
+        - log_loss
+        - hinge
+      alpha:
+        - 0.001
+        - 0.0001
+        - 0.00001
+      penalty:
+        - l2
+        - elasticnet
+    cv: 3
+    scoring: "f1_macro"
+    verbose: 1
+    n_jobs: -1

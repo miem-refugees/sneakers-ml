@@ -1,3 +1,4 @@
+import time
 from collections.abc import Sequence
 from pathlib import Path
 from typing import TypedDict
@@ -6,6 +7,7 @@ import numpy as np
 import onnxruntime as rt
 from hydra import compose, initialize
 from hydra.utils import instantiate
+from loguru import logger
 from omegaconf import DictConfig
 from PIL import Image
 
@@ -23,6 +25,9 @@ class BrandsClassifier:
     def __init__(self, config: DictConfig) -> None:
         self.config = config
         self.instances: dict[str, Feature] = {}
+        start_time = time.time()
+        logger.info("Loading models: " + ", ".join(self.config.models.keys()))
+
         for feature in self.config.features:
             feature_instance: BaseFeatures = instantiate(
                 config=self.config.features[feature], config_data=self.config.data
@@ -37,6 +42,8 @@ class BrandsClassifier:
             for model in self.config.models:
                 model_path = Path(self.config.paths.models_save) / f"{feature}-{model}.onnx"
                 self.instances[feature]["model_instances"][model] = get_session(str(model_path))
+        end_time = time.time()
+        logger.info(f"All models loaded in {end_time - start_time:.1f} seconds")
 
     def _predict_feature(
         self, feature_name: str, images: Sequence[Image.Image]

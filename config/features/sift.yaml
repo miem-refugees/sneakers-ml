@@ -1,10 +1,11 @@
 sift:
   _target_: sneakers_ml.features.sift.SIFTFeatures
   config:
-    full: ${paths.features}/${data.name}/sift.npy
-    train: ${paths.features}/${data.name}-splits/sift-train.npy
-    val: ${paths.features}/${data.name}-splits/sift-val.npy
-    test: ${paths.features}/${data.name}-splits/sift-test.npy
+    splits:
+      full: ${paths.features}/${data.name}/sift.npy
+      train: ${paths.features}/${data.name}-splits/sift-train.npy
+      val: ${paths.features}/${data.name}-splits/sift-val.npy
+      test: ${paths.features}/${data.name}-splits/sift-test.npy
 
     kmeans:
       n_clusters: 200

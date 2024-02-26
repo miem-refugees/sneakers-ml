@@ -1,13 +1,17 @@
 import csv
 import random
 from pathlib import Path
+from typing import Union
 
 import hydra
 import numpy as np
+from catboost import CatBoostClassifier
 from hydra.utils import call, instantiate
 from omegaconf import DictConfig
+from sklearn.base import BaseEstimator
 from tqdm import tqdm
 
+from sneakers_ml.features.base import BaseFeatures
 from sneakers_ml.models.onnx_utils import save_model
 
 
@@ -20,23 +24,20 @@ def train(cfg: DictConfig) -> None:
 
     for feature in cfg.features:
         tqdm.write(f"Using {feature}")
-        feature_instance = instantiate(config=cfg.features[feature], config_data=cfg.data)
+        feature_instance: BaseFeatures = instantiate(config=cfg.features[feature], config_data=cfg.data)
         x_train, x_val, x_test, y_train, y_val, y_test = feature_instance.load_train_val_test_splits()
 
         x_train_val = np.concatenate((x_train, x_val), axis=0)
         y_train_val = np.concatenate((y_train, y_val))
 
-        num_samples = x_train_val.shape[0]
-
-        # Choose 300 random indices
-        random_indices = np.random.choice(num_samples, 100, replace=False)
+        random_indices = np.random.choice(x_train_val.shape[0], 200, replace=False)
 
         x_train_val = x_train_val[random_indices]
         y_train_val = y_train_val[random_indices]
 
         for model in tqdm(cfg.models):
             tqdm.write(f"Training {model}")
-            model_instance = instantiate(cfg.models[model].model)
+            model_instance: Union[BaseEstimator, CatBoostClassifier] = instantiate(cfg.models[model].model)
             model_instance.fit(x_train_val, y_train_val)
             pred = model_instance.predict(x_test)
 

@@ -60,7 +60,7 @@ class SIFTFeatures(BaseFeatures):
                 image_feature_vector[cluster] += 1
         return np.array(image_feature_vector)
 
-    def get_feature(self, image: Image.Image) -> np.ndarray:
+    def _get_feature(self, image: Image.Image) -> np.ndarray:
         descriptors = self._get_sift(image)
 
         image_feature_vector = [0] * self.config.kmeans.n_clusters
@@ -75,7 +75,7 @@ class SIFTFeatures(BaseFeatures):
         return np.array(image_feature_vector)
 
     def get_features(self, images: Sequence[Image.Image]) -> np.ndarray:
-        features = [self.get_feature(image) for image in images]
+        features = [self._get_feature(image) for image in images]
         return np.array(features)
 
     def get_features_folder(self, folder_path: str) -> tuple[np.ndarray, np.ndarray, dict[str, int]]:

@@ -49,26 +49,32 @@ class BaseFeatures(ABC):
     def load_train_val_test_splits(
         self,
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        x_train, y_train = self.load_split(self.config.train)
-        x_val, y_val = self.load_split(self.config.val)
-        x_test, y_test = self.load_split(self.config.test)
+        x_train, y_train = self.load_split(self.config.splits.train)
+        x_val, y_val = self.load_split(self.config.splits.val)
+        x_test, y_test = self.load_split(self.config.splits.test)
 
         return x_train, x_val, x_test, y_train, y_val, y_test
 
     def load_full_split(self) -> tuple[np.ndarray, np.ndarray]:
-        return self.load_split(self.config.full)
+        return self.load_split(self.config.splits.full)
 
     def create_features(self) -> None:
         for split in self.config_data.splits:
             numpy_features, classes, class_to_idx = self.get_features_folder(self.config_data.splits[split])
             self._save_features(self.config[split], numpy_features, classes, class_to_idx)
 
+    def get_class_to_idx(self) -> dict[str, int]:
+        class_to_idx_all = [self._load_features(self.config.splits[split])[2] for split in self.config.splits]
+        if all(x == class_to_idx_all[0] for x in class_to_idx_all):
+            return class_to_idx_all[0]
+        raise Exception("Different class_to_idx in splits")
+
     @abstractmethod
     def apply_transforms(self, image: Image.Image) -> Union[Image.Image, torch.Tensor]:
         raise NotImplementedError
 
     @abstractmethod
-    def get_feature(self, image: Image.Image) -> np.ndarray:
+    def _get_feature(self, image: Image.Image) -> np.ndarray:
         raise NotImplementedError
 
     @abstractmethod

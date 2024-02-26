@@ -17,7 +17,7 @@ class HogFeatures(BaseFeatures):
         image_resized = image.resize((256, 256))
         return self.crop_image(image_resized, 224, 224)
 
-    def get_feature(self, image: Image.Image) -> np.ndarray:
+    def _get_feature(self, image: Image.Image) -> np.ndarray:
         transformed_image = self.apply_transforms(image)
 
         return hog(  # type: ignore[no-any-return]
@@ -31,7 +31,7 @@ class HogFeatures(BaseFeatures):
         )
 
     def get_features(self, images: Sequence[Image.Image]) -> np.ndarray:
-        features = [self.get_feature(image) for image in images]
+        features = [self._get_feature(image) for image in images]
         return np.array(features)
 
     def get_features_folder(self, folder_path: str) -> tuple[np.ndarray, np.ndarray, dict[str, int]]:
@@ -39,7 +39,7 @@ class HogFeatures(BaseFeatures):
 
         features = []
         for image, _ in tqdm(dataset, desc=folder_path):
-            feature = self.get_feature(image)
+            feature = self._get_feature(image)
             features.append(feature)
 
         classes = np.array(dataset.imgs)

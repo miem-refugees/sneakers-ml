@@ -52,8 +52,8 @@ class ResNet152Features(BaseFeatures):
     def apply_transforms(self, image: Image.Image) -> torch.Tensor:
         return self.preprocess(image)  # type: ignore[no-any-return]
 
-    def get_feature(self, image: Image.Image) -> np.ndarray:
-        return np.squeeze(self.get_features([image]))
+    def _get_feature(self, image: Image.Image) -> np.ndarray:
+        return self.get_features([image])
 
     def get_features(self, images: Sequence[Image.Image]) -> np.ndarray:
         preprocessed_images = torch.stack([self.apply_transforms(image) for image in images])

@@ -81,4 +81,4 @@ def predict(onnx_session: rt.InferenceSession, x: Union[np.ndarray, torch.Tensor
     input_name = onnx_session.get_inputs()[0].name
     output_name = onnx_session.get_outputs()[0].name
     input_value = format_inputs(x)
-    return onnx_session.run(output_name, {input_name: input_value})[0]  # type: ignore[no-any-return]
+    return onnx_session.run([output_name], {input_name: input_value})[0]  # type: ignore[no-any-return]

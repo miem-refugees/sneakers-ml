@@ -1,4 +1,3 @@
-import pickle
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from pathlib import Path
@@ -24,12 +23,18 @@ class BaseFeatures(ABC):
         save_path = Path(path)
         save_path.parent.mkdir(parents=True, exist_ok=True)
         with save_path.open("wb") as save_file:
-            pickle.dump((numpy_features, classes, class_to_idx), save_file)
+            np.save(save_file, numpy_features, allow_pickle=False)
+            np.save(save_file, classes, allow_pickle=False)
+            np.save(save_file, np.array(list(class_to_idx.items())), allow_pickle=False)
 
     @staticmethod
     def _load_features(path: str) -> tuple[np.ndarray, np.ndarray, dict[str, int]]:
         with Path(path).open("rb") as file:
-            return pickle.load(file)
+            numpy_features = np.load(file, allow_pickle=False)
+            classes = np.load(file, allow_pickle=False)
+            class_to_idx_numpy = np.load(file, allow_pickle=False)
+            class_to_idx = dict(zip(class_to_idx_numpy[:, 1], class_to_idx_numpy[:, 0]))
+            return numpy_features, classes, class_to_idx
 
     @classmethod
     def load_split(cls, split_path: str) -> tuple[np.ndarray, np.ndarray]:

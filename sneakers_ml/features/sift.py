@@ -2,6 +2,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 import cv2
+import hydra
 import numpy as np
 import onnxruntime
 from omegaconf import DictConfig
@@ -14,7 +15,7 @@ from tqdm import tqdm
 from sneakers_ml.features.features import BaseFeatures
 
 
-class SIFTFeatues(BaseFeatures):
+class SIFTFeatures(BaseFeatures):
 
     def __init__(self, config: DictConfig, config_data: DictConfig) -> None:
         super().__init__(config, config_data)
@@ -41,7 +42,7 @@ class SIFTFeatues(BaseFeatures):
 
         images_descriptors = []
         flattened_sift_descriptors = []
-        for image, _ in tqdm(dataset):
+        for image, _ in tqdm(dataset, desc=folder):
             descriptors = self._get_sift(image)
             images_descriptors.append(descriptors)
 
@@ -89,10 +90,19 @@ class SIFTFeatues(BaseFeatures):
 
     def get_features_folder(self, folder_path: str) -> tuple[np.ndarray, np.ndarray, dict[str, int]]:
         flattened_sift_descriptors, classes, class_to_idx, images_descriptors = self._get_sift_descriptors(folder_path)
-        self.kmeans.fit(flattened_sift_descriptors)
-        features = [self._get_feature_vector(images_descriptors) for images_descriptors in tqdm(images_descriptors)]
 
-        if self.config.kmeans_config.use_onnx:
+        if not hasattr(self.kmeans, "cluster_centers_"):  # check if kmeans is not fitted
+            self.kmeans.fit(flattened_sift_descriptors)
             self._save_onnx(flattened_sift_descriptors[:1])
 
+        features = [self._get_feature_vector(images_descriptors) for images_descriptors in tqdm(images_descriptors)]
         return np.array(features), classes, class_to_idx
+
+
+@hydra.main(version_base=None, config_path="../../config", config_name="config")
+def create_features(cfg: DictConfig) -> None:
+    SIFTFeatures(cfg.features.sift.config, cfg.data).create_features()
+
+
+if __name__ == "__main__":
+    create_features()  # pylint: disable=no-value-for-parameter

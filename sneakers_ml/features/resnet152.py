@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 
+import hydra
 import numpy as np
 import onnxruntime
 import torch
@@ -88,7 +89,7 @@ class ResNet152Featues(BaseFeatures):
 
         features = []
         with torch.inference_mode():
-            for data in tqdm(dataloader):
+            for data in tqdm(dataloader, desc=folder_path):
                 x = data[0].to(self.device)
                 prediction = self.model(x)
 
@@ -99,3 +100,18 @@ class ResNet152Featues(BaseFeatures):
         classes = np.array(dataset.imgs)
 
         return numpy_features, classes, dataset.class_to_idx
+
+
+@hydra.main(version_base=None, config_path="../../config", config_name="config")
+def create_onnx_model(cfg: DictConfig) -> None:
+    ResNet152Featues(cfg.features.resnet152.config, cfg.data).create_onnx_model()
+
+
+@hydra.main(version_base=None, config_path="../../config", config_name="config")
+def create_features(cfg: DictConfig) -> None:
+    ResNet152Featues(cfg.features.resnet152.config, cfg.data).create_features()
+
+
+if __name__ == "__main__":
+    create_onnx_model()  # pylint: disable=no-value-for-parameter
+    create_features()  # pylint: disable=no-value-for-parameter

@@ -1,6 +1,8 @@
 from collections.abc import Sequence
 
+import hydra
 import numpy as np
+from omegaconf import DictConfig
 from PIL import Image
 from skimage.feature import hog  # pylint: disable=no-name-in-module
 from torchvision.datasets import ImageFolder
@@ -36,7 +38,7 @@ class HogFeatures(BaseFeatures):
         dataset = ImageFolder(folder_path)
 
         features = []
-        for image, _ in tqdm(dataset):
+        for image, _ in tqdm(dataset, desc=folder_path):
             feature = self.get_feature(image)
             features.append(feature)
 
@@ -45,3 +47,12 @@ class HogFeatures(BaseFeatures):
         numpy_features = np.array(features)
 
         return numpy_features, classes, class_to_idx
+
+
+@hydra.main(version_base=None, config_path="../../config", config_name="config")
+def create_features(cfg: DictConfig) -> None:
+    HogFeatures(cfg.features.hog.config, cfg.data).create_features()
+
+
+if __name__ == "__main__":
+    create_features()  # pylint: disable=no-value-for-parameter

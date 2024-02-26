@@ -18,20 +18,22 @@ class BaseFeatures(ABC):
         self.config_data = config_data
 
     @staticmethod
-    def save_features(path: str, numpy_features: np.ndarray, classes: np.ndarray, class_to_idx: dict[str, int]) -> None:
+    def _save_features(
+        path: str, numpy_features: np.ndarray, classes: np.ndarray, class_to_idx: dict[str, int]
+    ) -> None:
         save_path = Path(path)
         save_path.parent.mkdir(parents=True, exist_ok=True)
         with save_path.open("wb") as save_file:
             pickle.dump((numpy_features, classes, class_to_idx), save_file)
 
     @staticmethod
-    def load_features(path: str) -> tuple[np.ndarray, np.ndarray, dict[str, int]]:
+    def _load_features(path: str) -> tuple[np.ndarray, np.ndarray, dict[str, int]]:
         with Path(path).open("rb") as file:
             return pickle.load(file)
 
     @classmethod
     def load_split(cls, split_path: str) -> tuple[np.ndarray, np.ndarray]:
-        numpy_features, classes, _ = cls.load_features(split_path)
+        numpy_features, classes, _ = cls._load_features(split_path)
         x = numpy_features
         y = classes[:, 1]
         return x, y
@@ -49,9 +51,9 @@ class BaseFeatures(ABC):
         return self.load_split(self.config.full)
 
     def create_features(self) -> None:
-        for split in self.config_data:
-            numpy_features, classes, class_to_idx = self.get_features(self.config_data[split])
-            self.save_features(self.config[split], numpy_features, classes, class_to_idx)
+        for split in self.config_data.config:
+            numpy_features, classes, class_to_idx = self.get_features_folder(self.config_data.config[split])
+            self._save_features(self.config[split], numpy_features, classes, class_to_idx)
 
     @abstractmethod
     def apply_transforms(self, image: Image.Image) -> Union[Image.Image, torch.Tensor]:

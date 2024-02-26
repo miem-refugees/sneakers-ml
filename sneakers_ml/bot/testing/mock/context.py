@@ -1,6 +1,6 @@
 from unittest.mock import Mock
 
-from sneakers_ml.bot.controller.test.mock.mockedbot import MockedBot
+from sneakers_ml.bot.testing.mock.mockedbot import MockedBot
 
 
 class MockedContext(Mock):

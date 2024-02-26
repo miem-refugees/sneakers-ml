@@ -2,7 +2,7 @@ from datetime import datetime
 
 from telegram import Chat, PhotoSize, TelegramObject, User
 
-from sneakers_ml.bot.controller.test.mock.mockedbot import MockedBot
+from sneakers_ml.bot.testing.mock.mockedbot import MockedBot
 
 
 class MockedMessage(TelegramObject):

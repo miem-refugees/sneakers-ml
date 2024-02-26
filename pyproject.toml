@@ -8,55 +8,51 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-pillow = "^10.1.0"
-numpy = "^1.26.2"
-pandas = "^2.1.3"
-# onnx stuff
-onnxscript = "^0.1.0.dev20240224"
-onnxruntime = "^1.16.3"
-onnx = "^1.15.0"
-skl2onnx = "^1.16.0"
-# ml libs
-catboost = "^1.2.2"
-scikit-learn = "^1.3.2"
-scikit-image = "^0.22.0"
-opencv-python = "^4.8.1.78"
-# torch stuff
-torch = "^2.1.1"
-torchvision = "^0.16.1"
-torcheval = "^0.0.7"
-# configs and logging
-wandb = "^0.16.2"
-hydra-core = "^1.3.2"
 dvc = { extras = ["s3"], version = "^3.39.0" }
+loguru = "^0.7.2"
+onnxruntime = "^1.16.3"
+opencv-python = "^4.8.1.78"
+pillow = "^10.1.0"
+scikit-image = "^0.22.0"
+skl2onnx = "^1.16.0"
+torchvision = "^0.16.1"
+requests = "^2.31.0"
 
 [tool.poetry.group.data-eda]
 optional = true
 
 [tool.poetry.group.data-eda.dependencies]
-# jupyter
-ipywidgets = "^8.1.1"
-jupyterlab = "^4.0.9"
-# parsing stuff
+split-folders = "^0.5.1"
+fake-useragent = "^1.4.0"
 algoliasearch = "^3.0.0"
 beautifulsoup4 = "^4.12.2"
-fake-useragent = "^1.4.0"
-split-folders = "^0.5.1"
-requests = "^2.31.0"
-# data cleaning
 pandarallel = "^1.6.5"
-tqdm = "^4.66.1"
-loguru = "^0.7.2"
-# visualizations
+ipywidgets = "^8.1.1"
+jupyterlab = "^4.0.9"
 matplotlib = "^3.8.2"
 seaborn = "^0.13.0"
 umap-learn = "^0.5.5"
+
+[tool.poetry.group.ml]
+optional = true
+
+[tool.poetry.group.ml.dependencies]
+catboost = "^1.2.2"
+numpy = "^1.26.2"
+pandas = "^2.1.3"
+pillow = "^10.1.0"
+scikit-learn = "^1.3.2"
+torch = "^2.1.1"
+torcheval = "^0.0.7"
+tqdm = "^4.66.1"
+wandb = "^0.16.2"
 
 [tool.poetry.group.bot]
 optional = true
 
 [tool.poetry.group.bot.dependencies]
 aiohttp = "^3.9.1"
+loguru = "^0.7.2"
 python-telegram-bot = "^20.8"
 
 [tool.poetry.group.api]
@@ -94,7 +90,11 @@ pandas-stubs = "^2.2.0.240218"
 types-pillow = "^10.2.0.20240213"
 types-beautifulsoup4 = "^4.12.0.20240106"
 types-tqdm = "^4.66.0.20240106"
-# tests
+
+[tool.poetry.group.testing]
+optional = true
+
+[tool.poetry.group.testing.dependencies]
 pytest = "^7.4.4"
 pytest-cov = "^4.1.0"
 pytest-asyncio = "^0.23.5"
@@ -131,13 +131,12 @@ extend-include = ["*.ipynb"]
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
-    "D",      # documentation
+    "D", # documentation
     "ANN101", # annotationg self in class methods, will be deprecated
     "RUF012", # mutable class attributes type checking
     "ANN102", # annotationg cls in class methods, will be deprecated
     "COM812", # missing-trailing-comma
-    "FA100",  # future-annotations
-    "NPY002", # numpy random stuff
+    "FA100", # future-annotations
 ]
 
 [tool.mypy]
@@ -145,7 +144,7 @@ python_version = "3.9"
 strict = true
 show_error_context = true
 pretty = true
-ignore_missing_imports = true # ignore packages without type-checking
+# ignore_missing_imports = true # ignore packages without type-checking
 
 [tool.pylint]
 py-version = "3.9"
@@ -158,18 +157,13 @@ disable = [
 
 [tool.bandit]
 exclude_dirs = ["sneakers_ml/data/test"]
-# skips = ["B403", "B301"]                 # to-do - remove pickle and switch to onnx
+skips = ["B403", "B301"]                 # to-do - remove pickle and switch to onnx
 
 [tool.bandit.assert_used]
 skips = ['*_test.py', '*/test_*.py']
 
-[tool.pytest]
-addopts = [
-    "--ignore=data",
-    "--ignore=notebooks",
-    "--ignore=notes",
-    "--ignore=docker",
-]
+[tool.pytest.ini_options]
+testpaths = "sneakers_ml"
 
 [build-system]
 requires = ["poetry-core"]

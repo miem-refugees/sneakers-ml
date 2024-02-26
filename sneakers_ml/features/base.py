@@ -61,13 +61,14 @@ class BaseFeatures(ABC):
     def create_features(self) -> None:
         for split in self.config_data.splits:
             numpy_features, classes, class_to_idx = self.get_features_folder(self.config_data.splits[split])
-            self._save_features(self.config[split], numpy_features, classes, class_to_idx)
+            self._save_features(self.config.splits[split], numpy_features, classes, class_to_idx)
 
     def get_class_to_idx(self) -> dict[str, int]:
         class_to_idx_all = [self._load_features(self.config.splits[split])[2] for split in self.config.splits]
         if all(x == class_to_idx_all[0] for x in class_to_idx_all):
             return class_to_idx_all[0]
-        raise Exception("Different class_to_idx in splits")
+        msg = "Different class_to_idx in splits"
+        raise ValueError(msg)
 
     @abstractmethod
     def apply_transforms(self, image: Image.Image) -> Union[Image.Image, torch.Tensor]:

@@ -12,8 +12,8 @@ sgd:
         - log_loss
         - hinge
       alpha:
-        - 0.0001
         - 0.001
+        - 0.0001
         - 0.00001
       penalty:
         - l2

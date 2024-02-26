@@ -66,7 +66,8 @@ def save_model(
         return save_sklearn_model(model, x, path)
     if isinstance(model, (CatBoostRegressor, CatBoostClassifier)):
         return save_catboost_model(model, path)
-    raise Exception("Unknown model")
+    msg = "Unknown model"
+    raise ValueError(msg)
 
 
 def format_inputs(x: Union[np.ndarray, torch.Tensor]) -> np.ndarray:
@@ -74,7 +75,8 @@ def format_inputs(x: Union[np.ndarray, torch.Tensor]) -> np.ndarray:
         return x.detach().cpu().numpy() if x.requires_grad else x.cpu().numpy()  # type: ignore[no-any-return]
     if isinstance(x, np.ndarray):
         return x.astype(np.float32)
-    raise Exception("Unknown input")
+    msg = "Unknown input"
+    raise ValueError(msg)
 
 
 def predict(onnx_session: rt.InferenceSession, x: Union[np.ndarray, torch.Tensor]) -> np.ndarray:

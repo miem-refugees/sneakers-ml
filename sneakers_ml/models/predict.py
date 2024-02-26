@@ -67,3 +67,4 @@ if __name__ == "__main__":
         cfg = compose(config_name="config")
         image = Image.open("data/training/brands-classification-splits/train/adidas/1.jpeg")
         print(BrandsClassifier(cfg).predict([image]))
+        print(BrandsClassifier(cfg).predict([image, image, image]))

@@ -1,18 +1,21 @@
 import csv
 import random
 from pathlib import Path
-from typing import Union
+from typing import TYPE_CHECKING, Union
 
 import hydra
 import numpy as np
-from catboost import CatBoostClassifier
 from hydra.utils import call, instantiate
 from omegaconf import DictConfig
-from sklearn.base import BaseEstimator
 from tqdm import tqdm
 
-from sneakers_ml.features.base import BaseFeatures
 from sneakers_ml.models.onnx_utils import save_model
+
+if TYPE_CHECKING:
+    from catboost import CatBoostClassifier
+    from sklearn.base import BaseEstimator
+
+    from sneakers_ml.features.base import BaseFeatures
 
 
 @hydra.main(version_base=None, config_path="../../config", config_name="config")
@@ -29,11 +32,6 @@ def train(cfg: DictConfig) -> None:
 
         x_train_val = np.concatenate((x_train, x_val), axis=0)
         y_train_val = np.concatenate((y_train, y_val))
-
-        random_indices = np.random.choice(x_train_val.shape[0], 200, replace=False)
-
-        x_train_val = x_train_val[random_indices]
-        y_train_val = y_train_val[random_indices]
 
         for model in tqdm(cfg.models):
             tqdm.write(f"Training {model}")

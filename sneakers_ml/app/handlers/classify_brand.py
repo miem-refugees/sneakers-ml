@@ -39,7 +39,7 @@ async def post_image_to_classify(
     # background_tasks.add_task(s3.write_image_to_s3, image=image, name=s3_key)
 
     start_time = time.time()
-    prediction = predictor.predict(image=[image])  # можно несколько картинок, но обязательно list
+    prediction = predictor.predict(image=[image])[1]  # можно несколько картинок, но обязательно list
     end_time = time.time()
     logger.info("Predicted %s in %f seconds", prediction, end_time - start_time)
     return prediction

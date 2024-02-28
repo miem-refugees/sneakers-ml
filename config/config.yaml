@@ -2,10 +2,12 @@ defaults:
   - _self_
   - data: brands_classification
   - features:
+      - hog
       - sift
       - resnet152
-      - hog
   - models:
+      - log_reg
+      - random_forest
       - decision_tree
       - svm
       - sgd

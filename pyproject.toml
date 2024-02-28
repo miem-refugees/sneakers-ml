@@ -11,6 +11,7 @@ python = "^3.9"
 # top libs
 numpy = "^1.26.2"
 pandas = "^2.1.3"
+scipy = "^1.12.0"
 # onnx stuff
 onnxscript = "^0.1.0.dev20240224"
 onnxruntime = "^1.16.3"
@@ -26,6 +27,7 @@ pillow = "^10.1.0"
 torch = "^2.1.1"
 torchvision = "^0.16.1"
 torcheval = "^0.0.7"
+lightning = "^2.2.0.post0"
 # configs and logging
 wandb = "^0.16.2"
 hydra-core = "^1.3.2"
@@ -114,6 +116,7 @@ in-place = true
 profile = "black"
 line_length = 120
 float_to_top = true
+known_third_party = ["wandb"]
 
 [tool.black]
 line-length = 120

@@ -1,0 +1,26 @@
+log_reg:
+  name: log_reg
+  save_onnx: true
+  model:
+    _target_: sklearn.model_selection.GridSearchCV
+    _convert_: partial
+    estimator:
+      _target_: sklearn.linear_model.LogisticRegression
+      random_state: 42
+      max_iter: 1000
+    param_grid:
+      penalty:
+        - l1
+        - l2
+      C:
+        - 0.01
+        - 0.1
+        - 1
+        - 10
+      solver:
+        - lbfgs
+        - liblinear
+    cv: 3
+    scoring: "f1_macro"
+    verbose: 1
+    n_jobs: -1

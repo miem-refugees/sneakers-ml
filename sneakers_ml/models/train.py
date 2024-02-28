@@ -51,7 +51,7 @@ def train(cfg: DictConfig) -> None:
             save_model(model_instance, x_train_val, str(save_path))
 
     results_save_path = Path(cfg.paths.results)
-    with results_save_path.open("w", newline="", encoding="utf-8") as csv_file:
+    with results_save_path.open("a", newline="", encoding="utf-8") as csv_file:
         csv_writer = csv.writer(csv_file)
         csv_writer.writerows(results)
 

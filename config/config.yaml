@@ -17,12 +17,7 @@ defaults:
       - f1_micro
       - f1_weighted
       - accuracy
-
-paths:
-  features: data/features
-  models: data/models
-  results: ${paths.models}/${data.name}/results.csv
-  models_save: ${paths.models}/${data.name}
+  - paths: default
 
 project_name: sneakers_ml
 log_wandb: False

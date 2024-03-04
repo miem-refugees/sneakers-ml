@@ -7,6 +7,7 @@ import hydra
 import numpy as np
 from hydra.utils import call, instantiate
 from omegaconf import DictConfig
+from sklearn.dummy import DummyClassifier
 from tqdm import tqdm
 
 from sneakers_ml.models.onnx_utils import save_model
@@ -23,7 +24,7 @@ def train(cfg: DictConfig) -> None:
     np.random.seed(42)
     random.seed(42)
 
-    results = [["model_name", *cfg.metrics.keys()]]
+    results = [["Feature-model_name", *cfg.metrics.keys()]]
 
     for feature in cfg.features:
         tqdm.write(f"Using {feature}")
@@ -51,6 +52,19 @@ def train(cfg: DictConfig) -> None:
             save_model(model_instance, x_train_val, str(save_path))
 
     results_save_path = Path(cfg.paths.results)
+    if not results_save_path.exists():
+        model = DummyClassifier()
+        model.fit(x_train_val, y_train_val)
+        pred = model.predict(x_test)
+
+        scores = ["Baseline"]
+        tqdm.write("DummyClassifier")
+        for metric in cfg.metrics:
+            score = round(call(config=cfg.metrics[metric], y_true=y_test, y_pred=pred), 2)
+            tqdm.write(f"{metric}: {score}")
+            scores.append(score)
+        results.insert(1, scores)
+
     with results_save_path.open("a", newline="", encoding="utf-8") as csv_file:
         csv_writer = csv.writer(csv_file)
         csv_writer.writerows(results)

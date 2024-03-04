@@ -24,7 +24,7 @@ def train(cfg: DictConfig) -> None:
     np.random.seed(42)
     random.seed(42)
 
-    results = [["model_name", *cfg.metrics.keys()]]
+    results = [["Feature-model_name", *cfg.metrics.keys()]]
 
     for feature in cfg.features:
         tqdm.write(f"Using {feature}")

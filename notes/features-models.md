@@ -8,12 +8,24 @@
 
 # Features and models
 
-| feature-model | baseline | hog-svm  | hog-sgd | hog-catboost | resnet-svm | resnet-sgd | resnet-catboost |
-| ------------- | -------- | -------- | ------- | ------------ | ---------- | ---------- | --------------- |
-| f1-weighted   | 0.13     | **0.81** | 0.76    | 0.72         | 0.76       | 0.69       | 0.68            |
-| f1-macro      | 0.03     | **0.78** | 0.72    | 0.68         | 0.76       | 0.65       | 0.64            |
-
-| feature-model | baseline | sift-svm | sift-sgd | sift-catboost | resnet-finetune |
-| ------------- | -------- | -------- | -------- | ------------- | --------------- |
-| f1-weighted   | 0.13     | 0.48     | 0.47     | 0.45          | 0.58            |
-| f1-macro      | 0.03     | 0.43     | 0.40     | 0.36          | 0.52            |
+| Feature-model_name      | f1_macro | f1_micro | f1_weighted | accuracy |
+| ----------------------- | -------- | -------- | ----------- | -------- |
+| Baseline                | 0.03     | 0.29     | 0.13        | 0.29     |
+| hog-log_reg             | 0.72     | 0.76     | 0.76        | 0.76     |
+| hog-random_forest       | 0.54     | 0.66     | 0.63        | 0.66     |
+| hog-decision_tree       | 0.34     | 0.45     | 0.45        | 0.45     |
+| hog-svm                 | 0.78     | 0.81     | 0.81        | 0.81     |
+| hog-sgd                 | 0.72     | 0.76     | 0.75        | 0.76     |
+| hog-catboost            | 0.67     | 0.73     | 0.71        | 0.73     |
+| sift-log_reg            | 0.29     | 0.38     | 0.36        | 0.38     |
+| sift-random_forest      | 0.18     | 0.38     | 0.29        | 0.38     |
+| sift-decision_tree      | 0.17     | 0.24     | 0.24        | 0.24     |
+| sift-svm                | 0.37     | 0.47     | 0.44        | 0.47     |
+| sift-sgd                | 0.26     | 0.34     | 0.34        | 0.34     |
+| sift-catboost           | 0.29     | 0.44     | 0.39        | 0.44     |
+| resnet152-log_reg       | 0.71     | 0.73     | 0.73        | 0.73     |
+| resnet152-random_forest | 0.41     | 0.56     | 0.51        | 0.56     |
+| resnet152-decision_tree | 0.27     | 0.38     | 0.36        | 0.38     |
+| resnet152-svm           | 0.76     | 0.76     | 0.76        | 0.76     |
+| resnet152-sgd           | 0.72     | 0.74     | 0.74        | 0.74     |
+| resnet152-catboost      | 0.64     | 0.7      | 0.68        | 0.7      |

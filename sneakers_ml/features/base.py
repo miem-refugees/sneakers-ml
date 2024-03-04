@@ -36,7 +36,7 @@ class BaseFeatures(ABC):
             numpy_features = np.load(file, allow_pickle=False)
             classes = np.load(file, allow_pickle=False)
             class_to_idx_numpy = np.load(file, allow_pickle=False)
-            class_to_idx = dict(zip(class_to_idx_numpy[:, 1], class_to_idx_numpy[:, 0]))
+            class_to_idx = dict(zip(class_to_idx_numpy[:, 0], class_to_idx_numpy[:, 1].astype(int)))
             return numpy_features, classes, class_to_idx
 
     @classmethod
@@ -106,3 +106,5 @@ def create_all_features(cfg: DictConfig) -> None:
 
 if __name__ == "__main__":
     create_all_features()  # pylint: disable=no-value-for-parameter
+
+# python sneakers_ml/features/base.py -m data=brands_classification,brands_classification_filtered

@@ -1,0 +1,6 @@
+outs:
+- md5: 3f57b33ed90a425e6da14c48970ce2ad.dir
+  size: 1794081326
+  nfiles: 8544
+  hash: md5
+  path: brands-classification-filtered

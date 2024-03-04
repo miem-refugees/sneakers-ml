@@ -2,10 +2,10 @@ resnet152:
   _target_: sneakers_ml.features.resnet152.ResNet152Features
   config:
     splits:
-      full: ${paths.features}/${data.name}/resnet.npy
-      train: ${paths.features}/${data.name}-splits/resnet-train.npy
-      val: ${paths.features}/${data.name}-splits/resnet-val.npy
-      test: ${paths.features}/${data.name}-splits/resnet-test.npy
+      full: ${paths.features}/${data.name}/resnet-full.npy
+      train: ${paths.features}/${data.name}/resnet-train.npy
+      val: ${paths.features}/${data.name}/resnet-val.npy
+      test: ${paths.features}/${data.name}/resnet-test.npy
 
     device: cuda
     use_onnx: true

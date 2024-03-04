@@ -2,7 +2,7 @@ hog:
   _target_: sneakers_ml.features.hog.HogFeatures
   config:
     splits:
-      full: ${paths.features}/${data.name}/hog.npy
-      train: ${paths.features}/${data.name}-splits/hog-train.npy
-      val: ${paths.features}/${data.name}-splits/hog-val.npy
-      test: ${paths.features}/${data.name}-splits/hog-test.npy
+      full: ${paths.features}/${data.name}/hog-full.npy
+      train: ${paths.features}/${data.name}/hog-train.npy
+      val: ${paths.features}/${data.name}/hog-val.npy
+      test: ${paths.features}/${data.name}/hog-test.npy

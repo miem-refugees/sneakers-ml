@@ -1,0 +1,5 @@
+name: brands-classification-filtered
+path: ${paths.training.brands_classification.filtered}
+
+defaults:
+  - default

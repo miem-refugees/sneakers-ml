@@ -1,6 +1,5 @@
 name: brands-classification
-splits:
-  full: data/training/${..name}
-  train: data/training/${..name}-splits/train
-  val: data/training/${..name}-splits/val
-  test: data/training/${..name}-splits/test
+path: ${paths.training.brands_classification.main}
+
+defaults:
+  - default

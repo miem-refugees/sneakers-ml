@@ -1,6 +1,6 @@
 outs:
-- md5: c8e4925efa25fa52a439c4831bebde28.dir
-  size: 325513112
-  nfiles: 3
+- md5: 6d2ad3f4268710226cddb0ef7a05489c.dir
+  size: 652366768
+  nfiles: 12
   hash: md5
   path: brands-classification

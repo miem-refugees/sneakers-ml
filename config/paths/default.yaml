@@ -1,0 +1,24 @@
+merged:
+  folder: data/merged
+  metadata_folder: ${.folder}/metadata
+  images_folder: ${.folder}/images
+  metadata:
+    full_dataset: ${..metadata_folder}/full_dataset.csv
+    main_dataset: ${..metadata_folder}/main_dataset.csv
+    brands_dataset: ${..metadata_folder}/brands_dataset.csv
+    models_dataset: ${..metadata_folder}/models_dataset.csv
+  images:
+    brands: ${..images_folder}/by-brands
+    models: ${..images_folder}/by-models
+
+training:
+  folder: data/training
+  brands_classification:
+    name: brands-classification
+    main: ${..folder}/${.name}
+    filtered: ${..folder}/${.name}-filtered
+
+features: data/features
+models: data/models
+results: ${paths.models}/${data.name}/results.csv
+models_save: ${paths.models}/${data.name}

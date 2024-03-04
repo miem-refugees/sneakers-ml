@@ -1,0 +1,5 @@
+splits:
+  full: ${..path}/full
+  train: ${..path}/train
+  val: ${..path}/val
+  test: ${..path}/test

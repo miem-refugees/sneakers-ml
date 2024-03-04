@@ -1,6 +1,5 @@
 name: brands-classification-filtered
 path: ${paths.training.brands_classification.filtered}
-splits_path: ${paths.training.brands_classification.filtered_splits}
 
 defaults:
   - default

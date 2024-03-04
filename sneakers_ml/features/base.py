@@ -106,3 +106,5 @@ def create_all_features(cfg: DictConfig) -> None:
 
 if __name__ == "__main__":
     create_all_features()  # pylint: disable=no-value-for-parameter
+
+# python sneakers_ml/features/base.py -m data=brands_classification,brands_classification_filtered

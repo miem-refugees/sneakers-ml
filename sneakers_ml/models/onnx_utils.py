@@ -26,10 +26,12 @@ def get_session(model_path: str, device: str = "cpu") -> rt.InferenceSession:
 
 
 def save_torch_model(model: torch.nn.Module, torch_input_tensor: torch.Tensor, model_path: str) -> None:
+    save_path = Path(model_path)
+    save_path.parent.mkdir(parents=True, exist_ok=True)
     torch.onnx.export(
         model,
         torch_input_tensor,
-        model_path,
+        str(model_path),
         input_names=["input"],
         output_names=["output"],
         dynamic_axes={"input": {0: "batch_size"}, "output": {0: "batch_size"}},
@@ -38,13 +40,17 @@ def save_torch_model(model: torch.nn.Module, torch_input_tensor: torch.Tensor, m
 
 def save_sklearn_model(model: BaseEstimator, x: np.ndarray, path: str) -> None:
     onx = to_onnx(model, x[:1].astype(np.float32))
-    with Path(path).open("wb") as file:
+    save_path = Path(path)
+    save_path.parent.mkdir(parents=True, exist_ok=True)
+    with save_path.open("wb") as file:
         file.write(onx.SerializeToString())
 
 
 def save_catboost_model(model: Union[CatBoostRegressor, CatBoostClassifier], path: str) -> None:
+    save_path = Path(path)
+    save_path.parent.mkdir(parents=True, exist_ok=True)
     model.save_model(
-        path,
+        str(path),
         format="onnx",
         export_parameters={
             "onnx_domain": "ai.catboost",

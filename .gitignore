@@ -166,3 +166,4 @@ cython_debug/
 catboost_info/
 wandb/
 outputs/
+multirun/

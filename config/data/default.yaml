@@ -1,5 +1,5 @@
 splits:
-  full: ${..path}
-  train: ${..splits_path}/train
-  val: ${..splits_path}/val
-  test: ${..splits_path}/test
+  full: ${..path}/full
+  train: ${..path}/train
+  val: ${..path}/val
+  test: ${..path}/test

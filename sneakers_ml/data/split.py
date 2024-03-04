@@ -1,4 +1,3 @@
-import shutil
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -29,8 +28,7 @@ def create_dataframe(
 
 def filter_images(cfg: DictConfig) -> list[str]:
     features_class = ResNet152Features(cfg.features.resnet152.config, cfg.data)
-
-    features, classes, class_to_idx = features_class._load_features(features_class.config.splits.full)
+    features, classes, class_to_idx = features_class.get_features_folder(cfg.data.splits.full)
     idx_to_class = {v: k for k, v in class_to_idx.items()}
     classes_idx = classes[:, 1]
     images_idx = classes[:, 0]
@@ -42,9 +40,9 @@ def filter_images(cfg: DictConfig) -> list[str]:
     plt.scatter(dataframe["feature_1"], dataframe["feature_2"])
     plt.savefig("umap_resnet_full.jpg")
 
-    feature_1_left_bounary = float(input("Enter left boundary for feature_1: "))
+    feature_1_right_boundary = float(input("Enter right boundary for feature_1: "))
 
-    return dataframe[dataframe["feature_1"] <= feature_1_left_bounary]["image"].to_list()
+    return dataframe[dataframe["feature_1"] <= feature_1_right_boundary]["image"].to_list()
 
 
 def remove_bad_images(bad_imgs_paths: list[str]) -> None:
@@ -69,30 +67,23 @@ def split_train_test_val(input_folder: str, output_folder: str) -> None:
 
 
 def create_brands_classification(cfg: DictConfig) -> None:
-    move_top_sneakers(cfg.paths.merged.metadata.brands_dataset, cfg.paths.training.brands_classification.main, 100)
-    split_train_test_val(
-        cfg.paths.training.brands_classification.main, cfg.paths.training.brands_classification.main_splits
-    )
+    move_top_sneakers(cfg.paths.merged.metadata.brands_dataset, cfg.data.splits.full, 100)
+    split_train_test_val(cfg.data.splits.full, cfg.data.path)
 
 
 def create_brands_classification_filtered(cfg: DictConfig) -> None:
-    copy_path = cfg.paths.training.brands_classification.main + "-copy"
-    shutil.copytree(cfg.paths.training.brands_classification.main, copy_path)
+    move_top_sneakers(cfg.paths.merged.metadata.brands_dataset, cfg.data.splits.full, 100)
     bad_imgs_paths = filter_images(cfg)
     remove_bad_images(bad_imgs_paths)
-    shutil.move(cfg.paths.training.brands_classification.main, cfg.paths.training.brands_classification.filtered)
-    shutil.move(copy_path, cfg.paths.training.brands_classification.main)
-    split_train_test_val(
-        cfg.paths.training.brands_classification.filtered, cfg.paths.training.brands_classification.filtered_splits
-    )
+    split_train_test_val(cfg.data.splits.full, cfg.data.path)
 
 
 if __name__ == "__main__":
 
     with initialize(version_base=None, config_path="../../config", job_name="create_brands_classification_main"):
-        config = compose(config_name="config")
+        config = compose(config_name="config", overrides=["data=brands_classification"])
         create_brands_classification(config)
 
     with initialize(version_base=None, config_path="../../config", job_name="create_brands_classification_filtered"):
-        config = compose(config_name="config", overrides=["data=brands_classification"])
+        config = compose(config_name="config", overrides=["data=brands_classification_filtered"])
         create_brands_classification_filtered(config)

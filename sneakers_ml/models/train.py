@@ -41,7 +41,7 @@ def train(cfg: DictConfig) -> None:
 
             scores = [f"{feature}-{model}"]
             for metric in cfg.metrics:
-                score = call(config=cfg.metrics[metric], y_true=y_test, y_pred=pred)
+                score = round(call(config=cfg.metrics[metric], y_true=y_test, y_pred=pred), 2)
                 tqdm.write(f"{metric}: {score}")
                 scores.append(score)
 
@@ -58,3 +58,5 @@ def train(cfg: DictConfig) -> None:
 
 if __name__ == "__main__":
     train()  # pylint: disable=no-value-for-parameter
+
+# python sneakers_ml/models/train.py -m data=brands_classification,brands_classification_filtered

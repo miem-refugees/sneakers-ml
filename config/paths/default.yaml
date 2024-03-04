@@ -16,9 +16,7 @@ training:
   brands_classification:
     name: brands-classification
     main: ${..folder}/${.name}
-    main_splits: ${..folder}/${.name}-splits
     filtered: ${..folder}/${.name}-filtered
-    filtered_splits: ${..folder}/${.name}-filtered-splits
 
 features: data/features
 models: data/models

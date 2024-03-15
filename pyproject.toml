@@ -31,7 +31,6 @@ lightning = "^2.2.0.post0"
 # configs and logging
 wandb = "^0.16.2"
 hydra-core = "^1.3.2"
-dvc = { extras = ["s3"], version = "^3.39.0" }
 loguru = "^0.7.2"
 
 [tool.poetry.group.data-eda]

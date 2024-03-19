@@ -1,30 +1,32 @@
+import os
+import pathlib
 import time
 from typing import Annotated
 
-from fastapi import APIRouter, Form, UploadFile  # , BackgroundTasks
+from fastapi import APIRouter, Form, UploadFile
 from hydra import compose, initialize
 from loguru import logger
 from PIL import Image
 
+from sneakers_ml.app.config import config
 from sneakers_ml.app.service.s3 import S3ImageUtility
 from sneakers_ml.models.predict import BrandsClassifier
 
 predictor: BrandsClassifier = None
 s3 = S3ImageUtility("user_images")
 
-# logger = logging.getLogger(__name__)
-
 router: APIRouter = APIRouter(prefix="/classify-brand", tags=["brand-classification"])
 
 
 @router.on_event("startup")
 async def load_model():
-    global predictor
-
-    with initialize(version_base=None, config_path="../../config", job_name="fastapi"):
+    config_relative_path = os.path.relpath((pathlib.Path.cwd() / config.ml_config_path), pathlib.Path(__file__).parent)
+    logger.info("Loading models config. Resolved as: {}", config_relative_path)
+    with initialize(version_base=None, config_path=config_relative_path, job_name="fastapi"):
         cfg = compose(config_name="config")
+        global predictor
         predictor = BrandsClassifier(cfg)
-        logger.info("Loaded BrandsClassifier")
+    logger.info("Loaded BrandsClassifier")
 
 
 @router.post("/upload/")

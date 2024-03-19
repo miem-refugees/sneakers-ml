@@ -25,7 +25,14 @@ ENV PYTHONUNBUFFERED=1 \
 # Install Python and curl
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.9 \
-    curl \
+    curl wget && \
+    # install dvc
+    wget https://dvc.org/deb/dvc.list -O /etc/apt/sources.list.d/dvc.list && \
+    wget -qO - https://dvc.org/deb/iterative.asc | gpg --dearmor > packages.iterative.gpg && \
+    install -o root -g root -m 644 packages.iterative.gpg /etc/apt/trusted.gpg.d/ && \
+    rm -f packages.iterative.gpg && \
+    apt update && apt-get install -y --no-install-recommends \
+    dvc \
     # for opencv
     ffmpeg libsm6 libxext6 \
     build-essential && \

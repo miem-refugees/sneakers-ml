@@ -72,6 +72,7 @@ sqlalchemy = "^2.0.25"
 sqlmodel = "^0.0.16"
 uvicorn = "^0.28.0"
 typing-extensions = "^4.9.0"
+pydantic-settings = "^2.2.1"
 
 [tool.poetry.group.dev]
 optional = true

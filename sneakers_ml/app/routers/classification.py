@@ -16,7 +16,7 @@ from sneakers_ml.models.predict import BrandsClassifier
 
 predictor: BrandsClassifier = None
 s3 = S3ImageUtility("user_images")
-redis = RedisCache(host=config.redis.host, port=config.redis.port)
+redis = RedisCache(host=config.redis_host, port=config.redis_port)
 
 router: APIRouter = APIRouter(prefix="/classify-brand", tags=["brand-classification"])
 

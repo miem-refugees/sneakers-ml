@@ -60,6 +60,7 @@ optional = true
 [tool.poetry.group.bot.dependencies]
 aiohttp = "^3.9.1"
 python-telegram-bot = "^21.0"
+loguru = "^0.7.2"
 
 [tool.poetry.group.api]
 optional = true

@@ -3,6 +3,7 @@
 .github
 .venv
 data
+!data/features
 !data/models
 deploy
 dist

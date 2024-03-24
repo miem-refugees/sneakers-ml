@@ -17,7 +17,7 @@ from sneakers_ml.models.onnx_utils import get_session, predict
 
 class Feature(TypedDict):
     feature_instance: BaseFeatures
-    class_to_idx: dict[str, int]
+    idx_to_class: dict[int, str]
     model_instances: dict[str, rt.InferenceSession]
 
 
@@ -35,7 +35,7 @@ class BrandsClassifier:
             class_to_idx = feature_instance.get_class_to_idx()
             self.instances[feature] = {
                 "feature_instance": feature_instance,
-                "class_to_idx": class_to_idx,
+                "idx_to_class": {ind: cls for cls, ind in class_to_idx.items()},
                 "model_instances": {},
             }
 
@@ -47,15 +47,15 @@ class BrandsClassifier:
 
     def _predict_feature(
         self, feature_name: str, images: Sequence[Image.Image]
-    ) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray]]:
+    ) -> tuple[dict[str, np.ndarray], dict[str, list[str]]]:
         result: dict[str, np.ndarray] = {}
-        string_result: dict[str, np.ndarray] = {}
+        string_result: dict[str, list[str]] = {}
         embedding = self.instances[feature_name]["feature_instance"].get_features(images)
-        class_to_idx = self.instances[feature_name]["class_to_idx"]
+        ind_to_class = self.instances[feature_name]["idx_to_class"]
         for model_name, model in self.instances[feature_name]["model_instances"].items():
-            pred = predict(model, embedding)
+            pred = predict(model, embedding).astype(np.int32)
             result[f"{feature_name}-{model_name}"] = pred
-            string_result[f"{feature_name}-{model_name}"] = np.vectorize(class_to_idx.get)(pred)
+            string_result[f"{feature_name}-{model_name}"] = [ind_to_class.get(i) for i in pred]
 
         return result, string_result
 

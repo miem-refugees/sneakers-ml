@@ -1,6 +1,7 @@
 import os
 import pathlib
 import time
+from hashlib import md5
 from typing import Annotated
 
 from fastapi import APIRouter, Form, UploadFile
@@ -9,11 +10,13 @@ from loguru import logger
 from PIL import Image
 
 from sneakers_ml.app.config import config
+from sneakers_ml.app.service.redis import RedisCache
 from sneakers_ml.app.service.s3 import S3ImageUtility
 from sneakers_ml.models.predict import BrandsClassifier
 
 predictor: BrandsClassifier = None
 s3 = S3ImageUtility("user_images")
+redis = RedisCache(host=config.redis.host, port=config.redis.port)
 
 router: APIRouter = APIRouter(prefix="/classify-brand", tags=["brand-classification"])
 
@@ -36,12 +39,19 @@ async def post_image_to_classify(
     username: Annotated[str, Form()],
 ):
     image.file.seek(0)
-    f"{username}/{image.filename}"
     image = Image.open(image.file)
-    # background_tasks.add_task(s3.write_image_to_s3, image=image, name=s3_key)
+    # background_tasks.add_task(s3.write_image_to_s3, image=image, name=f"{username}/{image.filename}")
+
+    image_key = md5(image.tobytes()).hexdigest()  # nosec B324 (weak hash)
+    cached_prediction = redis.get(image_key)
+    if cached_prediction:
+        logger.info("Found cached prediction for image: {}", image_key)
+        return cached_prediction
 
     start_time = time.time()
-    prediction = predictor.predict(images=[image])[1]  # можно несколько картинок, но обязательно list
+    predictions = predictor.predict(images=[image])[1]
     end_time = time.time()
-    logger.info("Predicted %s in %f seconds", prediction, end_time - start_time)
-    return prediction
+    logger.info("Predicted {} in {} seconds", predictions, end_time - start_time)
+
+    redis.set(image_key, predictions, ttl=3600)
+    return predictions

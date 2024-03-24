@@ -35,7 +35,8 @@ COPY . ./
 ARG AWS_ACCESS_KEY_ID
 ARG AWS_SECRET_ACCESS_KEY
 RUN dvc remote modify storage access_key_id ${AWS_ACCESS_KEY_ID} &&  \
-    dvc remote modify storage secret_access_key ${AWS_SECRET_ACCESS_KEY}
+    dvc remote modify storage secret_access_key ${AWS_SECRET_ACCESS_KEY} && \
+    dvc pull data/models/brands-classification.dvc -f -d
 
 EXPOSE 8000
-ENTRYPOINT [ "./run-app.sh" ]
+CMD ["uvicorn", "sneakers_ml.app.main:app", "--proxy-headers", "--host", "0.0.0.0", "--port", "8000"]

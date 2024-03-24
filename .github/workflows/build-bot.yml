@@ -1,10 +1,14 @@
-name: Docker build and publish
+name: Build bot docker image
 
 on:
   push:
     branches:
       - trunk
     tags: ["v*.*.*"]
+    paths:
+      - sneakers_ml/bot
+      - sneakers_ml/config
+      - sneakers_ml/deploy
 
 jobs:
   push_to_registries:
@@ -26,16 +30,4 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           docker build -t $CR_REGISTRY/$NAME:$IMAGE_TAG -t $CR_REGISTRY/$NAME:latest . --file deploy/bot/Dockerfile
-          docker push $CR_REGISTRY/$NAME --all-tags
-
-      - name: Build, tag and push api
-        env:
-          CR_REGISTRY: cr.yandex/crp9sd2f3p1o3mfu9664
-          NAME: sneakers-ml-api
-          IMAGE_TAG: ${{ github.sha }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: |
-          docker build -t $CR_REGISTRY/$NAME:$IMAGE_TAG -t $CR_REGISTRY/$NAME:latest . --file deploy/app/Dockerfile \
-          --build-arg="AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" --build-arg="AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY"
           docker push $CR_REGISTRY/$NAME --all-tags

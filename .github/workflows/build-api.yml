@@ -1,0 +1,36 @@
+name: Build api docker image
+
+on:
+  push:
+    branches:
+      - trunk
+    tags: ["v*.*.*"]
+    paths:
+      - sneakers_ml/api
+      - sneakers_ml/config
+      - sneakers_ml/deploy
+
+jobs:
+  push_to_registries:
+    name: Build and push Docker images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to Yandex Cloud Container Registry
+        uses: yc-actions/yc-cr-login@v2
+        with:
+          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
+
+      - name: Build, tag and push api
+        env:
+          CR_REGISTRY: cr.yandex/crp9sd2f3p1o3mfu9664
+          NAME: sneakers-ml-api
+          IMAGE_TAG: ${{ github.sha }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          docker build -t $CR_REGISTRY/$NAME:$IMAGE_TAG -t $CR_REGISTRY/$NAME:latest . --file deploy/app/Dockerfile \
+          --build-arg="AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" --build-arg="AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY"
+          docker push $CR_REGISTRY/$NAME --all-tags

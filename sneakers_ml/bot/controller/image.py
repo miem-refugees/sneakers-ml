@@ -29,8 +29,10 @@ class ImageController:
                 resp.raise_for_status()
                 predictions = content
                 logger.debug("Got predictions from server: {}", predictions)
-                joined = "\n".join([f"*{model}*: *{predictions[model]}*" for model in predictions])
-                return escape(joined)
+                joined = "\n".join(
+                    [f"*{escape(model)}*: _{escape(''.join(predictions[model]))}_" for model in predictions]
+                )
+                return joined
         except ClientResponseError as e:
             logger.error("Got response error from classify-brand: {}\n{}", e, content)
         except Exception as e:

@@ -5,14 +5,10 @@ on:
     branches:
       - trunk
     tags: ["v*.*.*"]
-    paths:
-      - sneakers_ml/app/**
-      - sneakers_ml/config/**
-      - sneakers_ml/deploy/**
 
 jobs:
   push_to_registries:
-    name: Build and push Docker images
+    name: Build API
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

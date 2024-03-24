@@ -7,7 +7,7 @@ on:
     tags: ["v*.*.*"]
   pull_request:
 
-environment:
+env:
   IMAGE_TAG: ${{ github.sha }}
 
 jobs:
@@ -40,6 +40,6 @@ jobs:
           cache-to: type=gha,mode=max
           tags: |
             cr.yandex/crp9sd2f3p1o3mfu9664/sneakers-ml-api:latest
-            cr.yandex/crp9sd2f3p1o3mfu9664/sneakers-ml-api:${{ environment.IMAGE_TAG }}
+            cr.yandex/crp9sd2f3p1o3mfu9664/sneakers-ml-api:${{ env.IMAGE_TAG }}
             ghcr.io/user/app:latest
-            ghcr.io/user/app:${{ environment.IMAGE_TAG }}
+            ghcr.io/user/app:${{ env.IMAGE_TAG }}

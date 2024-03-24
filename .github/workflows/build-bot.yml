@@ -6,9 +6,9 @@ on:
       - trunk
     tags: ["v*.*.*"]
     paths:
-      - sneakers_ml/bot
-      - sneakers_ml/config
-      - sneakers_ml/deploy
+      - sneakers_ml/bot/**
+      - sneakers_ml/config/**
+      - sneakers_ml/deploy/**
 
 jobs:
   push_to_registries:

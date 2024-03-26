@@ -134,6 +134,16 @@ repos:
       - id: validate-pyproject
         additional_dependencies: ["validate-pyproject-schema-store[all]"]
 
+  # - repo: https://github.com/AleksaC/hadolint-py
+  #   rev: v2.12.0
+  #   hooks:
+  #     - id: hadolint
+
+  - repo: https://github.com/iamthefij/docker-pre-commit
+    rev: v3.0.1
+    hooks:
+      - id: docker-compose-check
+
   # - repo: https://github.com/astral-sh/ruff-pre-commit
   #   rev: v0.1.9
   #   hooks:

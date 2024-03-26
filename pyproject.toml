@@ -103,30 +103,11 @@ pytest = "^8.1.1"
 pytest-cov = "^4.1.0"
 pytest-asyncio = "^0.23.5"
 
-[tool.autoflake]
-remove-all-unused-imports = true
-ignore-init-module-imports = true
-remove-duplicate-keys = true
-remove-unused-variables = true
-recursive = true
-expand-star-imports = true
-in-place = true
-
-[tool.isort]
-profile = "black"
-line_length = 120
-float_to_top = true
-known_third_party = ["wandb"]
-
 [tool.black]
 line-length = 120
 target-version = ["py39"]
 # skip-string-normalization = true
 # skip-magic-trailing-comma = true
-
-[tool.flake8]
-max-line-length = 120
-extend-ignore = "E203" # Whitespace before ':' for black compatability
 
 [tool.ruff]
 target-version = "py39"
@@ -145,12 +126,15 @@ ignore = [
     "NPY002", # numpy random stuff
 ]
 
-[tool.mypy]
-python_version = "3.9"
-strict = true
-show_error_context = true
-pretty = true
-ignore_missing_imports = true # ignore packages without type-checking
+[tool.isort]
+profile = "black"
+line_length = 120
+float_to_top = true
+known_third_party = ["wandb"]
+
+[tool.flake8]
+max-line-length = 120
+extend-ignore = "E203" # Whitespace before ':' for black compatability
 
 [tool.pylint]
 py-version = "3.9"
@@ -161,12 +145,6 @@ disable = [
     "C0115", # documentation
 ]
 
-[tool.bandit]
-exclude_dirs = ["sneakers_ml/data/test"]
-
-[tool.bandit.assert_used]
-skips = ['*_test.py', '*/test_*.py']
-
 [tool.pytest]
 addopts = [
     "--ignore=data",
@@ -175,6 +153,30 @@ addopts = [
     "--ignore=docker",
 ]
 
+[tool.mypy]
+python_version = "3.9"
+strict = true
+show_error_context = true
+pretty = true
+ignore_missing_imports = true # ignore packages without type-checking
+
+[tool.autoflake]
+remove-all-unused-imports = true
+ignore-init-module-imports = true
+remove-duplicate-keys = true
+remove-unused-variables = true
+recursive = true
+expand-star-imports = true
+in-place = true
+
+[tool.bandit]
+exclude_dirs = ["sneakers_ml/data/test"]
+
+[tool.bandit.assert_used]
+skips = ['*_test.py', '*/test_*.py']
+
 [build-system]
-requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+requires = [
+  "poetry-core",
+]

@@ -25,8 +25,7 @@ class StorageProcessor:
         return name in self.storage.get_all_filenames(directory)
 
     def get_max_filename(self, directory: str) -> int:
-        filenames = self.storage.get_all_filenames(directory)
-        if filenames:
+        if filenames := self.storage.get_all_filenames(directory):
             without_ext = [int(Path(fn).stem) for fn in filenames]
             return max(without_ext)
         return -1

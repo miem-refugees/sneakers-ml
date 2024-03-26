@@ -1,4 +1,4 @@
-[![Style](https://github.com/miem-refugees/sneakers-ml/actions/workflows/pre-commit.yaml/badge.svg)](https://github.com/miem-refugees/sneakers-ml/actions/workflows/pre-commit.yaml)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/miem-refugees/sneakers-ml/trunk.svg)](https://results.pre-commit.ci/latest/github/miem-refugees/sneakers-ml/trunk)
 [![API docker](https://github.com/miem-refugees/sneakers-ml/actions/workflows/build-api.yml/badge.svg)](https://github.com/miem-refugees/sneakers-ml/actions/workflows/build-api.yml)
 [![BOT docker](https://github.com/miem-refugees/sneakers-ml/actions/workflows/build-bot.yml/badge.svg)](https://github.com/miem-refugees/sneakers-ml/actions/workflows/build-bot.yml)
 [![codecov](https://codecov.io/gh/miem-refugees/sneakers-ml/graph/badge.svg?token=ZTQC72KIPN)](https://codecov.io/gh/miem-refugees/sneakers-ml)

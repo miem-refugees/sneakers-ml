@@ -5,28 +5,42 @@ on:
     branches:
       - trunk
     tags: ["v*.*.*"]
+  pull_request:
+
+env:
+  IMAGE_TAG: ${{ github.sha }}
 
 jobs:
-  push_to_registries:
-    name: Build API
+  docker:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
-
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Login to Yandex Cloud Container Registry
         uses: yc-actions/yc-cr-login@v2
         with:
           yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
-
-      - name: Build, tag and push api
-        env:
-          CR_REGISTRY: cr.yandex/crp9sd2f3p1o3mfu9664
-          NAME: sneakers-ml-api
-          IMAGE_TAG: ${{ github.sha }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: |
-          docker build -t $CR_REGISTRY/$NAME:$IMAGE_TAG -t $CR_REGISTRY/$NAME:latest . --file deploy/app/Dockerfile \
-          --build-arg="AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" --build-arg="AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY"
-          docker push $CR_REGISTRY/$NAME --all-tags
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: deploy/app/Dockerfile  
+          platforms: linux/amd64,linux/arm64
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: |
+            cr.yandex/crp9sd2f3p1o3mfu9664/sneakers-ml-api:latest
+            cr.yandex/crp9sd2f3p1o3mfu9664/sneakers-ml-api:${{ env.IMAGE_TAG }}
+            ghcr.io/user/app:latest
+            ghcr.io/user/app:${{ env.IMAGE_TAG }}
